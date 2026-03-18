@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PUBG Stats V7 — by Dani_4LA0</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #090b0f;
+  --bg2: #0f1218;
+  --bg3: #151922;
+  --bg4: #1a1f2b;
+  --border: #232a38;
+  --gold: #f0c040;
+  --gold2: #ffd700;
+  --red: #ff4d4f;
+  --orange: #ff9f1a;
+  --blue: #4da6ff;
+  --green: #7ed85b;
+  --purple: #cc88ff;
+  --text: #e8eaf0;
+  --text2: #9aa3b2;
+  --text3: #5a6272;
+  --font-head: 'Rajdhani', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-body: 'Barlow', sans-serif;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: var(–font-body);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(240,192,64,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(240,192,64,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+/* ── HEADER ── */
+.header {
+position: relative;
+z-index: 1;
+padding: 32px 24px 24px;
+border-bottom: 1px solid var(–border);
+background: linear-gradient(180deg, rgba(240,192,64,0.05) 0%, transparent 100%);
+}
+.header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+.header-logo { font-family: var(–font-head); font-size: 32px; font-weight: 700; color: var(–gold); letter-spacing: 2px; line-height: 1; }
+.header-logo span { color: var(–text2); font-weight: 400; font-size: 14px; display: block; letter-spacing: 3px; margin-top: 2px; }
+.header-badge { margin-left: auto; background: var(–bg3); border: 1px solid var(–gold); color: var(–gold); font-family: var(–font-mono); font-size: 11px; padding: 4px 12px; border-radius: 4px; }
+
+/* ── SETUP PANEL ── */
+.setup-wrap {
+position: relative;
+z-index: 1;
+max-width: 900px;
+margin: 32px auto;
+padding: 0 24px;
+}
+
+.setup-card {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: 12px;
+overflow: hidden;
+}
+
+.setup-top {
+background: linear-gradient(90deg, rgba(240,192,64,0.08) 0%, transparent 100%);
+padding: 20px 24px;
+border-bottom: 1px solid var(–border);
+display: flex; align-items: center; gap: 12px;
+}
+.setup-top-title { font-family: var(–font-head); font-size: 20px; font-weight: 700; color: var(–gold); letter-spacing: 1px; }
+
+.setup-body { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media(max-width:600px){ .setup-body { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field.full { grid-column: 1 / -1; }
+.field label { font-family: var(–font-mono); font-size: 11px; color: var(–text2); letter-spacing: 1px; text-transform: uppercase; }
+
+.input-wrap { position: relative; }
+.input-wrap input, .input-wrap select {
+width: 100%;
+background: var(–bg3);
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–text);
+font-family: var(–font-body);
+font-size: 14px;
+padding: 10px 14px;
+outline: none;
+transition: border-color .2s;
+appearance: none;
+}
+.input-wrap input:focus, .input-wrap select:focus { border-color: var(–gold); }
+.input-wrap input::placeholder { color: var(–text3); }
+
+.toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.toggle-btn {
+flex: 1;
+min-width: 80px;
+background: var(–bg3);
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–text2);
+font-family: var(–font-head);
+font-size: 14px;
+font-weight: 600;
+padding: 10px 14px;
+cursor: pointer;
+transition: all .2s;
+text-align: center;
+letter-spacing: 0.5px;
+}
+.toggle-btn:hover { border-color: var(–gold); color: var(–gold); }
+.toggle-btn.active { background: rgba(240,192,64,0.12); border-color: var(–gold); color: var(–gold); }
+
+.range-custom { display: none; grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
+.range-custom.show { display: grid; }
+
+.setup-footer { padding: 20px 24px; border-top: 1px solid var(–border); display: flex; align-items: center; gap: 16px; }
+
+.btn-run {
+background: var(–gold);
+color: #000;
+border: none;
+border-radius: 8px;
+font-family: var(–font-head);
+font-size: 18px;
+font-weight: 700;
+padding: 12px 36px;
+cursor: pointer;
+letter-spacing: 1px;
+transition: all .2s;
+display: flex; align-items: center; gap: 10px;
+}
+.btn-run:hover { background: var(–gold2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(240,192,64,0.3); }
+.btn-run:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+background: var(–bg3);
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–text2);
+font-family: var(–font-body);
+font-size: 13px;
+padding: 10px 20px;
+cursor: pointer;
+transition: all .2s;
+}
+.btn-secondary:hover { border-color: var(–text2); color: var(–text); }
+
+/* ── PROGRESS ── */
+.progress-wrap {
+display: none;
+position: relative; z-index: 1;
+max-width: 900px; margin: 0 auto; padding: 0 24px 24px;
+}
+.progress-wrap.show { display: block; }
+.progress-card {
+background: var(–bg2); border: 1px solid var(–border); border-radius: 12px; padding: 24px;
+}
+.progress-title { font-family: var(–font-head); font-size: 16px; color: var(–gold); margin-bottom: 16px; letter-spacing: 1px; }
+.progress-bar-wrap { background: var(–bg3); border-radius: 4px; height: 6px; overflow: hidden; margin-bottom: 12px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(–gold), var(–orange)); border-radius: 4px; transition: width .4s ease; width: 0%; }
+.progress-log { font-family: var(–font-mono); font-size: 11px; color: var(–text3); max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.progress-log .log-line { color: var(–text2); }
+.progress-log .log-line.ok { color: var(–green); }
+.progress-log .log-line.warn { color: var(–orange); }
+.progress-log .log-line.err { color: var(–red); }
+
+/* ── REPORT ── */
+#report {
+display: none;
+position: relative; z-index: 1;
+max-width: 1200px; margin: 0 auto; padding: 0 24px 48px;
+}
+#report.show { display: block; }
+
+.report-header {
+display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+padding: 20px 0; border-bottom: 1px solid var(–border); margin-bottom: 20px;
+}
+.report-title { font-family: var(–font-head); font-size: 28px; font-weight: 700; color: var(–gold); letter-spacing: 2px; }
+.report-sub { color: var(–text2); font-size: 12px; font-family: var(–font-mono); margin-top: 4px; }
+.report-actions { display: flex; gap: 10px; }
+
+.mode-badge {
+display: inline-flex; align-items: center; gap: 6px;
+padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: var(–font-mono);
+border: 1px solid;
+}
+.mode-simple { background: rgba(126,216,91,0.1); color: var(–green); border-color: var(–green); }
+.mode-detailed { background: rgba(255,159,26,0.1); color: var(–orange); border-color: var(–orange); }
+
+/* ── HERO GRID ── */
+.hero-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px;
+}
+.hero-card {
+background: var(–bg2); border: 1px solid var(–border); border-radius: 10px; padding: 14px 16px;
+position: relative; overflow: hidden;
+}
+.hero-card::before {
+content: ‘’; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+background: linear-gradient(90deg, var(–gold), transparent);
+}
+.hero-label { font-family: var(–font-mono); font-size: 10px; color: var(–text3); text-transform: uppercase; letter-spacing: 1px; }
+.hero-value { font-family: var(–font-head); font-size: 22px; font-weight: 700; margin-top: 4px; color: var(–text); }
+
+/* ── SECTION TITLE ── */
+.section-title {
+font-family: var(–font-head); font-size: 14px; font-weight: 700; color: var(–gold);
+letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
+display: flex; align-items: center; gap: 8px;
+}
+.section-title::after { content: ‘’; flex: 1; height: 1px; background: var(–border); }
+
+/* ── PODIUM ── */
+.podium { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.podium-card {
+flex: 1; min-width: 160px; background: var(–bg2); border: 1px solid var(–border);
+border-radius: 10px; padding: 16px; text-align: center;
+}
+.podium-card.gold { border-color: var(–gold); background: rgba(240,192,64,0.05); }
+.podium-card.silver { border-color: #aaa; }
+.podium-card.bronze { border-color: #cd7f32; }
+.podium-icon { font-size: 24px; }
+.podium-name { font-family: var(–font-head); font-size: 16px; font-weight: 700; margin: 6px 0 4px; }
+.podium-stats { font-size: 11px; color: var(–text2); line-height: 1.6; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; border: 1px solid var(–border); border-radius: 10px; margin-bottom: 20px; }
+table { border-collapse: collapse; width: 100%; min-width: 500px; font-size: 11px; }
+td, th { border: 1px solid var(–border); padding: 5px 7px; white-space: nowrap; text-align: center; }
+th { background: var(–bg3); font-family: var(–font-mono); font-size: 10px; color: var(–text2); text-transform: uppercase; }
+tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+.winner-row td { background: rgba(126,216,91,0.06) !important; font-weight: 600; }
+.absent { color: var(–text3); font-style: italic; }
+
+/* ── AI CARDS ── */
+.ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.ai-card {
+background: var(–bg2); border: 1px solid var(–border); border-radius: 10px; padding: 16px;
+position: relative; overflow: hidden;
+}
+.ai-card.mvp { border-color: var(–gold); }
+.ai-card.mvp::before { content: ‘MVP’; position: absolute; top: 10px; right: 10px; font-family: var(–font-mono); font-size: 9px; color: var(–gold); border: 1px solid var(–gold); padding: 2px 6px; border-radius: 3px; }
+.ai-name { font-family: var(–font-head); font-size: 18px; font-weight: 700; }
+.ai-archetype { font-family: var(–font-head); font-size: 14px; font-weight: 600; margin: 6px 0 4px; }
+.ai-msg { font-size: 13px; color: var(–text2); line-height: 1.5; }
+.ai-notes { font-size: 11px; color: var(–text3); margin-top: 6px; font-family: var(–font-mono); }
+.ai-mini { margin-top: 8px; font-size: 11px; color: var(–text3); font-family: var(–font-mono); padding-top: 8px; border-top: 1px solid var(–border); }
+
+/* ── PERSONAL BOX ── */
+.personal-box {
+background: var(–bg2); border: 1px solid var(–border); border-radius: 12px; padding: 20px; margin-bottom: 20px;
+}
+.personal-section { margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
+.personal-section ul { padding-left: 18px; margin-top: 6px; color: var(–text2); }
+.personal-section li { margin-bottom: 4px; }
+
+.streak-alert { background: rgba(255,77,79,0.08); border: 1px solid var(–red); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #ff8080; font-size: 12px; }
+.streak-good  { background: rgba(126,216,91,0.08); border: 1px solid var(–green); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #a0f070; font-size: 12px; }
+.streak-info  { background: rgba(77,166,255,0.08); border: 1px solid var(–blue); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #88c8ff; font-size: 12px; }
+.streak-best  { background: rgba(240,192,64,0.08); border: 1px solid var(–gold); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: var(–gold); font-size: 12px; }
+
+/* ── GLOBAL BOX ── */
+.global-box { background: var(–bg2); border: 1px solid var(–border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.global-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.global-card { background: var(–bg3); border: 1px solid var(–border); border-radius: 8px; padding: 14px; text-align: center; }
+.global-label { font-family: var(–font-mono); font-size: 10px; color: var(–text3); text-transform: uppercase; }
+.global-val { font-family: var(–font-head); font-size: 22px; font-weight: 700; margin: 6px 0; }
+.global-pct { font-size: 12px; font-weight: 600; font-family: var(–font-mono); }
+
+/* ── TARGETS ── */
+.targets-section { background: var(–bg2); border: 1px solid var(–border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.targets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.target-card { background: var(–bg3); border: 1px solid var(–border); border-radius: 10px; padding: 14px; }
+.target-card.mvp-target { border-color: var(–gold); }
+.target-player { font-family: var(–font-head); font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+.target-svg-wrap { display: flex; justify-content: center; margin-bottom: 10px; }
+.target-stats { font-size: 12px; line-height: 1.8; margin-bottom: 10px; }
+.hit-head { color: var(–red); font-weight: 700; }
+.hit-body { color: var(–orange); font-weight: 700; }
+.hit-legs { color: var(–blue); font-weight: 700; }
+.hit-unknown { color: var(–text3); }
+
+/* ── WEAPON BOX ── */
+.weapon-box { background: var(–bg); border: 1px solid var(–border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.weapon-top { font-size: 12px; color: var(–text2); margin-bottom: 8px; }
+.weapon-cols { display: flex; gap: 12px; }
+.weapon-col { flex: 1; }
+.weapon-col-title { font-family: var(–font-mono); font-size: 10px; color: var(–text3); text-transform: uppercase; margin-bottom: 6px; }
+.weapon-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid var(–border); }
+.weapon-name { color: var(–text2); }
+.weapon-kills { color: var(–red); font-weight: 700; font-family: var(–font-mono); }
+.weapon-dmg { color: var(–orange); font-weight: 700; font-family: var(–font-mono); }
+
+/* ── COMBAT ANALYSIS ── */
+.ca-block { border-top: 1px solid var(–border); padding-top: 12px; margin-top: 12px; }
+.ca-player-block { font-size: 12px; }
+.ca-conclusion { background: var(–bg); border-left: 3px solid var(–blue); padding: 10px 12px; margin-bottom: 10px; border-radius: 4px; color: var(–text2); line-height: 1.6; }
+.ca-event { padding: 4px 0; border-bottom: 1px solid var(–border); line-height: 1.5; }
+.ca-neg { color: #ff8080; }
+.ca-warn { color: #ffcc66; }
+.ca-stat { color: var(–text3); margin-top: 8px; font-family: var(–font-mono); font-size: 11px; }
+.mistake-badge { display: inline-block; border: 1.5px solid; border-radius: 6px; padding: 3px 12px; font-size: 12px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.5px; font-family: var(–font-mono); }
+.tl-bar { position: relative; height: 26px; background: var(–bg); border-radius: 6px; margin-bottom: 4px; overflow: hidden; border: 1px solid var(–border); }
+.tl-dot { position: absolute; top: 5px; transform: translateX(-50%); width: 18px; height: 16px; border-radius: 4px; font-size: 9px; font-weight: 700; color: #000; display: flex; align-items: center; justify-content: center; font-family: var(–font-mono); }
+.tl-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(–text3); margin-bottom: 10px; font-family: var(–font-mono); }
+
+/* ── TACTICAL PROFILE ── */
+.tactical-profile { border-left: 3px solid; padding: 10px 12px; margin: 10px 0; background: var(–bg); border-radius: 4px; }
+.tactical-style { font-family: var(–font-head); font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.tactical-tips { padding-left: 16px; color: var(–text2); font-size: 12px; line-height: 1.8; }
+
+/* ── TEAM SUMMARY ── */
+.team-summary { background: var(–bg2); border: 1px solid var(–border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.team-summary-stats { font-size: 13px; color: var(–text2); margin-bottom: 10px; line-height: 1.8; }
+.team-tips { padding-left: 18px; color: var(–text2); font-size: 12px; line-height: 1.8; }
+
+/* ── SURPRIZE ── */
+.surprize-box { background: rgba(240,192,64,0.04); border: 1px solid var(–gold); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.surprize-row { padding: 10px 0; border-bottom: 1px solid rgba(240,192,64,0.15); font-size: 13px; line-height: 1.6; display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.surprize-row:last-child { border-bottom: none; }
+.surprize-icon { font-size: 18px; flex-shrink: 0; }
+.surprize-text { flex: 1; }
+
+/* ── ERROR / EMPTY ── */
+.error-box { background: rgba(255,77,79,0.08); border: 1px solid var(–red); border-radius: 10px; padding: 16px 20px; color: #ff8080; font-size: 13px; margin-bottom: 20px; }
+
+/* ── FOOTER ── */
+.footer { text-align: center; padding: 24px; border-top: 1px solid var(–border); color: var(–text3); font-size: 11px; font-family: var(–font-mono); position: relative; z-index: 1; }
+.footer b { color: var(–gold); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(–bg2); }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(–text3); }
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">
+      PUBG STATS
+      <span>PERFORMANCE REPORT V7</span>
+    </div>
+    <div class="header-badge">by Dani_4LA0</div>
+  </div>
+</div>
+
+<!-- SETUP -->
+
+<div class="setup-wrap" id="setupWrap">
+  <div class="setup-card">
+    <div class="setup-top">
+      <div class="setup-top-title">⚙ CONFIGURARE RAPORT</div>
+    </div>
+    <div class="setup-body">
+
+```
+  <div class="field full">
+    <label>API Key PUBG</label>
+    <div class="input-wrap">
+      <input type="password" id="apiKey" placeholder="Introdu API Key-ul PUBG..." autocomplete="off">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Username PUBG</label>
+    <div class="input-wrap">
+      <input type="text" id="playerName" placeholder="ex: Dani_4LA0">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Platforma</label>
+    <div class="toggle-group">
+      <button class="toggle-btn active" data-group="platform" data-val="steam">PC</button>
+      <button class="toggle-btn" data-group="platform" data-val="psn">PS</button>
+      <button class="toggle-btn" data-group="platform" data-val="xbox">Xbox</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Tip Raport</label>
+    <div class="toggle-group">
+      <button class="toggle-btn active" data-group="reportType" data-val="personal">Personal</button>
+      <button class="toggle-btn" data-group="reportType" data-val="team">Team</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Detaliu</label>
+    <div class="toggle-group">
+      <button class="toggle-btn active" data-group="detailLevel" data-val="simple">Simple</button>
+      <button class="toggle-btn" data-group="detailLevel" data-val="detailed">Detailed</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Interval</label>
+    <div class="toggle-group">
+      <button class="toggle-btn active" data-group="range" data-val="3">3h</button>
+      <button class="toggle-btn" data-group="range" data-val="6">6h</button>
+      <button class="toggle-btn" data-group="range" data-val="12">12h</button>
+      <button class="toggle-btn" data-group="range" data-val="custom">Custom</button>
+    </div>
+  </div>
+
+  <div class="range-custom" id="customRange">
+    <div class="field">
+      <label>De la</label>
+      <div class="input-wrap"><input type="datetime-local" id="fromDate"></div>
+    </div>
+    <div class="field">
+      <label>Pana la</label>
+      <div class="input-wrap"><input type="datetime-local" id="toDate"></div>
+    </div>
+  </div>
+
+  <!-- Team extra players -->
+  <div class="field full" id="extraPlayersWrap" style="display:none">
+    <label>Extra Players (team, optional)</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <div class="input-wrap" style="flex:1;min-width:160px;"><input type="text" id="extra1" placeholder="Extra player 1"></div>
+      <div class="input-wrap" style="flex:1;min-width:160px;"><input type="text" id="extra2" placeholder="Extra player 2"></div>
+    </div>
+  </div>
+
+</div>
+<div class="setup-footer">
+  <button class="btn-run" id="btnRun">
+    <span>▶</span> GENEREAZA RAPORT
+  </button>
+  <button class="btn-secondary" id="btnClearKey">Sterge API Key</button>
+  <span id="savedKeyNote" style="font-size:12px;color:var(--green);display:none;">✓ API Key salvat</span>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- PROGRESS -->
+
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-card">
+    <div class="progress-title">⚡ SE GENEREAZA RAPORTUL...</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-log" id="progressLog"></div>
+  </div>
+</div>
+
+<!-- REPORT -->
+
+<div id="report"></div>
+
+<div class="footer">
+  ⚡ Designed &amp; Created by <b>Dani_4LA0</b> &nbsp;|&nbsp; PUBG Performance Report V7
+</div>
+
+<script>
+// ===================== STATE =====================
+const state = {
+  platform: 'steam',
+  reportType: 'personal',
+  detailLevel: 'simple',
+  range: '3',
+  apiKey: '',
+  playerName: '',
+  extra1: '',
+  extra2: '',
+  fromDate: null,
+  toDate: null
+};
+
+// ===================== LOCAL STORAGE =====================
+function loadApiKey() {
+  return localStorage.getItem('pubg_api_key') || '';
+}
+function saveApiKey(k) {
+  localStorage.setItem('pubg_api_key', k);
+}
+function clearApiKey() {
+  localStorage.removeItem('pubg_api_key');
+}
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadApiKey();
+  if (saved) {
+    document.getElementById('apiKey').value = saved;
+    document.getElementById('savedKeyNote').style.display = 'inline';
+  }
+
+  // Toggle buttons
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.group;
+      document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state[group] = btn.dataset.val;
+      if (group === 'range') {
+        document.getElementById('customRange').classList.toggle('show', btn.dataset.val === 'custom');
+      }
+      if (group === 'reportType') {
+        document.getElementById('extraPlayersWrap').style.display = btn.dataset.val === 'team' ? 'block' : 'none';
+      }
+    });
+  });
+
+  document.getElementById('btnRun').addEventListener('click', runReport);
+  document.getElementById('btnClearKey').addEventListener('click', () => {
+    clearApiKey();
+    document.getElementById('apiKey').value = '';
+    document.getElementById('savedKeyNote').style.display = 'none';
+  });
+});
+
+// ===================== UTIL =====================
+function safeInt(v) { return Number(v ?? 0) || 0; }
+function safeNum(v, d=0) { const n=Number(v||0); return d>0?n.toFixed(d):String(Math.round(n)); }
+function nameEq(a,b) { return String(a||'').toLowerCase()===String(b||'').toLowerCase(); }
+function escHtml(s) {
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function shortMapName(m) {
+  const maps={Baltic_Main:'Erangel',Desert_Main:'Miramar',Savage_Main:'Sanhok',DihorOtok_Main:'Vikendi',Tiger_Main:'Taego',Summerland_Main:'Karakin',Chimera_Main:'Paramo',Heaven_Main:'Haven',Kiki_Main:'Deston',Neon_Main:'Rondo'};
+  return maps[m]||m||'-';
+}
+function cleanWeaponName(raw) {
+  if(!raw) return 'Unknown';
+  return raw.replace(/^WeapID_/,'').replace(/^Weap_/,'').replace(/_C$/,'').replace(/_MainWeapon$/,'').replace(/BP_/,'').replace(/_/g,' ').trim();
+}
+function formatRoTime(d) {
+  return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
+}
+function formatRoDate(d) {
+  return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric'}).format(d);
+}
+function formatRoDateTime(d) {
+  return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
+}
+function classifyDamageReason(r) {
+  const s=String(r||'').toLowerCase();
+  if(!s) return 'unknown';
+  if(s.includes('head')||s.includes('helmet')) return 'head';
+  if(s.includes('leg')||s.includes('foot')||s.includes('knee')||s.includes('thigh')) return 'legs';
+  if(s.includes('body')||s.includes('torso')||s.includes('chest')||s.includes('pelvis')||s.includes('stomach')||s.includes('arm')||s.includes('hand')||s.includes('shoulder')) return 'body';
+  return 'unknown';
+}
+function emptyPlayerStat(name) {
+  return {name,kills:0,damage:0,assists:0,revives:0,downs:0,matches:0,wins:0,knocksTaken:0,head:0,body:0,legs:0,unknown:0,score:0};
+}
+function hashString(str) {
+  let h=0;
+  for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
+  return Math.abs(h);
+}
+function pickLine(lines,seed) {
+  if(!lines.length) return '';
+  return lines[hashString(seed)%lines.length];
+}
+function circlePhaseLabel(phase) {
+  if(phase<=2) return `Cerc ${phase} (Early game)`;
+  if(phase<=5) return `Cerc ${phase} (Mid game)`;
+  return `Cerc ${phase} (Late game)`;
+}
+
+// ===================== PROGRESS =====================
+let logEl, barEl;
+function logMsg(msg, cls='') {
+  if(!logEl) return;
+  const d=document.createElement('div');
+  d.className='log-line'+(cls?' '+cls:'');
+  d.textContent=msg;
+  logEl.appendChild(d);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+function setProgress(pct) {
+  if(barEl) barEl.style.width=pct+'%';
+}
+
+// ===================== API =====================
+async function apiGet(url, apiKey, useAuth=true) {
+  const opts = useAuth ? {headers:{'Authorization':`Bearer ${apiKey}`,'Accept':'application/vnd.api+json'}} : {};
+  const res = await fetch(url, opts);
+  if(!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  return res.json();
+}
+
+// ===================== SEASON =====================
+async function fetchSeasonId(platform, apiKey) {
+  try {
+    const res = await apiGet(`https://api.pubg.com/shards/${platform}/seasons`, apiKey);
+    const current = (res.data||[]).find(s=>s.attributes?.isCurrentSeason);
+    return current ? current.id : null;
+  } catch(e) { return null; }
+}
+
+async function fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId) {
+  try {
+    const res = await apiGet(`https://api.pubg.com/shards/${platform}/players/${playerId}/seasons/${seasonId}`, apiKey);
+    return res.data?.attributes?.gameModeStats || null;
+  } catch(e) { return null; }
+}
+
+async function fetchGlobalLeaderboard(platform, apiKey, seasonId) {
+  try {
+    const res = await apiGet(`https://api.pubg.com/shards/${platform}/leaderboards/${seasonId}/squad-ranked`, apiKey);
+    const included = res.included||[];
+    return included
+      .filter(x=>x.type==='player')
+      .map(x=>({name:x.attributes?.name||'',kills:safeInt(x.attributes?.stats?.kills)}))
+      .sort((a,b)=>b.kills-a.kills)
+      .slice(0,100);
+  } catch(e) { return []; }
+}
+
+// ===================== CIRCLE PHASES =====================
+function extractCirclePhases(telemetry) {
+  const phases=[];let phaseNum=1;
+  for(const ev of telemetry){
+    if(ev?._T==='LogGameStatePeriodically'||ev?._T==='LogPhaseChange'){
+      const t=ev?.common?.elapsedTime||ev?.elapsedTime||0;
+      if(!phases.find(p=>p.phase===phaseNum)){
+        phases.push({phase:phaseNum,start:t,end:t+999999});
+        if(phases.length>1) phases[phases.length-2].end=t;
+        phaseNum++;
+      }
+    }
+  }
+  if(!phases.length){
+    phases.push({phase:1,start:0,end:300});
+    phases.push({phase:2,start:300,end:700});
+    phases.push({phase:3,start:700,end:999999});
+  }
+  return phases;
+}
+function getCirclePhase(evTime, circlePhases) {
+  const found=circlePhases.find(c=>evTime>=c.start&&evTime<c.end);
+  return Math.min(found?found.phase:Math.ceil(evTime/300)||1, 9);
+}
+
+// ===================== COMBAT ANALYSIS =====================
+function buildCombatAnalysis(telemetry, teamNamesLower, circlePhases) {
+  const analysis={};
+  for(const n of teamNamesLower){
+    analysis[n]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{}};
+  }
+  for(const ev of telemetry){
+    if(ev?._T==='LogPlayerMakeGroggy'){
+      const vn=(ev?.victim?.name||'').toLowerCase();
+      const an=(ev?.attacker?.name||'').toLowerCase();
+      const evTime=ev?.common?.elapsedTime||0;
+      const phase=getCirclePhase(evTime,circlePhases);
+      const dist=Math.round(safeInt(ev?.distance)/100);
+      const weapon=cleanWeaponName(ev?.damageCauserName||ev?.attackerWeapon||'');
+      if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'knocked',time:evTime,phase,by:ev?.attacker?.name||'unknown',dist,isEarly});}
+      if(analysis[an]){analysis[an].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[an].weaponKnocked[weapon]=(analysis[an].weaponKnocked[weapon]||0)+1;}
+    }
+    if(ev?._T==='LogPlayerKill'){
+      const kn=(ev?.killer?.name||'').toLowerCase();
+      const vn=(ev?.victim?.name||'').toLowerCase();
+      const evTime=ev?.common?.elapsedTime||0;
+      const phase=getCirclePhase(evTime,circlePhases);
+      const dist=Math.round(safeInt(ev?.distance)/100);
+      const weapon=cleanWeaponName(ev?.damageCauserName||ev?.killerWeapon||'');
+      if(analysis[kn]){analysis[kn].events.push({type:'kill',time:evTime,phase,victim:ev?.victim?.name||'unknown',dist,weapon});analysis[kn].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[kn].weaponKills[weapon]=(analysis[kn].weaponKills[weapon]||0)+1;}
+      if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'died',time:evTime,phase,by:ev?.killer?.name||'unknown',dist,isEarly});}
+    }
+    if(ev?._T==='LogPlayerTakeDamage'){
+      const vn=(ev?.victim?.name||'').toLowerCase();
+      const an=(ev?.attacker?.name||'').toLowerCase();
+      const evTime=ev?.common?.elapsedTime||0;
+      const phase=getCirclePhase(evTime,circlePhases);
+      const dmg=safeInt(ev?.damage);
+      const weapon=cleanWeaponName(ev?.damageCauserName||'');
+      if(analysis[vn]&&String(ev?.damageTypeCategory||'').toLowerCase().includes('zone')){analysis[vn].zoneIssues++;analysis[vn].events.push({type:'zone_damage',time:evTime,phase});}
+      if(analysis[an]&&weapon&&weapon!=='Unknown'&&dmg>0)analysis[an].weaponDamage[weapon]=(analysis[an].weaponDamage[weapon]||0)+dmg;
+    }
+  }
+  for(const n of teamNamesLower){const d=analysis[n].distances;analysis[n].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;}
+  return analysis;
+}
+
+// ===================== ARCHETYPES =====================
+const ARCHETYPES={
+  chicken:{icon:'🐔',label:'Gaina Sesiunii',color:'#ffcc00'},
+  camper:{icon:'🌿',label:'Bush Camper',color:'#7ed85b'},
+  hitrun:{icon:'💨',label:'Hit & Run',color:'#aaaaaa'},
+  spray:{icon:'🎯',label:'Spray & Pray',color:'#ff9f1a'},
+  lootgoblin:{icon:'📦',label:'Loot Goblin',color:'#cc88ff'},
+  carry:{icon:'👑',label:'Carry',color:'#ffd700'},
+  fragger:{icon:'🔥',label:'Fragger',color:'#ff4d4f'},
+  igl:{icon:'🧠',label:'IGL / Support',color:'#4da6ff'},
+  entry:{icon:'⚡',label:'Entry Fragger',color:'#ffe066'},
+  clutch:{icon:'🎖',label:'Clutch King',color:'#ffd700'},
+  solid:{icon:'⚖',label:'Solid Player',color:'#9aa3b2'},
+  roleplay:{icon:'🧩',label:'Role Player',color:'#88ccff'},
+  lowimpact:{icon:'📉',label:'Low Impact',color:'#ff6666'}
+};
+
+function detectArchetype(t, rankingStats, isMvp, combatData) {
+  const m=Math.max(t.matches||1,1);
+  const avgKills=t.kills/m,avgDmg=t.damage/m,avgDowns=t.downs/m;
+  const avgRevives=t.revives/m,avgAssists=t.assists/m,avgKnocks=(t.knocksTaken||0)/m;
+  const winRate=(t.wins/m)*100,finishRate=t.downs>0?t.kills/t.downs:0;
+  const earlyDeaths=combatData?.earlyDeaths||0,zoneIssues=combatData?.zoneIssues||0;
+  if(isMvp&&avgKills>=3) return 'carry';
+  if(avgKills>=3&&avgDowns>=2.5) return 'fragger';
+  if(avgRevives>=1.2||avgAssists>=2) return 'igl';
+  if(avgDowns>=2&&avgDmg>=400&&finishRate>=0.7) return 'entry';
+  if(winRate>=25&&avgKnocks<=0.6) return 'clutch';
+  if(avgDmg>=250&&avgKills<0.8&&finishRate<0.3) return 'hitrun';
+  if(avgDmg<120&&avgKills<0.5&&zoneIssues>=2) return 'chicken';
+  if(avgDmg<100&&avgKills<0.5&&avgKnocks<=0.3) return 'camper';
+  if(avgDmg>=200&&t.head<t.body*0.15) return 'spray';
+  if(avgDmg<80&&avgKills<0.3&&t.matches>=3) return 'lootgoblin';
+  if(isMvp) return 'carry';
+  const ratio=rankingStats.bestScore>0?(t.score||0)/rankingStats.bestScore:0;
+  if(ratio>=0.65) return 'solid';
+  if((t.score||0)>=(rankingStats.avgScoreTeam||0)*0.75) return 'roleplay';
+  return 'lowimpact';
+}
+
+function savageAI(name,t,rankingStats,isMvp,combatData){
+  const m=Math.max(t.matches||1,1);
+  const avgDmg=t.damage/m,avgKills=t.kills/m,avgDowns=t.downs/m;
+  const avgRevives=t.revives/m,avgAssists=t.assists/m,avgKnocks=(t.knocksTaken||0)/m,winRate=(t.wins/m)*100;
+  const archetypeKey=detectArchetype(t,rankingStats,isMvp,combatData);
+  const archetype=ARCHETYPES[archetypeKey]||ARCHETYPES.solid;
+  const notes=[];
+  if(avgDmg>=500) notes.push('damage mare');
+  if(avgKills>=3) notes.push('frag bun');
+  if(avgRevives>=1) notes.push('support bun');
+  if(avgAssists>=1.5) notes.push('assist bun');
+  if(winRate>=30) notes.push('win rate bun');
+  if(avgKnocks<=0.5) notes.push('supravietuire buna');
+  if(avgKnocks>=1.5) notes.push('ia knock des');
+  if(avgDowns>avgKills&&t.downs>0) notes.push('opening bun');
+  if(t.matches<(rankingStats.maxMatches||0)) notes.push('mai putine meciuri');
+  if(avgDmg<120&&avgKills<1) notes.push('impact mic');
+  const seed=`${name}|${t.score}|${t.kills}|${t.damage}|${t.downs}|${t.wins}|${t.revives}|${t.assists}|${t.knocksTaken}|${t.matches}`;
+  const msgPools={
+    carry:['A fost clar reperul principal al sesiunii.','A dominat raportul la nivel general.','Cel mai puternic jucator din raport.','A iesit pe primul loc dupa impactul total.'],
+    fragger:['A fost printre cei mai buni din raport.','Impact clar peste restul echipei.','Performanta solida in sesiune.','A tinut nivelul ridicat in echipa.'],
+    igl:['Pilonul de suport al echipei in sesiune.','Revive-urile si assist-urile il fac esential.','Fara el echipa ar fi pierdut mai mult.','Support constant, valoare reala.'],
+    entry:['Deschide fight-urile cu curaj.','Primul in lupta, creeaza spatiu pentru echipa.','Opening-urile lui sunt arma principala.','Agresivitate controlata si eficienta.'],
+    clutch:['Supravietuieste cand altii cad.','Finalizeaza meciurile cu cap.','Cel mai disciplinat in momentele grele.','Castigurile lui vin din rabdare si pozitionare.'],
+    hitrun:['Face damage dar dispare inainte de finish.','Trage si fuge - echipa strange ce lasa in urma.','Mult noise, putin rezultat concret.','Damage-ul lui nu se transforma in kills.'],
+    chicken:['A descoperit ca exista si o viata in afara fight-urilor.','Strategia lui: supravietuiesc deci exist.','A evitat cu succes orice contact direct.','Cea mai lunga ruta ocolita din sesiune.'],
+    camper:['A stat atat de nemicat ca a prins muschi.','Pozitie excelenta. Lipsa completa de actiune.','A descoperit ca bush-ul e cel mai bun prieten.','Invizibil in fight. Invizibil in statistici.'],
+    spray:['Multe gloante, putin efect util.','Crosshair-ul lui are propriile planuri.','Amuzant de urmarit in killcam.','Consuma munitie cu generozitate maxima.'],
+    lootgoblin:['A colectat loot pentru toata echipa.','Inventarul lui e impresionant. Killboard-ul mai putin.','A supravietuit doar ca sa looteze mai bine.','Zero impact, full inventar.'],
+    solid:['A fost stabil si util.','Contributie decenta in echipa.','N-a dominat, dar a ajutat.','Prezenta constanta in meciuri.'],
+    roleplay:['Si-a indeplinit rolul fara sa iasa in evidenta.','Util fara sa fie spectaculos.','Un engrenaj necesar in masinaria echipei.','Prezent acolo unde era nevoie.'],
+    lowimpact:['Sub nivelul echipei in raport.','Impact mai mic decat restul.','A ramas in urma ca aport.','Nu a influentat suficient meciurile.']
+  };
+  const pool=msgPools[archetypeKey]||msgPools.solid;
+  return {archetype,msg:pickLine(pool,seed+'|'+archetypeKey),notes:notes.join(' | '),archetypeKey};
+}
+
+// ===================== PERSONAL IMPROVE =====================
+function buildPersonalImproveTips(t, teamTotals) {
+  const m=Math.max(t.matches||1,1);
+  const avgKills=t.kills/m,avgDmg=t.damage/m,avgDowns=t.downs/m,avgKnocks=(t.knocksTaken||0)/m,winRate=(t.wins/m)*100;
+  const headTotal=(t.head||0)+(t.body||0)+(t.legs||0),headRatio=headTotal>0?t.head/headTotal:0;
+  const teamPlayers=Object.values(teamTotals).filter(p=>!nameEq(p.name,t.name)&&p.matches>0);
+  const teamAvgKills=teamPlayers.length?teamPlayers.reduce((s,p)=>s+p.kills/Math.max(p.matches,1),0)/teamPlayers.length:0;
+  const teamAvgDmg=teamPlayers.length?teamPlayers.reduce((s,p)=>s+p.damage/Math.max(p.matches,1),0)/teamPlayers.length:0;
+  const teamAvgKnocks=teamPlayers.length?teamPlayers.reduce((s,p)=>s+(p.knocksTaken||0)/Math.max(p.matches,1),0)/teamPlayers.length:0;
+  let profile='Balanced player';
+  if(avgKills>=3&&avgDmg>=450) profile='Aggressive fragger';
+  else if(((t.revives||0)+(t.assists||0))/m>=1.6) profile='Support stabilizer';
+  else if(avgKnocks<=0.7&&winRate>=20) profile='Late-game survivor';
+  else if(avgDmg<180&&avgKills<1) profile='Low impact / passive';
+  let insight='Ai un profil relativ echilibrat, dar exista loc clar de optimizare.';
+  if(avgDmg>=350&&avgKills<1.8) insight='Produci damage, dar convertesti prea putin in kills.';
+  else if(avgDowns>avgKills+0.5) insight='Creezi opening-uri, dar nu valorifici suficient finalizarea fight-urilor.';
+  else if(avgKnocks>=1.5) insight='Pierzi prea multa valoare prin expunere si knock-uri primite.';
+  else if(winRate<10&&avgDmg>=300) insight='Ai impact in fight-uri, dar deciziile de mid si late game iti scad rezultatul final.';
+  const strengths=[],weaknesses=[],tips=[];
+  if(avgDmg>=350) strengths.push('Output de damage peste nivelul unui joc pasiv.');
+  if(avgKills>=2.2) strengths.push('Capacitate buna de conversie in kill-uri.');
+  if(avgDowns>=2) strengths.push('Generezi presiune si opening-uri in fight.');
+  if(avgKnocks<=0.8) strengths.push('Supravietuire disciplinata in dueluri.');
+  if(winRate>=20) strengths.push('Finalizezi sesiunile cu rezultate solide.');
+  if(teamAvgKills>0&&avgKills>=teamAvgKills) strengths.push('Kill-urile tale sunt peste media coechipierilor.');
+  if(teamAvgDmg>0&&avgDmg>=teamAvgDmg) strengths.push('Damage-ul tau depaseste media echipei din sesiune.');
+  if(teamAvgKnocks>0&&avgKnocks<=teamAvgKnocks) strengths.push('Te descurci mai bine cu supravietuirea fata de restul echipei.');
+  if(avgDmg>=350&&avgKills<1.8) weaknesses.push('Conversie slaba damage -> kills.');
+  if(avgDowns>avgKills+0.5) weaknesses.push('Nu inchizi suficient avantajele create.');
+  if(avgKnocks>=1.5) weaknesses.push('Te expui prea mult si pierzi valoare defensiv.');
+  if(headRatio<0.18&&headTotal>=10) weaknesses.push('Prea putine hituri curate pe cap.');
+  if(winRate<10&&m>=4) weaknesses.push('Executia de mid/late game nu transforma impactul in rezultat.');
+  if(teamAvgKills>0&&avgKills<teamAvgKills) weaknesses.push('Kill-urile tale sunt sub media coechipierilor din sesiune.');
+  if(teamAvgDmg>0&&avgDmg<teamAvgDmg) weaknesses.push('Damage-ul tau ramane sub media echipei.');
+  if(avgDmg>=350&&avgKills<1.8) tips.push('Dupa primul knock, prioritizeaza finish-ul sau impingerea coordonata.');
+  if(avgKnocks>=1.5) tips.push('Redu iesirile fara info si repozitioneaza imediat dupa primul schimb de damage.');
+  if(headRatio<0.18&&headTotal>=10) tips.push('Tine crosshair-ul mai sus in rotatii si in pre-aim, nu la nivel de piept.');
+  if(winRate<10&&avgDmg>=300) tips.push('Joaca mai disciplinat dupa mid-game si evita fight-urile inutile.');
+  if(tips.length<3) tips.push('Revizuieste fight-urile pierdute si cauta modelul repetitiv: expunere, timing sau lipsa de follow-up.');
+  if(tips.length<3) tips.push('Incearca sa transformi fiecare avantaj mic in presiune reala, nu doar in damage schimbat.');
+  return {profile,insight,strengths:strengths.slice(0,4),weaknesses:weaknesses.slice(0,4),tips:tips.slice(0,3)};
+}
+
+// ===================== STREAKS =====================
+function detectStreaks(matchesFiltered, playerName) {
+  let killStreak=0,maxKillStreak=0,zeroKillStreak=0,maxZeroStreak=0,bestMatchIdx=-1,bestMatchScore=-1;
+  const hourBuckets={};
+  matchesFiltered.forEach((match,idx)=>{
+    const p=match.teamStats.find(x=>nameEq(x.name,playerName));
+    if(!p) return;
+    const score=p.kills*12+p.damage*0.015+p.downs*6;
+    if(score>bestMatchScore){bestMatchScore=score;bestMatchIdx=idx;}
+    if(p.kills>0){killStreak++;zeroKillStreak=0;}
+    else{maxKillStreak=Math.max(maxKillStreak,killStreak);killStreak=0;zeroKillStreak++;maxZeroStreak=Math.max(maxZeroStreak,zeroKillStreak);}
+    const hour=new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',hour:'2-digit',hour12:false}).format(match.createdAt);
+    if(!hourBuckets[hour]) hourBuckets[hour]={score:0,count:0};
+    hourBuckets[hour].score+=score;hourBuckets[hour].count+=1;
+  });
+  maxKillStreak=Math.max(maxKillStreak,killStreak);
+  maxZeroStreak=Math.max(maxZeroStreak,zeroKillStreak);
+  let bestHour=null,bestHourAvg=0;
+  for(const[h,v] of Object.entries(hourBuckets)){const avg=v.score/v.count;if(avg>bestHourAvg){bestHourAvg=avg;bestHour=h;}}
+  return {maxKillStreak,maxZeroStreak,bestMatchIdx,bestHour};
+}
+
+// ===================== TACTICAL PROFILE =====================
+function buildTacticalProfile(combatData, totalMatches) {
+  const avgDist=combatData.avgEngagementDistance||0;
+  const earlyDeaths=combatData.earlyDeaths||0,zoneIssues=combatData.zoneIssues||0;
+  const knocked=(combatData.events||[]).filter(e=>e.type==='knocked').length;
+  const avgKnocks=totalMatches>0?knocked/totalMatches:0;
+  let style='',styleColor='#9aa3b2',tips=[];
+  if(avgDist>200){
+    style='🔭 Sniper / Jucator pasiv de distanta';styleColor='#4da6ff';
+    tips.push('Distanta medie mare — te pozitionezi departe de fight-uri.');
+    if(earlyDeaths>=2) tips.push('Totusi intri in contact devreme si mori — inconsistenta de pozitionare.');
+    tips.push('Incearca sa reduci distanta in fight-urile unde ai avantaj de info.');
+  } else if(avgDist>80){
+    style='🎯 Mid-range / Echilibrat';styleColor='#7ed85b';
+    tips.push('Distanta de engagement echilibrata — bun semn tactic.');
+    if(avgKnocks>=1.5) tips.push('Dar iei prea multe knock-uri — expunere mare chiar si la distanta medie.');
+  } else if(avgDist>0){
+    style='💥 Close range / Agresiv';styleColor='#ff9f1a';
+    tips.push('Joci in close range constant — agresivitate mare.');
+    if(avgKnocks>=1.5) tips.push('Close range + knock-uri dese = te expui fara suficient avantaj.');
+    else tips.push('Agresivitate buna daca supravietuiesti in dueluri directe.');
+  }
+  if(zoneIssues>=3) tips.push(`Ai luat damage de zona in ${zoneIssues} situatii — rotezi tarziu, urmareste minimap-ul mai des.`);
+  else if(zoneIssues>=1) tips.push(`${zoneIssues} situatie(ii) cu damage de zona — atentie la rotatie in mid/late game.`);
+  if(earlyDeaths>=3) tips.push(`Mori devreme des (${earlyDeaths}x) — evita fight-urile din primele 5 minute fara avantaj clar.`);
+  if(!style) style='⚖ Stil nedefinit — prea putine date';
+  return {style,styleColor,tips:tips.slice(0,4)};
+}
+
+// ===================== TARGET SVG =====================
+function renderTargetSvg(head,body,legs,unknown) {
+  const total=Math.max(head+body+legs+unknown,1);
+  function rw(h){return Math.min(3+(h/total)*16,20);}
+  function ro(h){return Math.min(0.25+(h/total)*0.7,0.92).toFixed(2);}
+  const hw=rw(head),ho=ro(head),bw=rw(body),bo=ro(body),lw=rw(legs),lo=ro(legs),uw=rw(unknown),uo=ro(unknown);
+  return `<svg width="130" height="210" viewBox="0 0 170 265" xmlns="http://www.w3.org/2000/svg">
+<defs><filter id="sg"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<circle cx="85" cy="42" r="22" fill="#111"/>
+<path d="M58 65 Q85 54 112 65 L118 155 Q85 168 52 155 Z" fill="#111"/>
+<rect x="62" y="155" width="16" height="80" rx="4" fill="#111"/>
+<rect x="92" y="155" width="16" height="80" rx="4" fill="#111"/>
+<circle cx="85" cy="42" r="22" fill="rgba(255,77,79,${ho})" stroke="#ff4d4f" stroke-width="${hw}" filter="url(#sg)" opacity="${ho}"/>
+<ellipse cx="85" cy="108" rx="30" ry="47" fill="rgba(255,159,26,${bo})" stroke="#ff9f1a" stroke-width="${bw}" filter="url(#sg)" opacity="${bo}"/>
+<ellipse cx="85" cy="200" rx="26" ry="38" fill="rgba(77,166,255,${lo})" stroke="#4da6ff" stroke-width="${lw}" filter="url(#sg)" opacity="${lo}"/>
+${unknown>0?`<circle cx="148" cy="24" r="${Math.min(6+(unknown/total)*10,16)}" fill="rgba(180,180,180,${uo})" stroke="#999" stroke-width="${uw}" opacity="${uo}"/><text x="148" y="28" text-anchor="middle" font-size="9" fill="#aaa">?</text>`:''}
+</svg>`;
+}
+
+// ===================== GLOBAL BENCHMARKS =====================
+const GB={avgKills:{top10:3.5,top25:2.2,top50:1.2},avgDamage:{top10:500,top25:320,top50:180},winRate:{top10:8,top25:4,top50:1.5},kd:{top10:3.2,top25:1.8,top50:0.9}};
+function calcPercentile(v,b){if(v>=b.top10) return{label:'Top 10%',color:'#ffd700'};if(v>=b.top25) return{label:'Top 25%',color:'#4da6ff'};if(v>=b.top50) return{label:'Top 50%',color:'#7ed85b'};return{label:'Bottom 50%',color:'#ff4d4f'};}
+
+// ===================== HTML BUILDERS =====================
+function buildGlobalComparisonHtml(seasonStats) {
+  if(!seasonStats) return '';
+  const modes=['squad','squad-fpp','duo','duo-fpp','solo','solo-fpp'];
+  let totalKills=0,totalDmg=0,totalWins=0,totalRounds=0,totalDeaths=0;
+  for(const mode of modes){const s=seasonStats[mode];if(!s) continue;totalKills+=safeInt(s.kills);totalDmg+=safeInt(s.damageDealt);totalWins+=safeInt(s.wins);totalRounds+=safeInt(s.roundsPlayed);totalDeaths+=safeInt(s.losses);}
+  if(!totalRounds) return '';
+  const avgK=totalKills/totalRounds,avgD=totalDmg/totalRounds,wr=(totalWins/totalRounds)*100,kd=totalDeaths>0?totalKills/totalDeaths:totalKills;
+  const pK=calcPercentile(avgK,GB.avgKills),pD=calcPercentile(avgD,GB.avgDamage),pW=calcPercentile(wr,GB.winRate),pKD=calcPercentile(kd,GB.kd);
+  return `<div class="global-box">
+    <div class="section-title">🌍 Global Ranking (Season)</div>
+    <div class="global-grid">
+      <div class="global-card"><div class="global-label">AVG Kills</div><div class="global-val">${safeNum(avgK,2)}</div><div class="global-pct" style="color:${pK.color}">${pK.label}</div></div>
+      <div class="global-card"><div class="global-label">AVG Damage</div><div class="global-val">${safeNum(avgD,0)}</div><div class="global-pct" style="color:${pD.color}">${pD.label}</div></div>
+      <div class="global-card"><div class="global-label">Win Rate</div><div class="global-val">${safeNum(wr,1)}%</div><div class="global-pct" style="color:${pW.color}">${pW.label}</div></div>
+      <div class="global-card"><div class="global-label">K/D</div><div class="global-val">${safeNum(kd,2)}</div><div class="global-pct" style="color:${pKD.color}">${pKD.label}</div></div>
+    </div>
+  </div>`;
+}
+
+function buildCombatInsightHtml(data, playerName, totalMatches) {
+  if(!data||!data.events.length) return '';
+  const negEvents=data.events.filter(e=>e.type==='knocked'||e.type==='died'||e.type==='zone_damage').slice(0,4);
+  const knockedCount=data.events.filter(e=>e.type==='knocked').length;
+  let topMistake=null;
+  if(data.zoneIssues>=2) topMistake={icon:'📍',label:'IN AFARA ZONEI',color:'#ff9f1a'};
+  else if(data.earlyDeaths>=2) topMistake={icon:'⏰',label:'ENGAGEMENT PREA DEVREME',color:'#ff4d4f'};
+  else if(data.avgEngagementDistance>200) topMistake={icon:'🎯',label:'SNIPER PASIV',color:'#4da6ff'};
+  else if(negEvents.length>=3) topMistake={icon:'⚠',label:'EXPUS IN FIGHT',color:'#ffcc00'};
+  const parts=[];
+  if(data.earlyDeaths>=2) parts.push(`in ${data.earlyDeaths} meciuri ai intrat in fight prea devreme`);
+  if(data.zoneIssues>=2) parts.push(`in ${data.zoneIssues} meciuri ai luat damage de zona`);
+  if(data.avgEngagementDistance>200) parts.push(`distanta medie ${data.avgEngagementDistance}m - joci de la distanta`);
+  else if(data.avgEngagementDistance>0&&data.avgEngagementDistance<=50) parts.push(`distanta medie ${data.avgEngagementDistance}m - joci in close range`);
+  if(knockedCount>0) parts.push(`ai fost knocked de ${knockedCount} ori`);
+  const conclusion=parts.length>0?`📋 <b>Concluzie (${totalMatches} meciuri):</b> ${parts.join('; ')}.`:`📋 <b>Concluzie (${totalMatches} meciuri):</b> Combat stabil, fara pattern negativ clar.`;
+  const tactical=buildTacticalProfile(data,totalMatches);
+  const timelineEvents=data.events.slice(0,6);
+  const maxTime=timelineEvents.length?Math.max(...timelineEvents.map(e=>e.time),1):1;
+  const timelineDots=timelineEvents.map(e=>{
+    const pct=Math.round((e.time/maxTime)*100);
+    const color=e.type==='kill'?'#7ed85b':e.type==='knocked'||e.type==='died'?'#ff4d4f':'#ff9f1a';
+    const label=e.type==='kill'?'K':e.type==='knocked'?'KD':e.type==='died'?'X':'Z';
+    return `<div class="tl-dot" style="left:${pct}%;background:${color}">${label}</div>`;
+  }).join('');
+  const eventLines=negEvents.map(e=>{
+    if(e.type==='knocked') return `<div class="ca-event ca-neg">Knocked in ${circlePhaseLabel(e.phase)}${e.isEarly?' - engagement prea devreme':''} (dist: ${e.dist}m)</div>`;
+    if(e.type==='died') return `<div class="ca-event ca-neg">Eliminat in ${circlePhaseLabel(e.phase)}${e.isEarly?' - prea devreme':''} (dist: ${e.dist}m)</div>`;
+    if(e.type==='zone_damage') return `<div class="ca-event ca-warn">Damage de zona in ${circlePhaseLabel(e.phase)}</div>`;
+    return '';
+  }).join('');
+  return `<div class="ca-player-block">
+    ${topMistake?`<div class="mistake-badge" style="border-color:${topMistake.color};color:${topMistake.color}">${topMistake.icon} ${topMistake.label}</div>`:''}
+    <div class="ca-conclusion">${conclusion}</div>
+    <div class="tactical-profile" style="border-left-color:${tactical.styleColor}">
+      <div class="tactical-style" style="color:${tactical.styleColor}">${tactical.style}</div>
+      <ul class="tactical-tips">${tactical.tips.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul>
+    </div>
+    <div class="ca-timeline"><div class="tl-bar">${timelineDots}</div><div class="tl-labels"><span>Start</span><span>End</span></div></div>
+    ${eventLines}
+    ${data.avgEngagementDistance>0?`<div class="ca-stat">Distanta medie engagement: ${data.avgEngagementDistance}m</div>`:''}
+  </div>`;
+}
+
+function buildWeaponSummaryHtml(data) {
+  if(!data) return '';
+  const killEntries=Object.entries(data.weaponKills||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const dmgEntries=Object.entries(data.weaponDamage||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(!killEntries.length&&!dmgEntries.length) return '';
+  const topWeapon=killEntries.length?killEntries[0][0]:(dmgEntries.length?dmgEntries[0][0]:null);
+  const killRows=killEntries.map(([w,k])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(w)}</span><span class="weapon-kills">${k}K</span></div>`).join('');
+  const dmgRows=dmgEntries.map(([w,d])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(w)}</span><span class="weapon-dmg">${Math.round(d)}</span></div>`).join('');
+  return `<div class="weapon-box">
+    <div class="section-title" style="font-size:12px">🔫 Arme folosite</div>
+    ${topWeapon?`<div class="weapon-top">Arma preferata: <b style="color:#ffd700">${escHtml(topWeapon)}</b></div>`:''}
+    <div class="weapon-cols">
+      ${killRows?`<div class="weapon-col"><div class="weapon-col-title">Top kills</div>${killRows}</div>`:''}
+      ${dmgRows?`<div class="weapon-col"><div class="weapon-col-title">Top damage</div>${dmgRows}</div>`:''}
+    </div>
+  </div>`;
+}
+
+// ===================== MAIN RUN =====================
+async function runReport() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const playerName = document.getElementById('playerName').value.trim();
+  if(!apiKey || !playerName) { alert('Introdu API Key si Username!'); return; }
+
+  // Save key
+  saveApiKey(apiKey);
+  document.getElementById('savedKeyNote').style.display = 'inline';
+
+  const platform = state.platform;
+  const reportType = state.reportType;
+  const detailLevel = state.detailLevel;
+  const rangeVal = state.range;
+
+  let fromDate, toDate;
+  if(rangeVal === 'custom') {
+    const fv = document.getElementById('fromDate').value;
+    const tv = document.getElementById('toDate').value;
+    if(!fv || !tv) { alert('Selecteaza intervalul custom!'); return; }
+    fromDate = new Date(fv);
+    toDate = new Date(tv);
+    if(toDate <= fromDate) { alert('Data finala trebuie sa fie dupa cea initiala!'); return; }
+  }
+
+  const extra1 = document.getElementById('extra1').value.trim();
+  const extra2 = document.getElementById('extra2').value.trim();
+  const extraPlayers = reportType === 'team' ? [extra1, extra2].filter(x => x && !nameEq(x, playerName)) : [];
+
+  function isInRange(date) {
+    if(rangeVal === 'custom') return date >= fromDate && date <= toDate;
+    const hours = parseInt(rangeVal);
+    const diff = Date.now() - date.getTime();
+    return diff >= 0 && diff <= hours * 3600000;
+  }
+
+  // Show progress
+  document.getElementById('setupWrap').style.display = 'none';
+  document.getElementById('progressWrap').classList.add('show');
+  document.getElementById('report').classList.remove('show');
+  document.getElementById('report').innerHTML = '';
+  logEl = document.getElementById('progressLog');
+  barEl = document.getElementById('progressBar');
+
+  try {
+    logMsg('Conectare la PUBG API...');
+    setProgress(5);
+
+    // Fetch player
+    logMsg(`Cautare player: ${playerName}...`);
+    let playerRes;
+    try {
+      playerRes = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${encodeURIComponent(playerName)}`, apiKey);
+    } catch(e) {
+      throw new Error('CORS sau API Key invalid. Verifica cheia API si incearca dintr-un browser care permite CORS.');
+    }
+
+    if(!playerRes.data?.length) throw new Error('Playerul nu a fost gasit pe aceasta platforma.');
+    const player = playerRes.data[0];
+    const playerId = player.id;
+    const matchRefs = player.relationships?.matches?.data || [];
+    logMsg(`Player gasit: ${playerName} (${matchRefs.length} meciuri recente)`, 'ok');
+    setProgress(10);
+
+    // Season + Leaderboard
+    let seasonStats = null, globalLeaderboard = [];
+    logMsg('Fetch season ID...');
+    const seasonId = await fetchSeasonId(platform, apiKey);
+    if(seasonId) {
+      logMsg(`Season: ${seasonId}`, 'ok');
+      if(reportType === 'personal') {
+        logMsg('Fetch season stats...');
+        seasonStats = await fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId);
+      }
+      if(detailLevel === 'detailed') {
+        logMsg('Fetch global leaderboard (top 100 kills)...');
+        globalLeaderboard = await fetchGlobalLeaderboard(platform, apiKey, seasonId);
+        logMsg(`Leaderboard: ${globalLeaderboard.length} jucatori`, globalLeaderboard.length ? 'ok' : 'warn');
+      }
+    }
+    setProgress(20);
+
+    // Fetch matches
+    const surprizeVictims = [];
+    let matchesFiltered = [];
+    const total = matchRefs.length;
+
+    for(let i = 0; i < total; i++) {
+      const matchRef = matchRefs[i];
+      setProgress(20 + Math.round((i / total) * 65));
+      let matchRes;
+      try { matchRes = await apiGet(`https://api.pubg.com/shards/${platform}/matches/${matchRef.id}`, apiKey); }
+      catch(e) { continue; }
+
+      const createdAt = new Date(matchRes.data?.attributes?.createdAt || 0);
+      if(!createdAt || isNaN(createdAt.getTime())) continue;
+      if(!isInRange(createdAt)) continue;
+
+      // Ranked only
+      const matchType = (matchRes.data?.attributes?.matchType || '').toLowerCase();
+      if(matchType !== 'competitive') continue;
+
+      logMsg(`Meci ${matchesFiltered.length + 1}: ${shortMapName(matchRes.data?.attributes?.mapName)} @ ${formatRoTime(createdAt)}`);
+
+      const included = matchRes.included || [];
+      const participants = included.filter(x => x.type === 'participant');
+      const rosters = included.filter(x => x.type === 'roster');
+      const myParticipant = participants.find(p => nameEq(p.attributes?.stats?.name, playerName));
+      if(!myParticipant) continue;
+      const myRoster = rosters.find(r => (r.relationships?.participants?.data?.map(x => x.id) || []).includes(myParticipant.id));
+      if(!myRoster) continue;
+      const teamIds = myRoster.relationships?.participants?.data?.map(x => x.id) || [];
+      const teamParticipants = teamIds.map(id => participants.find(p => p.id === id)).filter(Boolean);
+      const teamStats = teamParticipants.map(p => ({
+        name: p.attributes?.stats?.name || 'Unknown',
+        kills: safeInt(p.attributes?.stats?.kills),
+        damage: safeInt(p.attributes?.stats?.damageDealt),
+        assists: safeInt(p.attributes?.stats?.assists),
+        revives: safeInt(p.attributes?.stats?.revives),
+        downs: safeInt(p.attributes?.stats?.dBNOs ?? p.attributes?.stats?.DBNOs ?? 0),
+        knocksTaken: 0, head: 0, body: 0, legs: 0, unknown: 0
+      }));
+
+      let matchCombatData = null;
+      if(detailLevel === 'detailed') {
+        const telemetryUrl = (() => {
+          const asset = included.find(x => x.type === 'asset' && (x.attributes?.name === 'telemetry' || x.attributes?.URL));
+          return asset?.attributes?.URL || null;
+        })();
+        if(telemetryUrl) {
+          try {
+            logMsg(`  → Telemetry...`);
+            const telemetry = await apiGet(telemetryUrl, apiKey, false);
+            const teamNamesLower = teamStats.map(x => x.name.toLowerCase());
+            const circlePhases = extractCirclePhases(telemetry);
+            for(const ev of telemetry) {
+              if(ev?._T === 'LogPlayerMakeGroggy') {
+                const vn = (ev?.victim?.name || '').toLowerCase();
+                const idx = teamNamesLower.indexOf(vn);
+                if(idx >= 0) teamStats[idx].knocksTaken += 1;
+              }
+              if(ev?._T === 'LogPlayerTakeDamage') {
+                const an = (ev?.attacker?.name || '').toLowerCase();
+                const idx = teamNamesLower.indexOf(an);
+                if(idx >= 0) {
+                  const z = classifyDamageReason(ev?.damageReason);
+                  if(z === 'head') teamStats[idx].head++;
+                  else if(z === 'body') teamStats[idx].body++;
+                  else if(z === 'legs') teamStats[idx].legs++;
+                  else teamStats[idx].unknown++;
+                }
+              }
+              if(ev?._T === 'LogPlayerKill' && globalLeaderboard.length) {
+                const killerName = ev?.killer?.name || '';
+                const victimName = ev?.victim?.name || '';
+                const isTeamKill = teamStats.some(x => nameEq(x.name, killerName));
+                if(isTeamKill) {
+                  const gIdx = globalLeaderboard.findIndex(x => nameEq(x.name, victimName));
+                  if(gIdx !== -1) {
+                    surprizeVictims.push({killerName, victimName, globalRank: gIdx + 1, kills: globalLeaderboard[gIdx].kills, mapName: shortMapName(matchRes.data?.attributes?.mapName), time: formatRoTime(createdAt)});
+                    logMsg(`  ⭐ SURPRIZE: ${killerName} a eliminat Top ${gIdx+1} global!`, 'ok');
+                  }
+                }
+              }
+            }
+            matchCombatData = buildCombatAnalysis(telemetry, teamNamesLower, circlePhases);
+          } catch(e) { logMsg('  → Telemetry indisponibil', 'warn'); }
+        }
+      }
+
+      matchesFiltered.push({
+        createdAt,
+        mapName: shortMapName(matchRes.data?.attributes?.mapName),
+        mode: matchRes.data?.attributes?.gameMode || '-',
+        duration: safeInt(matchRes.data?.attributes?.duration),
+        rank: safeInt(myRoster.attributes?.stats?.rank),
+        teamStats, combatData: matchCombatData
+      });
+    }
+
+    matchesFiltered.sort((a, b) => a.createdAt - b.createdAt);
+    setProgress(88);
+
+    if(!matchesFiltered.length) throw new Error(`Nu exista meciuri ranked in intervalul selectat.`);
+    logMsg(`Total meciuri ranked gasite: ${matchesFiltered.length}`, 'ok');
+
+    // Build totals
+    let allTeamPlayers = [];
+    for(const match of matchesFiltered)
+      for(const p of match.teamStats)
+        if(!allTeamPlayers.some(x => nameEq(x, p.name))) allTeamPlayers.push(p.name);
+
+    let displayPlayers = reportType === 'personal' ? [playerName] : (() => {
+      let all = [...allTeamPlayers];
+      const forced = [playerName, ...extraPlayers];
+      for(const f of forced) if(!all.some(x => nameEq(x, f))) all.push(f);
+      return [playerName, ...extraPlayers.filter(n => !nameEq(n, playerName)), ...all.filter(n => !nameEq(n, playerName) && !extraPlayers.some(e => nameEq(e, n)))];
+    })();
+
+    const totals = {}, zeroLines = {};
+    for(const name of allTeamPlayers) { totals[name] = emptyPlayerStat(name); zeroLines[name] = 0; }
+
+    const aggregatedCombat = {};
+    for(const name of allTeamPlayers) aggregatedCombat[name.toLowerCase()] = {events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{}};
+
+    for(const match of matchesFiltered) {
+      for(const name of allTeamPlayers) {
+        const p = match.teamStats.find(x => nameEq(x.name, name));
+        if(!p) continue;
+        totals[name].kills += p.kills; totals[name].damage += p.damage;
+        totals[name].assists += p.assists; totals[name].revives += p.revives;
+        totals[name].downs += p.downs; totals[name].knocksTaken += p.knocksTaken;
+        totals[name].head += p.head; totals[name].body += p.body;
+        totals[name].legs += p.legs; totals[name].unknown += p.unknown;
+        totals[name].matches += 1;
+        if(match.rank === 1) totals[name].wins += 1;
+        if(!p.kills && !p.damage && !p.assists && !p.downs && !p.knocksTaken) zeroLines[name] += 1;
+      }
+      if(match.combatData) {
+        for(const key of Object.keys(match.combatData)) {
+          if(!aggregatedCombat[key]) continue;
+          const src = match.combatData[key];
+          aggregatedCombat[key].events.push(...src.events);
+          aggregatedCombat[key].earlyDeaths += src.earlyDeaths;
+          aggregatedCombat[key].zoneIssues += src.zoneIssues;
+          aggregatedCombat[key].distances.push(...src.distances);
+          for(const[w,v] of Object.entries(src.weaponKills||{})) aggregatedCombat[key].weaponKills[w]=(aggregatedCombat[key].weaponKills[w]||0)+v;
+          for(const[w,v] of Object.entries(src.weaponDamage||{})) aggregatedCombat[key].weaponDamage[w]=(aggregatedCombat[key].weaponDamage[w]||0)+v;
+          for(const[w,v] of Object.entries(src.weaponKnocked||{})) aggregatedCombat[key].weaponKnocked[w]=(aggregatedCombat[key].weaponKnocked[w]||0)+v;
+        }
+      }
+    }
+    for(const key of Object.keys(aggregatedCombat)){const d=aggregatedCombat[key].distances;aggregatedCombat[key].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;}
+
+    const leaderboard = Object.values(totals).map(t => {
+      const score = t.kills*12+t.damage*0.015+t.downs*6+t.wins*40+t.assists*4+t.revives*5-(t.knocksTaken||0)*5;
+      return {...t, score, zeroLine: zeroLines[t.name]||0};
+    }).sort((a,b) => b.score - a.score);
+
+    const top3 = leaderboard.slice(0,3);
+    const mvp = leaderboard[0] || emptyPlayerStat(playerName);
+    const mainTotals = totals[playerName] || emptyPlayerStat(playerName);
+    const overallMatches = Math.max(mainTotals.matches||1,1);
+    const bestScore = leaderboard.length ? leaderboard[0].score : 0;
+    const avgScoreTeam = leaderboard.reduce((a,p)=>a+p.score,0)/Math.max(leaderboard.length,1);
+    const maxMatches = Math.max(...leaderboard.map(p=>p.matches||0),1);
+    const rankingStats = {bestScore, avgScoreTeam, maxMatches};
+    const streaks = detectStreaks(matchesFiltered, playerName);
+    const colors = ['#5f4b66','#6a4e00','#2c4563','#4b5d2a','#613c3c','#54436b'];
+
+    // ── Build HTML ──
+    setProgress(95);
+    logMsg('Generare raport HTML...', 'ok');
+
+    const rangeText = rangeVal === 'custom' ? `${formatRoDateTime(fromDate)} - ${formatRoDateTime(toDate)}` : `${rangeVal}h`;
+    const firstTime = formatRoTime(matchesFiltered[0].createdAt);
+    const lastTime = formatRoTime(matchesFiltered[matchesFiltered.length-1].createdAt);
+
+    // Hero
+    const mainWinRate = (mainTotals.wins/overallMatches)*100;
+    const heroCards = reportType === 'personal' ? [
+      ['Main player', playerName],
+      ['Total kills', mainTotals.kills],
+      ['Total damage', Math.round(mainTotals.damage)],
+      ['Win rate', safeNum(mainWinRate,1)+'%'],
+      ['AVG kills', safeNum(mainTotals.kills/overallMatches,2)],
+      ['AVG damage', safeNum(mainTotals.damage/overallMatches,2)],
+      ['Meciuri ranked', matchesFiltered.length],
+      ['Mode', detailLevel.toUpperCase()]
+    ] : [
+      ['Tracked players', leaderboard.length],
+      ['Report', 'TEAM'],
+      ['MVP', mvp.name],
+      ['Best score', safeNum(bestScore,0)],
+      ['Avg score', safeNum(avgScoreTeam,0)],
+      ['Meciuri ranked', matchesFiltered.length],
+      ['Main player', playerName],
+      ['Mode', detailLevel.toUpperCase()]
+    ];
+
+    const heroHtml = `<div class="hero-grid">${heroCards.map(([l,v])=>`<div class="hero-card"><div class="hero-label">${l}</div><div class="hero-value">${escHtml(String(v))}</div></div>`).join('')}</div>`;
+
+    // Podium
+    const podiumHtml = reportType === 'team' ? `
+      <div class="section-title">🏆 Podium</div>
+      <div class="podium">${top3.map((p,i)=>{
+        const cls=['gold','silver','bronze'][i]||'';
+        const icon=['🥇','🥈','🥉'][i]||'';
+        return `<div class="podium-card ${cls}"><div class="podium-icon">${icon}</div><div class="podium-name">${escHtml(p.name)}</div><div class="podium-stats">${p.kills}K &nbsp; ${Math.round(p.damage)}D &nbsp; ${p.downs}Down &nbsp; ${p.knocksTaken}Taken</div></div>`;
+      }).join('')}</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;">⭐ MVP: <b style="color:var(--gold)">${escHtml(mvp.name)}</b> — ${mvp.kills}K &nbsp; ${Math.round(mvp.damage)}D &nbsp; ${mvp.downs}Down &nbsp; ${mvp.knocksTaken}Taken</div>` : '';
+
+    // Table
+    let headerTop = `<th rowspan="2">#</th>`;
+    let headerBottom = '';
+    displayPlayers.forEach((name, i) => {
+      const color = colors[i % colors.length];
+      headerTop += `<th colspan="6" style="background:${color};color:#fff;">${escHtml(name)}</th>`;
+      headerBottom += `<th style="background:${color};color:#fff;">Kill</th><th style="background:${color};color:#fff;">Dmg</th><th style="background:${color};color:#fff;">Asst</th><th style="background:${color};color:#fff;">Rev</th><th style="background:${color};color:#fff;">Down</th><th style="background:${color};color:#fff;">KTkn</th>`;
+    });
+    headerTop += `<th rowspan="2">Map</th><th rowspan="2">Ora</th><th rowspan="2">Loc</th><th rowspan="2">Status</th>`;
+
+    function cellFor(match, name) {
+      const p = match.teamStats.find(x => nameEq(x.name, name));
+      if(!p) return '<td class="absent">-</td>'.repeat(6);
+      return `<td>${p.kills}</td><td>${Math.round(p.damage)}</td><td>${p.assists}</td><td>${p.revives}</td><td>${p.downs}</td><td>${p.knocksTaken}</td>`;
+    }
+    let rows = matchesFiltered.map((match, idx) => {
+      const isWinner = match.rank === 1;
+      return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?'🍗 Chicken Dinner':''}</td></tr>`;
+    }).join('');
+
+    let totalRow='<tr><td><b>Total</b></td>';
+    let avgRow='<tr><td><b>AVG</b></td>';
+    let winRow='<tr><td><b>Wins</b></td>';
+    let zeroRow='<tr><td><b>Zero</b></td>';
+    let playedRow='<tr><td><b>Played</b></td>';
+    let missedRow='<tr><td><b>Missed</b></td>';
+    displayPlayers.forEach(name=>{
+      const t=totals[name]||emptyPlayerStat(name);
+      totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;
+      avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;
+      winRow+=`<td colspan="6">${t.wins}</td>`;
+      zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;
+      playedRow+=`<td colspan="6">${t.matches}</td>`;
+      missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;
+    });
+    const tableHtml = `
+      <div class="section-title">📊 Match Table</div>
+      <div class="table-wrap"><table>
+        <tr>${headerTop}</tr><tr>${headerBottom}</tr>
+        ${rows}
+        ${totalRow}<td colspan="4"></td></tr>
+        ${avgRow}<td colspan="4"></td></tr>
+        ${winRow}<td colspan="4"></td></tr>
+        ${zeroRow}<td colspan="4"></td></tr>
+        ${playedRow}<td colspan="4"></td></tr>
+        ${missedRow}<td colspan="4"></td></tr>
+      </table></div>`;
+
+    // AI
+    const withAI = (reportType === 'personal' ? [totals[playerName]].filter(Boolean) : leaderboard).map((p,idx)=>{
+      const combatKey = p.name.toLowerCase();
+      const combat = aggregatedCombat[combatKey]||null;
+      const isMvp = reportType === 'team' ? idx === 0 : false;
+      const ai = savageAI(p.name, p, rankingStats, isMvp, combat);
+      const target = detailLevel === 'detailed' ? renderTargetSvg(p.head||0,p.body||0,p.legs||0,p.unknown||0) : '';
+      return {...p, ai, target};
+    });
+
+    const aiHtml = `
+      <div class="section-title">🤖 AI Analysis</div>
+      <div class="ai-grid">${withAI.map(p=>{
+        const arch=p.ai.archetype;
+        const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';
+        return `<div class="ai-card ${isMvpCard?'mvp':''}">
+          <div class="ai-name">${escHtml(p.name)}</div>
+          <div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div>
+          <div class="ai-msg">${escHtml(p.ai.msg)}</div>
+          <div class="ai-notes">${escHtml(p.ai.notes||' ')}</div>
+          <div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div>
+        </div>`;
+      }).join('')}</div>`;
+
+    // Personal
+    let personalHtml = '';
+    if(reportType === 'personal') {
+      const tips = buildPersonalImproveTips(mainTotals, totals);
+      let streakAlert = '';
+      if(streaks.maxZeroStreak>=3) streakAlert+=`<div class="streak-alert">⚠ ${streaks.maxZeroStreak} meciuri consecutive fara kill</div>`;
+      if(streaks.maxKillStreak>=3) streakAlert+=`<div class="streak-good">🔥 ${streaks.maxKillStreak} meciuri consecutive cu cel putin un kill</div>`;
+      if(streaks.bestHour) streakAlert+=`<div class="streak-info">⏰ Performezi cel mai bine in jurul orei <b>${streaks.bestHour}:00</b></div>`;
+      if(streaks.bestMatchIdx>=0){const bm=matchesFiltered[streaks.bestMatchIdx];const bp=bm.teamStats.find(x=>nameEq(x.name,playerName));if(bp) streakAlert+=`<div class="streak-best">⭐ Cel mai bun meci: ${bm.mapName} @ ${formatRoTime(bm.createdAt)} — ${bp.kills}K / ${Math.round(bp.damage)}D / ${bp.downs}Down</div>`;}
+      personalHtml = `
+        <div class="section-title" style="color:var(--blue)">🎯 Personal Analysis</div>
+        <div class="personal-box">
+          ${streakAlert}
+          <div class="personal-section"><b>Profil:</b> ${escHtml(tips.profile)}</div>
+          <div class="personal-section"><b>Insight:</b> ${escHtml(tips.insight)}</div>
+          <div class="personal-section"><b>✔ Strengths</b><ul>${tips.strengths.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div>
+          <div class="personal-section"><b>⚠ Weaknesses</b><ul>${tips.weaknesses.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div>
+          <div class="personal-section"><b>🚀 Improve</b><ul>${tips.tips.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div>
+        </div>`;
+    }
+
+    // Global
+    const globalHtml = reportType === 'personal' ? buildGlobalComparisonHtml(seasonStats) : '';
+
+    // Team summary
+    let teamSummaryHtml = '';
+    if(reportType === 'team') {
+      const wins = matchesFiltered.filter(m=>m.rank===1).length;
+      const winRate = (wins/matchesFiltered.length)*100;
+      const teamAvgKills = leaderboard.reduce((s,p)=>s+p.kills/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
+      const teamAvgDmg = leaderboard.reduce((s,p)=>s+p.damage/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
+      const tips2=[];
+      if(teamAvgKills<1) tips2.push('Echipa converteste prea putin damage in kills - follow-up slab.');
+      if(teamAvgDmg<200) tips2.push('Damage general scazut - echipa evita prea mult contactul direct.');
+      if(winRate<10) tips2.push('Win rate sub 10% - deciziile de late game sunt problema principala.');
+      if(tips2.length===0) tips2.push('Sesiune decenta per total. Continuati coordonarea si follow-up-ul.');
+      teamSummaryHtml = `<div class="team-summary">
+        <div class="section-title">📈 Team Session Summary</div>
+        <div class="team-summary-stats">Win rate: <b>${safeNum(winRate,1)}%</b> &nbsp;|&nbsp; AVG kills/player: <b>${safeNum(teamAvgKills,2)}</b> &nbsp;|&nbsp; AVG damage/player: <b>${safeNum(teamAvgDmg,0)}</b></div>
+        <ul class="team-tips">${tips2.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul>
+      </div>`;
+    }
+
+    // Detailed targets
+    let detailedHtml = '';
+    if(detailLevel === 'detailed') {
+      const cards = withAI.map(p => {
+        const combatData = aggregatedCombat[p.name.toLowerCase()];
+        const combatInsight = combatData ? buildCombatInsightHtml(combatData, p.name, p.matches) : '';
+        const weaponHtml = combatData ? buildWeaponSummaryHtml(combatData) : '';
+        const isMvpCard = nameEq(p.name, mvp.name) && reportType === 'team';
+        return `<div class="target-card ${isMvpCard?'mvp-target':''}">
+          <div class="target-player">${escHtml(p.name)}</div>
+          <div class="target-svg-wrap">${p.target}</div>
+          <div class="target-stats">
+            <span class="hit-head">Head: ${p.head||0}</span> &nbsp;
+            <span class="hit-body">Body: ${p.body||0}</span> &nbsp;
+            <span class="hit-legs">Legs: ${p.legs||0}</span> &nbsp;
+            <span class="hit-unknown">Unk: ${p.unknown||0}</span>
+          </div>
+          ${weaponHtml}
+          ${combatInsight?`<div class="ca-block"><div class="section-title" style="font-size:12px">🧠 Combat Analysis</div>${combatInsight}</div>`:''}
+        </div>`;
+      }).join('');
+      detailedHtml = `<div class="targets-section"><div class="section-title">🎯 Hit Distribution + Weapons + Combat</div><div class="targets-grid">${cards}</div></div>`;
+    }
+
+    // Surprize
+    let surprizeHtml = '';
+    if(detailLevel === 'detailed' && surprizeVictims.length) {
+      surprizeHtml = `<div class="surprize-box">
+        <div class="section-title">🎉 Surprize Surprize! Top 100 Global Eliminated</div>
+        ${surprizeVictims.map(v=>`<div class="surprize-row">
+          <div class="surprize-icon">🏆</div>
+          <div class="surprize-text"><b style="color:var(--gold)">${escHtml(v.killerName)}</b> a eliminat pe <b style="color:var(--red)">${escHtml(v.victimName)}</b> <span style="color:var(--text3)">(Top ${v.globalRank} global kills | ${v.kills} kills sezon | ${escHtml(v.mapName)} ${escHtml(v.time)})</span></div>
+        </div>`).join('')}
+      </div>`;
+    }
+
+    // Download button
+    const modeBadge = `<span class="mode-badge ${detailLevel==='simple'?'mode-simple':'mode-detailed'}">${detailLevel==='simple'?'⚡ SIMPLE':'🔍 DETAILED'}</span>`;
+
+    const fullHtml = `
+      <div class="report-header">
+        <div>
+          <div class="report-title">🔥 PUBG ${rangeText.toUpperCase()} — ${reportType.toUpperCase()} — RANKED</div>
+          <div class="report-sub">${escHtml(playerName)} · ${platform.toUpperCase()} · ${matchesFiltered.length} meciuri · ${firstTime}–${lastTime} · ${formatRoDate(new Date())}</div>
+        </div>
+        <div class="report-actions">
+          ${modeBadge}
+          <button class="btn-secondary" onclick="downloadReport()">⬇ Download HTML</button>
+          <button class="btn-secondary" onclick="location.reload()">↩ Reset</button>
+        </div>
+      </div>
+      ${heroHtml}
+      ${podiumHtml}
+      ${tableHtml}
+      ${aiHtml}
+      ${personalHtml}
+      ${globalHtml}
+      ${teamSummaryHtml}
+      ${detailedHtml}
+      ${surprizeHtml}
+    `;
+
+    setProgress(100);
+    document.getElementById('progressWrap').classList.remove('show');
+    const reportEl = document.getElementById('report');
+    reportEl.innerHTML = fullHtml;
+    reportEl.classList.add('show');
+    window._reportHtml = fullHtml;
+    window._reportTitle = `pubg_${playerName}_${platform}_${detailLevel}_${rangeVal}_v7.html`;
+
+  } catch(e) {
+    setProgress(100);
+    document.getElementById('progressWrap').classList.remove('show');
+    document.getElementById('setupWrap').style.display = 'block';
+    const reportEl = document.getElementById('report');
+    reportEl.innerHTML = `<div class="error-box">❌ Eroare: ${escHtml(e.message)}<br><br><small>Nota: Daca primesti eroare CORS, browserul blocheaza requestul catre PUBG API. Incearca din alt browser sau adauga un proxy CORS.</small></div>`;
+    reportEl.classList.add('show');
+  }
+}
+
+// ===================== DOWNLOAD =====================
+function downloadReport() {
+  if(!window._reportHtml) return;
+  const fullPage = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PUBG Stats V7</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>${document.querySelector('style').textContent}</style></head>
+
+<body style="padding:24px">${window._reportHtml}</body></html>`;
+  const blob = new Blob([fullPage], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = window._reportTitle || 'pubg_report_v7.html';
+  a.click();
+}
+</script>
+</body>
+</html>
