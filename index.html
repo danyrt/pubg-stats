@@ -104,6 +104,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 
 /* TABLE */
 .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
+.table-wrap table thead th { position: sticky; top: 0; z-index: 10; background: var(--bg2); box-shadow: 0 1px 0 var(--border); }
 table { border-collapse: collapse; width: 100%; min-width: 500px; font-size: 13px; }
 td, th { border: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: center; }
 th { background: var(--bg3); font-family: var(--font-mono); font-size: 11px; color: var(--text2); text-transform: uppercase; }
@@ -655,16 +656,31 @@ document.addEventListener('DOMContentLoaded', () => {
 function openFeedbackModal() { document.getElementById('modalOverlay').classList.add('show'); document.getElementById('modalForm').style.display = 'block'; document.getElementById('modalSuccess').style.display = 'none'; }
 function closeFeedbackModal() { document.getElementById('modalOverlay').classList.remove('show'); }
 function closeOnOverlay(e) { if(e.target === document.getElementById('modalOverlay')) closeFeedbackModal(); }
-function sendFeedback() {
+async function sendFeedback() {
   const name = document.getElementById('fbName').value.trim();
   const msg = document.getElementById('fbMsg').value.trim();
   if(!msg) { alert(i('errorNoMsg')); return; }
-  const subject = encodeURIComponent('PUBG Global Stats - Feedback' + (name ? i('feedbackFrom') + name : ''));
-  const body = encodeURIComponent((name ? i('feedbackFromLabel') + name + '\n\n' : '') + msg);
-  window.open(`mailto:oltenacu.dan87@gmail.com?subject=${subject}&body=${body}`);
-  document.getElementById('modalForm').style.display = 'none';
-  document.getElementById('modalSuccess').style.display = 'block';
-  setTimeout(closeFeedbackModal, 2500);
+  const btn = document.querySelector('.btn-send');
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const res = await fetch('https://formspree.io/f/xkoqkyjk', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      body: JSON.stringify({name: name||'Anonim', message: msg})
+    });
+    if(res.ok) {
+      document.getElementById('modalForm').style.display = 'none';
+      document.getElementById('modalSuccess').style.display = 'block';
+      setTimeout(closeFeedbackModal, 2500);
+    } else {
+      alert('Eroare la trimitere. Incearca din nou.');
+    }
+  } catch(e) {
+    alert('Eroare la trimitere. Verifica conexiunea.');
+  }
+  btn.disabled = false;
+  btn.innerHTML = i('feedbackSend');
 }
 
 // ===================== COLLAPSIBLE =====================
@@ -811,7 +827,7 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
 }
 
 // ===================== SURVIVAL TIMELINE HTML =====================
-function buildSurvivalTimelineHtml(extData, playerName) {
+function buildSurvivalTimelineHtml(extData, playerName, totalMatches) {
   if(!extData || !extData.survivalEvents.length) return '';
   const events = extData.survivalEvents.sort((a,b)=>a.time-b.time);
   const maxTime = extData.totalMatchTime || 1800;
@@ -988,6 +1004,7 @@ function buildLootEfficiencyHtml(extData) {
       <div class="loot-bar-labels"><span style="color:var(--orange)">■ Lootare ${secToMin(extData.lootTime)}</span><span style="color:var(--green)">■ Activ ${secToMin(extData.activeTime)}</span></div>
       ${topItemsList.length ? `<div class="loot-items-title">Top items luate</div>${topItemsList.map(([item,cnt])=>`<div class="loot-item-row"><span class="loot-item-name">${escHtml(item)}</span><span style="color:var(--text2);font-family:var(--font-mono);font-size:11px">${cnt}x</span></div>`).join('')}` : ''}
       <div class="loot-verdict ${verdictClass}">${verdictText}</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:10px">* Timpii de loot sunt estimativi, bazati pe activitatea de pickup din telemetry.</div>
     </div>
   </div>`;
 }
@@ -1001,24 +1018,19 @@ const LOOT_LIMITS = {
 function getLootWarnings(lootEvents) {
   const counts = {};
   (lootEvents||[]).filter(e=>e.type==='pickup').forEach(e=>{
-    const k = (e.item||'').toLowerCase().replace(/item\s*/i,'').replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+    const k = (e.item||'').toLowerCase().replace(/[^a-z0-9]/g,'');
     counts[k] = (counts[k]||0) + (e.count||1);
   });
   const warnings = [];
-  const a556 = (counts['ammo556mm']||0)+(counts['556mm']||0);
-  const a762 = (counts['ammo762mm']||0)+(counts['762mm']||0);
-  const a9mm = (counts['ammo9mm']||0)+(counts['9mm']||0);
-  const heals = (counts['healfirstaid']||0)+(counts['firstaid']||0)+(counts['firstaidkit']||0)+(counts['healfirstaidkit']||0);
+  // Total ammo
+  const totalAmmo = Object.entries(counts).filter(([k])=>k.includes('ammo')).reduce((s,[,v])=>s+v,0);
+  if(totalAmmo > 300) warnings.push(`${totalAmmo}x gloante ⚠`);
+  // Med kits
   const medkits = (counts['healmedkit']||0)+(counts['medkit']||0);
-  const boosts = (counts['boostenergydrin']||0)+(counts['boostenergydrink']||0)+(counts['energydrink']||0)+(counts['boostpainkiller']||0)+(counts['painkiller']||0);
-  const bandages = (counts['healbandage']||0)+(counts['bandage']||0);
-  if(a556 > LOOT_LIMITS.ammo556) warnings.push(`${a556}x 5.56mm ⚠`);
-  if(a762 > LOOT_LIMITS.ammo762) warnings.push(`${a762}x 7.62mm ⚠`);
-  if(a9mm > LOOT_LIMITS.ammo9mm) warnings.push(`${a9mm}x 9mm ⚠`);
-  if(heals > LOOT_LIMITS.firstaid) warnings.push(`${heals}x FirstAid ⚠`);
-  if(medkits > LOOT_LIMITS.medkit) warnings.push(`${medkits}x MedKit ⚠`);
-  if(boosts > LOOT_LIMITS.boost) warnings.push(`${boosts}x Boost ⚠`);
-  if(bandages > LOOT_LIMITS.bandage) warnings.push(`${bandages}x Bandage ⚠`);
+  if(medkits > 10) warnings.push(`${medkits}x MedKit ⚠`);
+  // Boosts
+  const boosts = Object.entries(counts).filter(([k])=>k.includes('boost')||k.includes('energy')||k.includes('painkiller')).reduce((s,[,v])=>s+v,0);
+  if(boosts > 10) warnings.push(`${boosts}x Boost ⚠`);
   return warnings;
 }
 
@@ -1657,8 +1669,13 @@ async function runReport() {
                 if(ev?._T==='LogPlayerKill'&&globalLeaderboard.length){const kn=ev?.killer?.name||'';const vn=ev?.victim?.name||'';const isTeamKill=teamStats.some(x=>nameEq(x.name,kn));if(isTeamKill){const gIdx=globalLeaderboard.findIndex(x=>nameEq(x.name,vn));if(gIdx!==-1){surprizes.push({killerName:kn,victimName:vn,globalRank:gIdx+1,kills:globalLeaderboard[gIdx].kills,mapName:shortMapName(matchRes.data?.attributes?.mapName),time:formatRoTime(createdAt)});logMsg(`  ⭐ SURPRIZE: Top ${gIdx+1} eliminated!`,'ok');}}}
               }
               matchCombatData = buildCombatAnalysis(telemetry, teamNamesLower, circlePhases);
-              extData = buildExtendedTelemetry(telemetry, pName, matchDuration);
-              extendedDataMap[mRefs[i].id] = extData;
+              // Build ext data for ALL team members
+              const allExtData = {};
+              for(const tName of teamNamesLower) {
+                allExtData[tName] = buildExtendedTelemetry(telemetry, tName, matchDuration);
+              }
+              extData = allExtData[pName.toLowerCase()] || buildExtendedTelemetry(telemetry, pName, matchDuration);
+              extendedDataMap[mRefs[i].id] = allExtData;
             } catch(e) { logMsg('  → Telemetry indisponibil','warn'); }
           }
         }
@@ -1722,14 +1739,16 @@ async function runReport() {
         }
       }
       if(match.extData) {
-        const key = playerName.toLowerCase();
-        if(aggregatedExt[key]) {
-          aggregatedExt[key].survivalEvents.push(...(match.extData.survivalEvents||[]));
-          aggregatedExt[key].killDistances.push(...(match.extData.killDistances||[]));
-          aggregatedExt[key].lootEvents.push(...(match.extData.lootEvents||[]));
-          aggregatedExt[key].totalMatchTime += match.extData.totalMatchTime||0;
-          aggregatedExt[key].lootTime += match.extData.lootTime||0;
-          aggregatedExt[key].activeTime += match.extData.activeTime||0;
+        // extData is now a map of playerName -> extData
+        for(const [key, ext] of Object.entries(match.extData)) {
+          if(aggregatedExt[key]) {
+            aggregatedExt[key].survivalEvents.push(...(ext.survivalEvents||[]));
+            aggregatedExt[key].killDistances.push(...(ext.killDistances||[]));
+            aggregatedExt[key].lootEvents.push(...(ext.lootEvents||[]));
+            aggregatedExt[key].totalMatchTime += ext.totalMatchTime||0;
+            aggregatedExt[key].lootTime += ext.lootTime||0;
+            aggregatedExt[key].activeTime += ext.activeTime||0;
+          }
         }
       }
     }
@@ -1751,13 +1770,16 @@ async function runReport() {
           if(match.combatData[key]){const src=match.combatData[key];vsAggCombat.events.push(...src.events);vsAggCombat.earlyDeaths+=src.earlyDeaths;vsAggCombat.zoneIssues+=src.zoneIssues;vsAggCombat.distances.push(...src.distances);}
         }
         if(match.extData){
-          // extData was built with vsPlayerName, so use it directly
-          vsAggExt.survivalEvents.push(...(match.extData.survivalEvents||[]));
-          vsAggExt.killDistances.push(...(match.extData.killDistances||[]));
-          vsAggExt.lootEvents.push(...(match.extData.lootEvents||[]));
-          vsAggExt.totalMatchTime+=match.extData.totalMatchTime||0;
-          vsAggExt.lootTime+=match.extData.lootTime||0;
-          vsAggExt.activeTime+=match.extData.activeTime||0;
+          // extData is now a map - get vsPlayerName's data
+          const vsKey = vsPlayerName.toLowerCase();
+          const vsExt = match.extData[vsKey] || match.extData;
+          const src = vsExt.survivalEvents ? vsExt : (Object.values(match.extData)[0] || {});
+          vsAggExt.survivalEvents.push(...(src.survivalEvents||[]));
+          vsAggExt.killDistances.push(...(src.killDistances||[]));
+          vsAggExt.lootEvents.push(...(src.lootEvents||[]));
+          vsAggExt.totalMatchTime+=src.totalMatchTime||0;
+          vsAggExt.lootTime+=src.lootTime||0;
+          vsAggExt.activeTime+=src.activeTime||0;
         }
       }
       const vsDist=vsAggCombat.distances;vsAggCombat.avgEngagementDistance=vsDist.length?Math.round(vsDist.reduce((a,b)=>a+b,0)/vsDist.length):0;
@@ -1815,7 +1837,7 @@ async function runReport() {
       let rows=matchesFiltered.map((match,idx)=>{const isWinner=match.rank===1;return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td></tr>`;}).join('');
       let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr><td><b>Zero</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
       displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
-      tableHtml=`<div class="section-title">📊 Match Table</div><div class="table-wrap"><table><tr>${headerTop}</tr><tr>${headerBottom}</tr>${rows}${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></table></div>`;
+      const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title">📊 Match Table</div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
     }
 
     // AI
@@ -1850,7 +1872,7 @@ async function runReport() {
     let detailedHtml='';
     if(detailLevel==='detailed') {
       const mainExtData = aggregatedExt[playerName.toLowerCase()];
-      const survivalHtml = reportType !== 'vs' ? buildSurvivalTimelineHtml(mainExtData, playerName) : '';
+      const survivalHtml = reportType !== 'vs' ? buildSurvivalTimelineHtml(mainExtData, playerName, matchesFiltered.length) : '';
       const distHtml = reportType !== 'vs' ? buildKillDistanceHtml(mainExtData?.killDistances) : '';
       const lootHtml = reportType !== 'vs' ? buildLootEfficiencyHtml(mainExtData) : '';
 
