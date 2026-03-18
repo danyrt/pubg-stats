@@ -1068,7 +1068,9 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
 
   // 1. Loot Analysis - using aggregatedExt per player
   const lootData = leaderboard.map(p => {
-    const ext = aggregatedExt[p.name.toLowerCase()];
+    const pKey2 = p.name.toLowerCase();
+    const lootExtKey = aggregatedExt[pKey2] ? pKey2 : Object.keys(aggregatedExt).find(k=>k===pKey2||k.includes(pKey2)||pKey2.includes(k));
+    const ext = lootExtKey ? aggregatedExt[lootExtKey] : null;
     const totalLootTime = ext?.lootTime || 0;
     const totalMatchTime = ext?.totalMatchTime || (totalMatches * 1800);
     const avgLootPerMatch = totalMatches > 0 ? totalLootTime / totalMatches : 0; // seconds
@@ -1215,11 +1217,6 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
     <div class="section-title">🔬 Team Deep Analysis (Detailed)</div>
     <div class="team-analysis-grid">
       <div class="team-analysis-card">
-        <div class="team-analysis-title" style="color:var(--orange)">📦 Loot Impact</div>
-        ${lootBars}
-        <div class="team-impact-line">${lootImpact}</div>
-      </div>
-      <div class="team-analysis-card">
         <div class="team-analysis-title" style="color:var(--red)">❤️ Survival Patterns</div>
         ${survBars}
         <div class="team-impact-line">${survImpact}</div>
@@ -1244,7 +1241,9 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
       <div class="team-analysis-title" style="color:var(--red)">❤️ Survival per Jucator</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px">
         ${leaderboard.map(p => {
-          const ext = aggregatedExt[p.name.toLowerCase()];
+          const sKey = p.name.toLowerCase();
+          const sExtKey = aggregatedExt[sKey] ? sKey : Object.keys(aggregatedExt).find(k=>k===sKey||k.includes(sKey)||sKey.includes(k));
+          const ext = sExtKey ? aggregatedExt[sExtKey] : null;
           if(!ext || !ext.survivalEvents.length) return `<div class="weapon-box"><div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escHtml(p.name)}</div><div style="font-size:11px;color:var(--text3)">Date insuficiente</div></div>`;
           const dmgEvs = ext.survivalEvents.filter(e=>e.type==='damage');
           const healEvs = ext.survivalEvents.filter(e=>e.type==='heal');
@@ -1812,14 +1811,16 @@ async function runReport() {
       if(match.extData) {
         // extData is now a map of playerName -> extData
         for(const [key, ext] of Object.entries(match.extData)) {
-          if(aggregatedExt[key]) {
-            aggregatedExt[key].survivalEvents.push(...(ext.survivalEvents||[]));
-            aggregatedExt[key].killDistances.push(...(ext.killDistances||[]));
-            aggregatedExt[key].lootEvents.push(...(ext.lootEvents||[]));
-            aggregatedExt[key].totalMatchTime += ext.totalMatchTime||0;
-            aggregatedExt[key].lootTime += ext.lootTime||0;
-            aggregatedExt[key].activeTime += ext.activeTime||0;
+          // Create key dynamically if doesn't exist
+          if(!aggregatedExt[key]) {
+            aggregatedExt[key] = {survivalEvents:[],killDistances:[],lootEvents:[],totalMatchTime:0,lootTime:0,activeTime:0};
           }
+          aggregatedExt[key].survivalEvents.push(...(ext.survivalEvents||[]));
+          aggregatedExt[key].killDistances.push(...(ext.killDistances||[]));
+          aggregatedExt[key].lootEvents.push(...(ext.lootEvents||[]));
+          aggregatedExt[key].totalMatchTime += ext.totalMatchTime||0;
+          aggregatedExt[key].lootTime += ext.lootTime||0;
+          aggregatedExt[key].activeTime += ext.activeTime||0;
         }
       }
     }
@@ -1948,9 +1949,9 @@ async function runReport() {
     let detailedHtml='';
     if(detailLevel==='detailed') {
       const mainExtData = aggregatedExt[playerName.toLowerCase()];
-      const survivalHtml = reportType !== 'vs' ? buildSurvivalTimelineHtml(mainExtData, playerName, matchesFiltered.length) : '';
-      const distHtml = reportType !== 'vs' ? buildKillDistanceHtml(mainExtData?.killDistances) : '';
-      const lootHtml = reportType !== 'vs' ? buildLootEfficiencyHtml(mainExtData, matchesFiltered.length) : '';
+      const survivalHtml = reportType === 'personal' ? buildSurvivalTimelineHtml(mainExtData, playerName, matchesFiltered.length) : '';
+      const distHtml = reportType === 'personal' ? buildKillDistanceHtml(mainExtData?.killDistances) : '';
+      const lootHtml = reportType === 'personal' ? buildLootEfficiencyHtml(mainExtData, matchesFiltered.length) : '';
 
       const cards=withAI.map(p=>{
         const combatData=aggregatedCombat[p.name.toLowerCase()];
