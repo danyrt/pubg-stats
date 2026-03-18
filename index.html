@@ -993,8 +993,9 @@ function buildKillDistanceHtml(killDistances) {
 }
 
 // ===================== LOOT EFFICIENCY HTML =====================
-function buildLootEfficiencyHtml(extData) {
+function buildLootEfficiencyHtml(extData, totalMatches) {
   if(!extData || !extData.lootEvents.length) return '';
+  const nMatches = Math.max(totalMatches||1, 1);
   const lootPct = Math.round((extData.lootTime / extData.totalMatchTime) * 100);
   const activePct = 100 - lootPct;
   const pickups = extData.lootEvents.filter(e=>e.type==='pickup');
@@ -1092,19 +1093,26 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
     'Loot eficient pentru toti jucatorii — sub 4 min/meci.';
 
   const maxLootMin = Math.max(...lootData.map(p=>p.avgLootMin), 0.1);
-  const lootBars = lootData.map((p,i) => {
-    const pct = maxLootMin > 0 ? Math.round((p.avgLootMin/maxLootMin)*100) : 0;
+  const lootBars = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">` +
+  lootData.map(p => {
     const color = p.avgLootMin>8?'var(--red)':p.avgLootMin>4?'var(--orange)':'var(--green)';
-    const warningHtml = p.warnings.length ? `<div style="font-size:10px;color:var(--red);margin-top:2px">⚠ ${p.warnings.slice(0,3).map(w=>escHtml(w)).join(' · ')}</div>` : '';
-    const topItemHtml = p.topItemsList.length ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${p.topItemsList.map(([k,v])=>`${escHtml(k)} ${v}x`).join(' · ')}</div>` : '';
-    return `<div style="margin-bottom:10px">
-      <div class="player-bar-row">
-        <div class="player-bar-name">${escHtml(p.name)}</div>
-        <div class="player-bar-track"><div class="player-bar-fill" style="width:${Math.max(pct,3)}%;background:${color}">&nbsp;</div><div class="player-bar-val">~${p.avgLootMin.toFixed(1)} min/meci</div></div>
+    const verdictIcon = p.avgLootMin>8?'❌':p.avgLootMin>4?'⚠️':'✅';
+    const warningHtml = p.warnings.length ? `<div style="font-size:10px;color:var(--red);margin-top:6px">⚠ ${p.warnings.slice(0,2).map(w=>escHtml(w)).join(' · ')}</div>` : '';
+    const topItemHtml = p.topItemsList.length ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">${p.topItemsList.map(([k,v])=>`${escHtml(k)} ${v}x`).join(' · ')}</div>` : '';
+    const pct = maxLootMin > 0 ? Math.round((p.avgLootMin/maxLootMin)*100) : 0;
+    return `<div class="weapon-box">
+      <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escHtml(p.name)}</div>
+      <div style="text-align:center;margin-bottom:8px">
+        <div style="font-family:var(--font-head);font-size:26px;font-weight:700;color:${color}">${p.avgLootMin.toFixed(1)}</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">MIN/MECI ${verdictIcon}</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:2px">${secToMin(p.totalLootTime)} total · ${totalMatches} meciuri</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px">
+        <div style="height:100%;width:${Math.max(pct,3)}%;background:${color};border-radius:4px"></div>
       </div>
       ${warningHtml}${topItemHtml}
     </div>`;
-  }).join('');
+  }).join('') + `</div>`;
 
   // 2. Survival Patterns
   const survData = leaderboard.map(p => {
@@ -1231,6 +1239,42 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
       <div class="team-verdict-title">🏆 Team Verdict</div>
       ${verdictRows}
       <div class="team-tips-list">${tips.map((t,i)=>`<div class="team-tip-item"><span class="team-tip-num">${i+1}.</span><span>${escHtml(t)}</span></div>`).join('')}</div>
+    </div>
+    <div class="team-analysis-section">
+      <div class="team-analysis-title" style="color:var(--red)">❤️ Survival per Jucator</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px">
+        ${leaderboard.map(p => {
+          const ext = aggregatedExt[p.name.toLowerCase()];
+          if(!ext || !ext.survivalEvents.length) return `<div class="weapon-box"><div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escHtml(p.name)}</div><div style="font-size:11px;color:var(--text3)">Date insuficiente</div></div>`;
+          const dmgEvs = ext.survivalEvents.filter(e=>e.type==='damage');
+          const healEvs = ext.survivalEvents.filter(e=>e.type==='heal');
+          const totalDmg = Math.round(dmgEvs.reduce((s,e)=>s+Math.abs(e.value||0),0));
+          const totalHeal = Math.round(healEvs.reduce((s,e)=>s+Math.abs(e.value||0),0));
+          const worstHit = dmgEvs.reduce((max,e)=>Math.abs(e.value||0)>Math.abs(max.value||0)?e:max, {value:0});
+          const worstVal = Math.round(Math.abs(worstHit.value||0));
+          const dmgByWeapon = {};
+          dmgEvs.forEach(e=>{if(e.weapon&&e.weapon!=='Unknown')dmgByWeapon[e.weapon]=(dmgByWeapon[e.weapon]||0)+Math.round(Math.abs(e.value||0));});
+          const topWeapon = Object.entries(dmgByWeapon).sort((a,b)=>b[1]-a[1])[0];
+          const m = Math.max(p.matches||1,1);
+          return `<div class="weapon-box">
+            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escHtml(p.name)}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+              <div style="text-align:center;background:var(--bg2);border-radius:6px;padding:6px">
+                <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)">${totalDmg}</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DMG PRIMIT</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">~${Math.round(totalDmg/m)}/meci</div>
+              </div>
+              <div style="text-align:center;background:var(--bg2);border-radius:6px;padding:6px">
+                <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--green)">${healEvs.length}x</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">HEALS</div>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">~${(healEvs.length/m).toFixed(1)}/meci</div>
+              </div>
+            </div>
+            ${worstVal>0?`<div style="font-size:11px;color:var(--text2);margin-bottom:4px">💥 Cel mai mare hit: <b style="color:var(--red)">${worstVal} HP</b>${worstHit.weapon?' ('+escHtml(worstHit.weapon)+')':''}</div>`:''}
+            ${topWeapon?`<div style="font-size:11px;color:var(--text2)">⚔️ Top armă adversar: <b style="color:var(--orange)">${escHtml(topWeapon[0])}</b> (${topWeapon[1]} dmg)</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
     </div>
   </div>`;
 }
@@ -1401,7 +1445,7 @@ function buildCombatInsightHtml(data, playerName, totalMatches) {
   const timelineEvents=data.events.slice(0,6);
   const maxTime=timelineEvents.length?Math.max(...timelineEvents.map(e=>e.time),1):1;
   const timelineDots=timelineEvents.map(e=>{const pct=Math.round((e.time/maxTime)*100);const color=e.type==='kill'?'#7ed85b':e.type==='knocked'||e.type==='died'?'#ff4d4f':'#ff9f1a';const label=e.type==='kill'?'K':e.type==='knocked'?'KD':e.type==='died'?'X':'Z';return `<div class="tl-dot" style="left:${pct}%;background:${color}">${label}</div>`;}).join('');
-  const eventLines=negEvents.map(e=>{if(e.type==='knocked') return `<div class="ca-event ca-neg">Knocked in ${circlePhaseLabel(e.phase)}${e.isEarly?' - engagement prea devreme':''} (dist: ${e.dist}m)</div>`;if(e.type==='died') return `<div class="ca-event ca-neg">Eliminat in ${circlePhaseLabel(e.phase)}${e.isEarly?' - prea devreme':''} (dist: ${e.dist}m)</div>`;if(e.type==='zone_damage') return `<div class="ca-event ca-warn">Damage de zona in ${circlePhaseLabel(e.phase)}</div>`;return '';}).join('');
+  const eventLines=negEvents.map(e=>{if(e.type==='knocked') return `<div class="ca-event ca-neg">Knocked in ${circlePhaseLabel(e.phase)}${e.isEarly?' - engagement prea devreme':''} (dist: ${e.dist}m)</div>`;if(e.type==='died') return `<div class="ca-event ca-neg">Eliminat in ${circlePhaseLabel(e.phase)}${e.isEarly?' - prea devreme':''} (dist: ${e.dist}m)</div>`;if(e.type==='zone_damage') return '';return '';}).join('');
   return `<div class="ca-player-block">${topMistake?`<div class="mistake-badge" style="border-color:${topMistake.color};color:${topMistake.color}">${topMistake.icon} ${topMistake.label}</div>`:''}<div class="ca-conclusion">${conclusion}</div><div class="tactical-profile" style="border-left-color:${tactical.styleColor}"><div class="tactical-style" style="color:${tactical.styleColor}">${tactical.style}</div><ul class="tactical-tips">${tactical.tips.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul></div><div class="ca-timeline"><div class="tl-bar">${timelineDots}</div><div class="tl-labels"><span>Start</span><span>End</span></div></div>${eventLines}${data.avgEngagementDistance>0?`<div class="ca-stat">Distanta medie engagement: ${data.avgEngagementDistance}m</div>`:''}</div>`;
 }
 
@@ -1906,7 +1950,7 @@ async function runReport() {
       const mainExtData = aggregatedExt[playerName.toLowerCase()];
       const survivalHtml = reportType !== 'vs' ? buildSurvivalTimelineHtml(mainExtData, playerName, matchesFiltered.length) : '';
       const distHtml = reportType !== 'vs' ? buildKillDistanceHtml(mainExtData?.killDistances) : '';
-      const lootHtml = reportType !== 'vs' ? buildLootEfficiencyHtml(mainExtData) : '';
+      const lootHtml = reportType !== 'vs' ? buildLootEfficiencyHtml(mainExtData, matchesFiltered.length) : '';
 
       const cards=withAI.map(p=>{
         const combatData=aggregatedCombat[p.name.toLowerCase()];
@@ -1976,37 +2020,53 @@ async function downloadPDF() {
   btn.disabled = true;
   btn.textContent = '⏳ Generare PDF...';
   try {
+    const { jsPDF } = window.jspdf;
     const report = document.getElementById('report');
-    // Temporarily expand all overflow elements
-    const scrollEls = report.querySelectorAll('*');
-    const overflows = [];
-    scrollEls.forEach(el => {
-      const s = window.getComputedStyle(el);
-      if(s.overflow === 'auto' || s.overflow === 'scroll' || s.overflowX === 'auto' || s.overflowX === 'scroll') {
-        overflows.push({el, ox: el.style.overflowX, oy: el.style.overflow});
-        el.style.overflow = 'visible';
-        el.style.overflowX = 'visible';
-      }
-    });
-    const canvas = await html2canvas(report, {
-      scale: 1.5,
-      useCORS: true,
-      allowTaint: true,
+    const tableWrap = report.querySelector('.table-wrap');
+
+    // ── Page 1: Report WITHOUT table ──
+    if(tableWrap) tableWrap.style.display = 'none';
+    const canvas1 = await html2canvas(report, {
+      scale: 1.5, useCORS: true, allowTaint: true,
       backgroundColor: '#090b0f',
-      scrollX: 0,
-      scrollY: -window.scrollY,
+      scrollX: 0, scrollY: -window.scrollY,
       windowWidth: Math.max(report.scrollWidth, 1200),
     });
-    // Restore overflows
-    overflows.forEach(({el, ox, oy}) => { el.style.overflow = oy; el.style.overflowX = ox; });
-    const imgData = canvas.toDataURL('image/jpeg', 0.85);
-    const { jsPDF } = window.jspdf;
-    const imgW = canvas.width;
-    const imgH = canvas.height;
-    const pdfW = imgW * 0.75; // px to pt
-    const pdfH = imgH * 0.75;
-    const pdf = new jsPDF({ orientation: pdfW > pdfH ? 'l' : 'p', unit: 'pt', format: [pdfW, pdfH] });
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+    if(tableWrap) tableWrap.style.display = '';
+
+    const w1 = canvas1.width * 0.75;
+    const h1 = canvas1.height * 0.75;
+    const pdf = new jsPDF({ orientation: w1 > h1 ? 'l' : 'p', unit: 'pt', format: [w1, h1] });
+    pdf.addImage(canvas1.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, w1, h1);
+
+    // ── Page 2: Table only, fully expanded ──
+    if(tableWrap) {
+      // Clone table into a temp full-width container
+      const tempDiv = document.createElement('div');
+      tempDiv.style.cssText = 'position:fixed;top:0;left:0;background:#090b0f;padding:20px;z-index:-1;';
+      const tableClone = tableWrap.cloneNode(true);
+      tableClone.style.cssText = 'overflow:visible;max-height:none;width:auto;max-width:none;';
+      const table = tableClone.querySelector('table');
+      if(table) table.style.cssText = 'width:auto;min-width:100%;';
+      tempDiv.appendChild(tableClone);
+      document.body.appendChild(tempDiv);
+
+      const canvas2 = await html2canvas(tempDiv, {
+        scale: 1.2, useCORS: true, allowTaint: true,
+        backgroundColor: '#090b0f',
+        scrollX: 0, scrollY: 0,
+        windowWidth: Math.max(tempDiv.scrollWidth + 40, 1200),
+        width: tempDiv.scrollWidth + 40,
+        height: tempDiv.scrollHeight + 40,
+      });
+      document.body.removeChild(tempDiv);
+
+      const w2 = canvas2.width * 0.75;
+      const h2 = canvas2.height * 0.75;
+      pdf.addPage([w2, h2], w2 > h2 ? 'l' : 'p');
+      pdf.addImage(canvas2.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, w2, h2);
+    }
+
     pdf.save(window._reportTitle?.replace('.html','.pdf') || 'pubg_global_stats.pdf');
   } catch(e) {
     alert('Eroare la generare PDF: ' + e.message);
