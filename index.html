@@ -3,179 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PUBG Stats V7 — by Dani_4LA0</title>
+<title>PUBG GLOBAL STATS — by Dani_4LA0</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #090b0f;
-  --bg2: #0f1218;
-  --bg3: #151922;
-  --bg4: #1a1f2b;
-  --border: #232a38;
-  --gold: #f0c040;
-  --gold2: #ffd700;
-  --red: #ff4d4f;
-  --orange: #ff9f1a;
-  --blue: #4da6ff;
-  --green: #7ed85b;
-  --purple: #cc88ff;
-  --text: #e8eaf0;
-  --text2: #9aa3b2;
-  --text3: #5a6272;
+  --bg: #090b0f; --bg2: #0f1218; --bg3: #151922; --bg4: #1a1f2b;
+  --border: #232a38; --gold: #f0c040; --gold2: #ffd700;
+  --red: #ff4d4f; --orange: #ff9f1a; --blue: #4da6ff;
+  --green: #7ed85b; --purple: #cc88ff;
+  --text: #e8eaf0; --text2: #9aa3b2; --text3: #5a6272;
   --font-head: 'Rajdhani', sans-serif;
   --font-mono: 'Share Tech Mono', monospace;
   --font-body: 'Barlow', sans-serif;
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(240,192,64,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(240,192,64,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* ── GRID BACKGROUND ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(240,192,64,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(240,192,64,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ── HEADER ── */
-.header {
-  position: relative;
-  z-index: 1;
-  padding: 32px 24px 24px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(240,192,64,0.05) 0%, transparent 100%);
-}
+/* HEADER */
+.header { position: relative; z-index: 1; padding: 32px 24px 24px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(240,192,64,0.05) 0%, transparent 100%); }
 .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
 .header-logo { font-family: var(--font-head); font-size: 32px; font-weight: 700; color: var(--gold); letter-spacing: 2px; line-height: 1; }
 .header-logo span { color: var(--text2); font-weight: 400; font-size: 14px; display: block; letter-spacing: 3px; margin-top: 2px; }
 .header-badge { margin-left: auto; background: var(--bg3); border: 1px solid var(--gold); color: var(--gold); font-family: var(--font-mono); font-size: 11px; padding: 4px 12px; border-radius: 4px; }
 
-/* ── SETUP PANEL ── */
-.setup-wrap {
-  position: relative;
-  z-index: 1;
-  max-width: 900px;
-  margin: 32px auto;
-  padding: 0 24px;
-}
-
-.setup-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.setup-top {
-  background: linear-gradient(90deg, rgba(240,192,64,0.08) 0%, transparent 100%);
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12px;
-}
+/* SETUP */
+.setup-wrap { position: relative; z-index: 1; max-width: 900px; margin: 32px auto; padding: 0 24px; }
+.setup-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.setup-top { background: linear-gradient(90deg, rgba(240,192,64,0.08) 0%, transparent 100%); padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
 .setup-top-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
-
 .setup-body { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media(max-width:600px){ .setup-body { grid-template-columns: 1fr; } }
-
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field.full { grid-column: 1 / -1; }
 .field label { font-family: var(--font-mono); font-size: 11px; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; }
-
 .input-wrap { position: relative; }
-.input-wrap input, .input-wrap select {
-  width: 100%;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 14px;
-  padding: 10px 14px;
-  outline: none;
-  transition: border-color .2s;
-  appearance: none;
-}
+.input-wrap input, .input-wrap select { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 14px; padding: 10px 14px; outline: none; transition: border-color .2s; appearance: none; }
 .input-wrap input:focus, .input-wrap select:focus { border-color: var(--gold); }
 .input-wrap input::placeholder { color: var(--text3); }
-
 .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
-.toggle-btn {
-  flex: 1;
-  min-width: 80px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-family: var(--font-head);
-  font-size: 14px;
-  font-weight: 600;
-  padding: 10px 14px;
-  cursor: pointer;
-  transition: all .2s;
-  text-align: center;
-  letter-spacing: 0.5px;
-}
+.toggle-btn { flex: 1; min-width: 70px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-family: var(--font-head); font-size: 14px; font-weight: 600; padding: 10px 14px; cursor: pointer; transition: all .2s; text-align: center; letter-spacing: 0.5px; }
 .toggle-btn:hover { border-color: var(--gold); color: var(--gold); }
 .toggle-btn.active { background: rgba(240,192,64,0.12); border-color: var(--gold); color: var(--gold); }
-
+.toggle-btn.vs-active { background: rgba(255,77,79,0.12); border-color: var(--red); color: var(--red); }
 .range-custom { display: none; grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
 .range-custom.show { display: grid; }
-
-.setup-footer { padding: 20px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
-
-.btn-run {
-  background: var(--gold);
-  color: #000;
-  border: none;
-  border-radius: 8px;
-  font-family: var(--font-head);
-  font-size: 18px;
-  font-weight: 700;
-  padding: 12px 36px;
-  cursor: pointer;
-  letter-spacing: 1px;
-  transition: all .2s;
-  display: flex; align-items: center; gap: 10px;
-}
+.setup-footer { padding: 20px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.btn-run { background: var(--gold); color: #000; border: none; border-radius: 8px; font-family: var(--font-head); font-size: 18px; font-weight: 700; padding: 12px 36px; cursor: pointer; letter-spacing: 1px; transition: all .2s; display: flex; align-items: center; gap: 10px; }
 .btn-run:hover { background: var(--gold2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(240,192,64,0.3); }
 .btn-run:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.btn-secondary {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text2);
-  font-family: var(--font-body);
-  font-size: 13px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: all .2s;
-}
+.btn-secondary { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-family: var(--font-body); font-size: 13px; padding: 10px 20px; cursor: pointer; transition: all .2s; }
 .btn-secondary:hover { border-color: var(--text2); color: var(--text); }
+input[type="datetime-local"] { color-scheme: dark; }
+input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(1) saturate(3) hue-rotate(5deg); cursor: pointer; }
 
-/* ── PROGRESS ── */
-.progress-wrap {
-  display: none;
-  position: relative; z-index: 1;
-  max-width: 900px; margin: 0 auto; padding: 0 24px 24px;
-}
+/* PROGRESS */
+.progress-wrap { display: none; position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px 24px; }
 .progress-wrap.show { display: block; }
-.progress-card {
-  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
-}
+.progress-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
 .progress-title { font-family: var(--font-head); font-size: 16px; color: var(--gold); margin-bottom: 16px; letter-spacing: 1px; }
 .progress-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; margin-bottom: 12px; }
 .progress-bar { height: 100%; background: linear-gradient(90deg, var(--gold), var(--orange)); border-radius: 4px; transition: width .4s ease; width: 0%; }
@@ -185,59 +70,31 @@ body::before {
 .progress-log .log-line.warn { color: var(--orange); }
 .progress-log .log-line.err { color: var(--red); }
 
-/* ── REPORT ── */
-#report {
-  display: none;
-  position: relative; z-index: 1;
-  max-width: 1200px; margin: 0 auto; padding: 0 24px 48px;
-}
+/* REPORT */
+#report { display: none; position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px 120px; }
 #report.show { display: block; }
-
-.report-header {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px;
-}
-.report-title { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--gold); letter-spacing: 2px; }
+.report-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.report-title { font-family: var(--font-head); font-size: 24px; font-weight: 700; color: var(--gold); letter-spacing: 2px; }
 .report-sub { color: var(--text2); font-size: 12px; font-family: var(--font-mono); margin-top: 4px; }
-.report-actions { display: flex; gap: 10px; }
-
-.mode-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: var(--font-mono);
-  border: 1px solid;
-}
+.report-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.mode-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: var(--font-mono); border: 1px solid; }
 .mode-simple { background: rgba(126,216,91,0.1); color: var(--green); border-color: var(--green); }
 .mode-detailed { background: rgba(255,159,26,0.1); color: var(--orange); border-color: var(--orange); }
 
-/* ── HERO GRID ── */
-.hero-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px;
-}
-.hero-card {
-  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
-  position: relative; overflow: hidden;
-}
-.hero-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--gold), transparent);
-}
+/* HERO */
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.hero-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; position: relative; overflow: hidden; }
+.hero-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--gold), transparent); }
 .hero-label { font-family: var(--font-mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
-.hero-value { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--text); }
+.hero-value { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-top: 4px; }
 
-/* ── SECTION TITLE ── */
-.section-title {
-  font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--gold);
-  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
-  display: flex; align-items: center; gap: 8px;
-}
+/* SECTION TITLE */
+.section-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-/* ── PODIUM ── */
+/* PODIUM */
 .podium { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.podium-card {
-  flex: 1; min-width: 160px; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 16px; text-align: center;
-}
+.podium-card { flex: 1; min-width: 160px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
 .podium-card.gold { border-color: var(--gold); background: rgba(240,192,64,0.05); }
 .podium-card.silver { border-color: #aaa; }
 .podium-card.bronze { border-color: #cd7f32; }
@@ -245,7 +102,7 @@ body::before {
 .podium-name { font-family: var(--font-head); font-size: 16px; font-weight: 700; margin: 6px 0 4px; }
 .podium-stats { font-size: 11px; color: var(--text2); line-height: 1.6; }
 
-/* ── TABLE ── */
+/* TABLE */
 .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
 table { border-collapse: collapse; width: 100%; min-width: 500px; font-size: 13px; }
 td, th { border: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: center; }
@@ -255,15 +112,10 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 .absent { color: var(--text3); font-style: italic; }
 .total-row td { background: rgba(240,192,64,0.10) !important; border-top: 2px solid var(--gold) !important; font-size: 15px !important; font-weight: 700 !important; color: var(--gold) !important; padding: 10px 12px !important; }
 .avg-row td { background: rgba(77,166,255,0.05) !important; color: var(--blue); }
-input[type="datetime-local"] { color-scheme: dark; }
-input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(1) saturate(3) hue-rotate(5deg); cursor: pointer; }
 
-/* ── AI CARDS ── */
+/* AI CARDS */
 .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.ai-card {
-  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px;
-  position: relative; overflow: hidden;
-}
+.ai-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; position: relative; overflow: hidden; }
 .ai-card.mvp { border-color: var(--gold); }
 .ai-card.mvp::before { content: 'MVP'; position: absolute; top: 10px; right: 10px; font-family: var(--font-mono); font-size: 9px; color: var(--gold); border: 1px solid var(--gold); padding: 2px 6px; border-radius: 3px; }
 .ai-name { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
@@ -272,20 +124,17 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 .ai-notes { font-size: 11px; color: var(--text3); margin-top: 6px; font-family: var(--font-mono); }
 .ai-mini { margin-top: 8px; font-size: 11px; color: var(--text3); font-family: var(--font-mono); padding-top: 8px; border-top: 1px solid var(--border); }
 
-/* ── PERSONAL BOX ── */
-.personal-box {
-  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px;
-}
+/* PERSONAL */
+.personal-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
 .personal-section { margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
 .personal-section ul { padding-left: 18px; margin-top: 6px; color: var(--text2); }
 .personal-section li { margin-bottom: 4px; }
-
 .streak-alert { background: rgba(255,77,79,0.08); border: 1px solid var(--red); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #ff8080; font-size: 12px; }
-.streak-good  { background: rgba(126,216,91,0.08); border: 1px solid var(--green); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #a0f070; font-size: 12px; }
-.streak-info  { background: rgba(77,166,255,0.08); border: 1px solid var(--blue); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #88c8ff; font-size: 12px; }
-.streak-best  { background: rgba(240,192,64,0.08); border: 1px solid var(--gold); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: var(--gold); font-size: 12px; }
+.streak-good { background: rgba(126,216,91,0.08); border: 1px solid var(--green); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #a0f070; font-size: 12px; }
+.streak-info { background: rgba(77,166,255,0.08); border: 1px solid var(--blue); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: #88c8ff; font-size: 12px; }
+.streak-best { background: rgba(240,192,64,0.08); border: 1px solid var(--gold); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: var(--gold); font-size: 12px; }
 
-/* ── GLOBAL BOX ── */
+/* GLOBAL */
 .global-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
 .global-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
 .global-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
@@ -293,7 +142,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 .global-val { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin: 6px 0; }
 .global-pct { font-size: 12px; font-weight: 600; font-family: var(--font-mono); }
 
-/* ── TARGETS ── */
+/* TARGETS */
 .targets-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
 .targets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
 .target-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
@@ -306,7 +155,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 .hit-legs { color: var(--blue); font-weight: 700; }
 .hit-unknown { color: var(--text3); }
 
-/* ── WEAPON BOX ── */
+/* WEAPON */
 .weapon-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
 .weapon-top { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
 .weapon-cols { display: flex; gap: 12px; }
@@ -317,7 +166,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 .weapon-kills { color: var(--red); font-weight: 700; font-family: var(--font-mono); }
 .weapon-dmg { color: var(--orange); font-weight: 700; font-family: var(--font-mono); }
 
-/* ── COMBAT ANALYSIS ── */
+/* COMBAT ANALYSIS */
 .ca-block { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
 .ca-player-block { font-size: 12px; }
 .ca-conclusion { background: var(--bg); border-left: 3px solid var(--blue); padding: 10px 12px; margin-bottom: 10px; border-radius: 4px; color: var(--text2); line-height: 1.6; }
@@ -329,46 +178,173 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 .tl-bar { position: relative; height: 26px; background: var(--bg); border-radius: 6px; margin-bottom: 4px; overflow: hidden; border: 1px solid var(--border); }
 .tl-dot { position: absolute; top: 5px; transform: translateX(-50%); width: 18px; height: 16px; border-radius: 4px; font-size: 9px; font-weight: 700; color: #000; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); }
 .tl-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); margin-bottom: 10px; font-family: var(--font-mono); }
-
-/* ── TACTICAL PROFILE ── */
 .tactical-profile { border-left: 3px solid; padding: 10px 12px; margin: 10px 0; background: var(--bg); border-radius: 4px; }
 .tactical-style { font-family: var(--font-head); font-size: 14px; font-weight: 600; margin-bottom: 6px; }
 .tactical-tips { padding-left: 16px; color: var(--text2); font-size: 12px; line-height: 1.8; }
 
-/* ── TEAM SUMMARY ── */
+/* COLLAPSIBLE */
+.collapsible { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+.collapsible-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; cursor: pointer; user-select: none; transition: background .2s; }
+.collapsible-header:hover { background: rgba(240,192,64,0.04); }
+.collapsible-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.collapsible-badge { font-family: var(--font-mono); font-size: 10px; padding: 2px 8px; border-radius: 4px; border: 1px solid; }
+.badge-blue { color: var(--blue); border-color: var(--blue); background: rgba(77,166,255,0.08); }
+.badge-green { color: var(--green); border-color: var(--green); background: rgba(126,216,91,0.08); }
+.badge-orange { color: var(--orange); border-color: var(--orange); background: rgba(255,159,26,0.08); }
+.badge-purple { color: var(--purple); border-color: var(--purple); background: rgba(204,136,255,0.08); }
+.collapsible-arrow { color: var(--text3); font-size: 12px; transition: transform .3s; }
+.collapsible-arrow.open { transform: rotate(180deg); }
+.collapsible-body { padding: 0 18px 18px; border-top: 1px solid var(--border); }
+
+/* SURVIVAL TIMELINE */
+.surv-stats { display: flex; gap: 20px; margin: 14px 0 12px; flex-wrap: wrap; }
+.surv-stat-val { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+.surv-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text3); text-transform: uppercase; }
+.chart-wrap { position: relative; width: 100%; height: 120px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+.chart-y-labels { position: absolute; left: 6px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between; font-family: var(--font-mono); font-size: 9px; color: var(--text3); pointer-events: none; padding: 4px 0; z-index: 2; }
+.chart-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--text3); margin-top: 4px; padding: 0 4px; }
+.chart-legend { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); font-family: var(--font-mono); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.event-list { margin-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+.event-item { display: flex; align-items: center; gap: 10px; font-size: 12px; padding: 6px 10px; border-radius: 6px; background: var(--bg3); }
+.event-time { font-family: var(--font-mono); font-size: 11px; color: var(--text3); min-width: 45px; }
+.event-desc { color: var(--text2); flex: 1; }
+.event-val { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
+
+/* KILL DISTANCE */
+.dist-stats { display: flex; gap: 20px; margin: 14px 0 14px; flex-wrap: wrap; }
+.dist-bar-wrap { display: flex; flex-direction: column; gap: 8px; }
+.dist-bar-row { display: flex; align-items: center; gap: 10px; }
+.dist-bar-label { font-family: var(--font-mono); font-size: 11px; color: var(--text2); min-width: 85px; text-align: right; }
+.dist-bar-track { flex: 1; height: 28px; background: var(--bg3); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); position: relative; }
+.dist-bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #000; min-width: 0; }
+.dist-bar-count { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-family: var(--font-mono); font-size: 11px; color: var(--text2); }
+.dist-verdict { margin-top: 14px; padding: 12px 14px; background: var(--bg3); border-radius: 8px; border-left: 3px solid var(--gold); font-size: 13px; color: var(--text2); line-height: 1.6; }
+.pro-comparison { margin-top: 10px; padding: 10px 14px; border-radius: 8px; background: rgba(77,166,255,0.06); border: 1px solid rgba(77,166,255,0.2); font-size: 12px; color: #88c8ff; line-height: 1.6; }
+
+/* LOOT */
+.loot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 14px 0; }
+.loot-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+.loot-card-val { font-family: var(--font-head); font-size: 24px; font-weight: 700; margin-bottom: 2px; }
+.loot-card-label { font-family: var(--font-mono); font-size: 10px; color: var(--text3); text-transform: uppercase; }
+.loot-bar-wrap { height: 36px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: flex; }
+.loot-segment { height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: #000; }
+.loot-bar-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--text3); margin-top: 4px; }
+.loot-items-title { font-family: var(--font-mono); font-size: 11px; color: var(--text3); text-transform: uppercase; margin: 12px 0 8px; }
+.loot-item-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.loot-item-name { flex: 1; color: var(--text2); }
+.loot-verdict { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13px; line-height: 1.6; }
+.verdict-good { background: rgba(126,216,91,0.08); border: 1px solid var(--green); color: #a0f070; }
+.verdict-warn { background: rgba(255,159,26,0.08); border: 1px solid var(--orange); color: #ffcc88; }
+.verdict-bad { background: rgba(255,77,79,0.08); border: 1px solid var(--red); color: #ff8080; }
+
+/* TEAM DETAILED */
+.team-detailed-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.team-analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media(max-width:700px){ .team-analysis-grid { grid-template-columns: 1fr; } }
+.team-analysis-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.team-analysis-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.player-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.player-bar-name { font-size: 12px; min-width: 90px; color: var(--text2); font-family: var(--font-mono); }
+.player-bar-track { flex: 1; height: 20px; background: var(--bg); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border); }
+.player-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-family: var(--font-mono); font-weight: 700; color: #000; }
+.player-bar-val { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 10px; font-family: var(--font-mono); color: var(--text2); }
+.team-impact-line { font-size: 12px; color: var(--text2); line-height: 1.6; margin-top: 10px; padding: 8px 10px; background: var(--bg); border-radius: 6px; border-left: 2px solid var(--orange); }
+.team-verdict-box { background: var(--bg3); border: 1px solid var(--gold); border-radius: 10px; padding: 16px; }
+.team-verdict-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
+.team-verdict-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.team-verdict-player { font-family: var(--font-head); font-size: 14px; font-weight: 600; min-width: 120px; }
+.team-verdict-score { font-family: var(--font-mono); font-size: 12px; }
+.team-tips-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.team-tip-item { display: flex; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.5; padding: 6px 10px; background: var(--bg); border-radius: 6px; }
+.team-tip-num { font-family: var(--font-mono); color: var(--gold); font-weight: 700; min-width: 18px; }
+
+/* TEAM SUMMARY */
 .team-summary { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
 .team-summary-stats { font-size: 13px; color: var(--text2); margin-bottom: 10px; line-height: 1.8; }
 .team-tips { padding-left: 18px; color: var(--text2); font-size: 12px; line-height: 1.8; }
 
-/* ── SURPRIZE ── */
+/* SURPRIZE */
 .surprize-box { background: rgba(240,192,64,0.04); border: 1px solid var(--gold); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
 .surprize-row { padding: 10px 0; border-bottom: 1px solid rgba(240,192,64,0.15); font-size: 13px; line-height: 1.6; display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
 .surprize-row:last-child { border-bottom: none; }
-.surprize-icon { font-size: 18px; flex-shrink: 0; }
-.surprize-text { flex: 1; }
 
-/* ── ERROR / EMPTY ── */
+/* 1VS1 */
+.vs-wrap { margin-bottom: 20px; }
+.vs-header { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-bottom: 20px; }
+.vs-player-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+.vs-player-card.winner { border-color: var(--gold); background: rgba(240,192,64,0.06); }
+.vs-player-card.loser { opacity: 0.7; }
+.vs-player-name { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+.vs-player-score { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--gold); margin: 6px 0; }
+.vs-player-label { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+.vs-separator { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--red); text-align: center; }
+.vs-stat-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 8px; padding: 8px 12px; background: var(--bg2); border-radius: 8px; border: 1px solid var(--border); }
+.vs-stat-val { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
+.vs-stat-val.win { color: var(--gold); }
+.vs-stat-val.left { text-align: right; }
+.vs-stat-val.right { text-align: left; }
+.vs-stat-label { font-family: var(--font-mono); font-size: 11px; color: var(--text3); text-align: center; text-transform: uppercase; }
+.vs-analysis-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
+.vs-analysis-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 14px; }
+.vs-analysis-section { margin-bottom: 14px; }
+.vs-analysis-label { font-family: var(--font-mono); font-size: 11px; color: var(--text3); text-transform: uppercase; margin-bottom: 6px; }
+.vs-analysis-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.vs-side-by-side { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+@media(max-width:600px){ .vs-side-by-side { grid-template-columns: 1fr; } }
+.vs-side-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.vs-side-card.winner-side { border-color: var(--gold); }
+.vs-side-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+/* ERROR */
 .error-box { background: rgba(255,77,79,0.08); border: 1px solid var(--red); border-radius: 10px; padding: 16px 20px; color: #ff8080; font-size: 13px; margin-bottom: 20px; }
 
-/* ── FOOTER ── */
+/* FLOATING BUTTONS */
+.fab-wrap { position: fixed; bottom: 28px; right: 24px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; z-index: 100; }
+.fab-donate { display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #1a2e1a, #0f1f0f); border: 1px solid var(--green); border-radius: 50px; padding: 10px 18px; cursor: pointer; font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--green); letter-spacing: 0.5px; box-shadow: 0 4px 20px rgba(126,216,91,0.2); transition: all .2s; text-decoration: none; }
+.fab-donate:hover { box-shadow: 0 6px 28px rgba(126,216,91,0.35); transform: translateY(-2px); }
+.fab-feedback { display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #1a1f2e, #0f1420); border: 1px solid var(--blue); border-radius: 50px; padding: 10px 18px; cursor: pointer; font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--blue); letter-spacing: 0.5px; box-shadow: 0 4px 20px rgba(77,166,255,0.2); transition: all .2s; }
+.fab-feedback:hover { box-shadow: 0 6px 28px rgba(77,166,255,0.35); transform: translateY(-2px); }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; position: relative; transform: translateY(20px); transition: transform .2s; }
+.modal-overlay.show .modal { transform: translateY(0); }
+.modal-close { position: absolute; top: 16px; right: 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text3); font-size: 14px; transition: all .2s; }
+.modal-close:hover { color: var(--text); border-color: var(--text3); }
+.modal-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--blue); margin-bottom: 4px; letter-spacing: 1px; }
+.modal-sub { font-family: var(--font-mono); font-size: 11px; color: var(--text3); margin-bottom: 20px; }
+.modal-field { margin-bottom: 14px; }
+.modal-label { font-family: var(--font-mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+.modal-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 14px; padding: 10px 14px; outline: none; transition: border-color .2s; }
+.modal-input:focus { border-color: var(--blue); }
+.modal-input::placeholder { color: var(--text3); }
+textarea.modal-input { resize: vertical; min-height: 100px; }
+.modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+.btn-send { flex: 1; background: var(--blue); color: #000; border: none; border-radius: 8px; font-family: var(--font-head); font-size: 16px; font-weight: 700; padding: 12px; cursor: pointer; letter-spacing: 0.5px; transition: all .2s; }
+.btn-send:hover { background: #6dbfff; transform: translateY(-1px); }
+.btn-cancel { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; font-family: var(--font-body); font-size: 14px; padding: 12px 20px; cursor: pointer; transition: all .2s; }
+.modal-success { text-align: center; padding: 20px 0; display: none; }
+.success-icon { font-size: 48px; margin-bottom: 12px; }
+.success-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+.success-sub { font-size: 13px; color: var(--text2); }
+
+/* FOOTER */
 .footer { text-align: center; padding: 24px; border-top: 1px solid var(--border); color: var(--text3); font-size: 11px; font-family: var(--font-mono); position: relative; z-index: 1; }
 .footer b { color: var(--gold); }
 
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text3); }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="header-inner">
-    <div class="header-logo">
-      PUBG STATS
-      <span>PERFORMANCE REPORT V7</span>
-    </div>
+    <div class="header-logo">PUBG GLOBAL STATS<span>PERFORMANCE REPORT</span></div>
     <div class="header-badge">by Dani_4LA0</div>
   </div>
 </div>
@@ -376,23 +352,17 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 <!-- SETUP -->
 <div class="setup-wrap" id="setupWrap">
   <div class="setup-card">
-    <div class="setup-top">
-      <div class="setup-top-title">⚙ CONFIGURARE RAPORT</div>
-    </div>
+    <div class="setup-top"><div class="setup-top-title">⚙ CONFIGURARE RAPORT</div></div>
     <div class="setup-body">
 
       <div class="field full">
         <label>API Key PUBG</label>
-        <div class="input-wrap">
-          <input type="password" id="apiKey" placeholder="Introdu API Key-ul PUBG..." autocomplete="off">
-        </div>
+        <div class="input-wrap"><input type="password" id="apiKey" placeholder="Introdu API Key-ul PUBG..." autocomplete="off"></div>
       </div>
 
       <div class="field">
-        <label>Username PUBG</label>
-        <div class="input-wrap">
-          <input type="text" id="playerName" placeholder="ex: Dani_4LA0">
-        </div>
+        <label>Username PUBG (Player 1)</label>
+        <div class="input-wrap"><input type="text" id="playerName" placeholder="ex: Dani_4LA0"></div>
       </div>
 
       <div class="field">
@@ -409,6 +379,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
         <div class="toggle-group">
           <button class="toggle-btn active" data-group="reportType" data-val="personal">Personal</button>
           <button class="toggle-btn" data-group="reportType" data-val="team">Team</button>
+          <button class="toggle-btn" data-group="reportType" data-val="vs">1VS1</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tip Meci</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-group="matchMode" data-val="ranked">Ranked</button>
+          <button class="toggle-btn" data-group="matchMode" data-val="normal">Normal</button>
         </div>
       </div>
 
@@ -441,7 +420,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
         </div>
       </div>
 
-      <!-- Team extra players -->
       <div class="field full" id="extraPlayersWrap" style="display:none">
         <label>Extra Players (team, optional)</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -450,11 +428,14 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
         </div>
       </div>
 
+      <div class="field full" id="vsPlayerWrap" style="display:none">
+        <label>Player 2 (pentru 1VS1)</label>
+        <div class="input-wrap"><input type="text" id="vsPlayerName" placeholder="ex: Adversar_PUBG"></div>
+      </div>
+
     </div>
     <div class="setup-footer">
-      <button class="btn-run" id="btnRun">
-        <span>▶</span> GENEREAZA RAPORT
-      </button>
+      <button class="btn-run" id="btnRun"><span>▶</span> GENEREAZA RAPORT</button>
       <button class="btn-secondary" id="btnClearKey">Sterge API Key</button>
       <span id="savedKeyNote" style="font-size:12px;color:var(--green);display:none;">✓ API Key salvat</span>
     </div>
@@ -473,131 +454,248 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 <!-- REPORT -->
 <div id="report"></div>
 
-<div class="footer">
-  ⚡ Designed &amp; Created by <b>Dani_4LA0</b> &nbsp;|&nbsp; PUBG Performance Report V7
+<div class="footer">⚡ Designed &amp; Created by <b>Dani_4LA0</b> &nbsp;|&nbsp; PUBG Global Stats</div>
+
+<!-- FLOATING BUTTONS -->
+<div class="fab-wrap">
+  <a href="https://revolut.me/oltenai530" target="_blank" class="fab-donate">💚 Donatie</a>
+  <button class="fab-feedback" onclick="openFeedbackModal()">✉️ Feedback</button>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-close" onclick="closeFeedbackModal()">✕</div>
+    <div id="modalForm">
+      <div class="modal-title">✉️ Trimite Feedback</div>
+      <div class="modal-sub">Sugestii, bug-uri sau idei noi — toate sunt binevenite!</div>
+      <div class="modal-field">
+        <label class="modal-label">Numele tau (optional)</label>
+        <input type="text" class="modal-input" id="fbName" placeholder="ex: Dani_4LA0">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Mesaj *</label>
+        <textarea class="modal-input" id="fbMsg" placeholder="Scrie aici sugestia sau bug-ul gasit..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeFeedbackModal()">Anuleaza</button>
+        <button class="btn-send" onclick="sendFeedback()">✉️ Trimite</button>
+      </div>
+    </div>
+    <div class="modal-success" id="modalSuccess">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Multumim!</div>
+      <div class="success-sub">Feedback-ul tau a fost trimis.<br>Il vom lua in considerare!</div>
+    </div>
+  </div>
 </div>
 
 <script>
-// ===================== STATE =====================
-const state = {
-  platform: 'steam',
-  reportType: 'personal',
-  detailLevel: 'simple',
-  range: '3',
-  apiKey: '',
-  playerName: '',
-  extra1: '',
-  extra2: '',
-  fromDate: null,
-  toDate: null
-};
 
-// ===================== LOCAL STORAGE =====================
-function loadApiKey() {
-  return localStorage.getItem('pubg_api_key') || '';
-}
-function saveApiKey(k) {
-  localStorage.setItem('pubg_api_key', k);
-}
-function clearApiKey() {
-  localStorage.removeItem('pubg_api_key');
-}
-
-// ===================== INIT =====================
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = loadApiKey();
-  if (saved) {
-    document.getElementById('apiKey').value = saved;
-    document.getElementById('savedKeyNote').style.display = 'inline';
+// ===================== I18N =====================
+const IS_RO = navigator.language.toLowerCase().startsWith('ro');
+const T = {
+  ro: {
+    configTitle: '⚙ CONFIGURARE RAPORT',
+    apiKeyLabel: 'API Key PUBG',
+    apiKeyPh: 'Introdu API Key-ul PUBG...',
+    usernameLabel: 'Username PUBG (Player 1)',
+    usernamePh: 'ex: Dani_4LA0',
+    platformLabel: 'Platforma',
+    reportTypeLabel: 'Tip Raport',
+    matchModeLabel: 'Tip Meci',
+    detailLabel: 'Detaliu',
+    intervalLabel: 'Interval',
+    fromLabel: 'De la',
+    toLabel: 'Pana la',
+    extraLabel: 'Extra Players (team, optional)',
+    vsLabel: 'Player 2 (pentru 1VS1)',
+    vsPh: 'ex: Adversar_PUBG',
+    btnRun: '▶ GENEREAZA RAPORT',
+    btnClear: 'Sterge API Key',
+    savedKey: '✓ API Key salvat',
+    progressTitle: '⚡ SE GENEREAZA RAPORTUL...',
+    fabDonate: '💚 Donatie',
+    fabFeedback: '✉️ Feedback',
+    feedbackTitle: '✉️ Trimite Feedback',
+    feedbackSub: 'Sugestii, bug-uri sau idei noi — toate sunt binevenite!',
+    feedbackNameLabel: 'Numele tau (optional)',
+    feedbackMsgLabel: 'Mesaj *',
+    feedbackCancel: 'Anuleaza',
+    feedbackSend: '✉️ Trimite',
+    feedbackThanks: 'Multumim!',
+    feedbackSentMsg: 'Feedback-ul tau a fost trimis.<br>Il vom lua in considerare!',
+    footerText: 'PUBG Global Stats',
+    errorNoMsg: 'Scrie un mesaj!',
+    errorFillFields: 'Introdu API Key si Username!',
+    errorFillP2: 'Introdu username-ul pentru Player 2!',
+    errorSelectCustom: 'Selecteaza intervalul custom!',
+    errorDateRange: 'Data finala trebuie sa fie dupa cea initiala!',
+    chickenDinner: '🍗 Chicken Dinner',
+    noMatches: 'Nu exista meciuri in intervalul selectat.',
+    playerNotFound: 'Playerul nu a fost gasit pe aceasta platforma.',
+    corsError: 'CORS sau API Key invalid. Verifica cheia API si incearca dintr-un browser care permite CORS.',
+    feedbackFrom: ' de la ',
+    feedbackFromLabel: 'De la: ',
+  },
+  en: {
+    configTitle: '⚙ REPORT CONFIGURATION',
+    apiKeyLabel: 'PUBG API Key',
+    apiKeyPh: 'Enter your PUBG API Key...',
+    usernameLabel: 'PUBG Username (Player 1)',
+    usernamePh: 'e.g. Dani_4LA0',
+    platformLabel: 'Platform',
+    reportTypeLabel: 'Report Type',
+    matchModeLabel: 'Match Mode',
+    detailLabel: 'Detail',
+    intervalLabel: 'Interval',
+    fromLabel: 'From',
+    toLabel: 'To',
+    extraLabel: 'Extra Players (team, optional)',
+    vsLabel: 'Player 2 (for 1VS1)',
+    vsPh: 'e.g. Opponent_PUBG',
+    btnRun: '▶ GENERATE REPORT',
+    btnClear: 'Clear API Key',
+    savedKey: '✓ API Key saved',
+    progressTitle: '⚡ GENERATING REPORT...',
+    fabDonate: '💚 Donate',
+    fabFeedback: '✉️ Feedback',
+    feedbackTitle: '✉️ Send Feedback',
+    feedbackSub: 'Suggestions, bugs or new ideas — all welcome!',
+    feedbackNameLabel: 'Your name (optional)',
+    feedbackMsgLabel: 'Message *',
+    feedbackCancel: 'Cancel',
+    feedbackSend: '✉️ Send',
+    feedbackThanks: 'Thank you!',
+    feedbackSentMsg: 'Your feedback has been sent.<br>We will take it into consideration!',
+    footerText: 'PUBG Global Stats',
+    errorNoMsg: 'Please write a message!',
+    errorFillFields: 'Please enter API Key and Username!',
+    errorFillP2: 'Please enter Player 2 username!',
+    errorSelectCustom: 'Please select the custom interval!',
+    errorDateRange: 'End date must be after start date!',
+    chickenDinner: '🍗 Chicken Dinner',
+    noMatches: 'No matches found in the selected interval.',
+    playerNotFound: 'Player not found on this platform.',
+    corsError: 'CORS or invalid API Key. Check your API key and try in a browser that allows CORS.',
+    feedbackFrom: ' from ',
+    feedbackFromLabel: 'From: ',
   }
+};
+function i(key) { return (IS_RO ? T.ro : T.en)[key] || key; }
 
-  // Toggle buttons
+// ===================== STATE =====================
+const state = { platform:'steam', reportType:'personal', matchMode:'ranked', detailLevel:'simple', range:'3' };
+
+function loadApiKey() { return localStorage.getItem('pubg_api_key') || ''; }
+function saveApiKey(k) { localStorage.setItem('pubg_api_key', k); }
+function clearApiKey() { localStorage.removeItem('pubg_api_key'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Apply i18n to UI
+  const L = IS_RO ? T.ro : T.en;
+  document.querySelector('.setup-top-title').textContent = L.configTitle;
+  document.getElementById('apiKey').placeholder = L.apiKeyPh;
+  document.getElementById('playerName').placeholder = L.usernamePh;
+  document.getElementById('extra1').placeholder = L.extraLabel.includes('Extra') ? (IS_RO ? 'Extra player 1' : 'Extra player 1') : 'Extra player 1';
+  document.getElementById('extra2').placeholder = IS_RO ? 'Extra player 2' : 'Extra player 2';
+  document.getElementById('vsPlayerName').placeholder = L.vsPh;
+  document.getElementById('btnRun').innerHTML = L.btnRun;
+  document.getElementById('btnClearKey').textContent = L.btnClear;
+  document.querySelector('.progress-title').textContent = L.progressTitle;
+  document.querySelector('.fab-donate').innerHTML = L.fabDonate;
+  document.querySelector('.fab-feedback').innerHTML = L.fabFeedback;
+  document.querySelector('.modal-title').textContent = L.feedbackTitle;
+  document.querySelector('.modal-sub').textContent = L.feedbackSub;
+  document.querySelector('.btn-cancel').textContent = L.feedbackCancel;
+  document.querySelector('.btn-send').innerHTML = L.feedbackSend;
+  document.querySelector('.success-title').textContent = L.feedbackThanks;
+  document.querySelector('.success-sub').innerHTML = L.feedbackSentMsg;
+  document.querySelector('.footer').innerHTML = '⚡ Designed &amp; Created by <b>Dani_4LA0</b> &nbsp;|&nbsp; ' + L.footerText;
+  // Labels
+  const labels = document.querySelectorAll('.field label');
+  labels.forEach(lbl => {
+    const txt = lbl.textContent.trim();
+    if(txt.includes('API Key')) lbl.textContent = L.apiKeyLabel;
+    else if(txt.includes('Username') || txt.includes('Player 1')) lbl.textContent = L.usernameLabel;
+    else if(txt.includes('Platforma') || txt.includes('Platform')) lbl.textContent = L.platformLabel;
+    else if(txt.includes('Tip Raport') || txt.includes('Report Type')) lbl.textContent = L.reportTypeLabel;
+    else if(txt.includes('Tip Meci') || txt.includes('Match Mode')) lbl.textContent = L.matchModeLabel;
+    else if(txt.includes('Detaliu') || txt.includes('Detail')) lbl.textContent = L.detailLabel;
+    else if(txt.includes('Interval')) lbl.textContent = L.intervalLabel;
+    else if(txt.includes('De la') || txt.includes('From')) lbl.textContent = L.fromLabel;
+    else if(txt.includes('Pana la') || txt.includes('To')) lbl.textContent = L.toLabel;
+    else if(txt.includes('Extra Players')) lbl.textContent = L.extraLabel;
+    else if(txt.includes('Player 2')) lbl.textContent = L.vsLabel;
+  });
+
+  const saved = loadApiKey();
+  if(saved) { document.getElementById('apiKey').value = saved; document.getElementById('savedKeyNote').style.display = 'inline'; }
+  document.getElementById('savedKeyNote').textContent = L.savedKey;
+
   document.querySelectorAll('.toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const group = btn.dataset.group;
       document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state[group] = btn.dataset.val;
-      if (group === 'range') {
-        document.getElementById('customRange').classList.toggle('show', btn.dataset.val === 'custom');
-      }
-      if (group === 'reportType') {
+      if(group === 'range') document.getElementById('customRange').classList.toggle('show', btn.dataset.val === 'custom');
+      if(group === 'reportType') {
         document.getElementById('extraPlayersWrap').style.display = btn.dataset.val === 'team' ? 'block' : 'none';
+        document.getElementById('vsPlayerWrap').style.display = btn.dataset.val === 'vs' ? 'block' : 'none';
       }
     });
   });
 
   document.getElementById('btnRun').addEventListener('click', runReport);
-  document.getElementById('btnClearKey').addEventListener('click', () => {
-    clearApiKey();
-    document.getElementById('apiKey').value = '';
-    document.getElementById('savedKeyNote').style.display = 'none';
-  });
+  document.getElementById('btnClearKey').addEventListener('click', () => { clearApiKey(); document.getElementById('apiKey').value = ''; document.getElementById('savedKeyNote').style.display = 'none'; });
 });
+
+// ===================== FEEDBACK =====================
+function openFeedbackModal() { document.getElementById('modalOverlay').classList.add('show'); document.getElementById('modalForm').style.display = 'block'; document.getElementById('modalSuccess').style.display = 'none'; }
+function closeFeedbackModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+function closeOnOverlay(e) { if(e.target === document.getElementById('modalOverlay')) closeFeedbackModal(); }
+function sendFeedback() {
+  const name = document.getElementById('fbName').value.trim();
+  const msg = document.getElementById('fbMsg').value.trim();
+  if(!msg) { alert(i('errorNoMsg')); return; }
+  const subject = encodeURIComponent('PUBG Global Stats - Feedback' + (name ? i('feedbackFrom') + name : ''));
+  const body = encodeURIComponent((name ? i('feedbackFromLabel') + name + '\n\n' : '') + msg);
+  window.open(`mailto:oltenacu.dan87@gmail.com?subject=${subject}&body=${body}`);
+  document.getElementById('modalForm').style.display = 'none';
+  document.getElementById('modalSuccess').style.display = 'block';
+  setTimeout(closeFeedbackModal, 2500);
+}
+
+// ===================== COLLAPSIBLE =====================
+function toggleCollapsible(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('.collapsible-arrow');
+  const isOpen = body.style.display !== 'none' && body.style.display !== '';
+  body.style.display = isOpen ? 'none' : 'block';
+  if(arrow) arrow.classList.toggle('open', !isOpen);
+}
 
 // ===================== UTIL =====================
 function safeInt(v) { return Number(v ?? 0) || 0; }
 function safeNum(v, d=0) { const n=Number(v||0); return d>0?n.toFixed(d):String(Math.round(n)); }
 function nameEq(a,b) { return String(a||'').toLowerCase()===String(b||'').toLowerCase(); }
-function escHtml(s) {
-  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function shortMapName(m) {
-  const maps={Baltic_Main:'Erangel',Desert_Main:'Miramar',Savage_Main:'Sanhok',DihorOtok_Main:'Vikendi',Tiger_Main:'Taego',Summerland_Main:'Karakin',Chimera_Main:'Paramo',Heaven_Main:'Haven',Kiki_Main:'Deston',Neon_Main:'Rondo'};
-  return maps[m]||m||'-';
-}
-function cleanWeaponName(raw) {
-  if(!raw) return 'Unknown';
-  return raw.replace(/^WeapID_/,'').replace(/^Weap_/,'').replace(/_C$/,'').replace(/_MainWeapon$/,'').replace(/BP_/,'').replace(/_/g,' ').trim();
-}
-function formatRoTime(d) {
-  return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
-}
-function formatRoDate(d) {
-  return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric'}).format(d);
-}
-function formatRoDateTime(d) {
-  return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
-}
-function classifyDamageReason(r) {
-  const s=String(r||'').toLowerCase();
-  if(!s) return 'unknown';
-  if(s.includes('head')||s.includes('helmet')) return 'head';
-  if(s.includes('leg')||s.includes('foot')||s.includes('knee')||s.includes('thigh')) return 'legs';
-  if(s.includes('body')||s.includes('torso')||s.includes('chest')||s.includes('pelvis')||s.includes('stomach')||s.includes('arm')||s.includes('hand')||s.includes('shoulder')) return 'body';
-  return 'unknown';
-}
-function emptyPlayerStat(name) {
-  return {name,kills:0,damage:0,assists:0,revives:0,downs:0,matches:0,wins:0,knocksTaken:0,head:0,body:0,legs:0,unknown:0,score:0};
-}
-function hashString(str) {
-  let h=0;
-  for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}
-  return Math.abs(h);
-}
-function pickLine(lines,seed) {
-  if(!lines.length) return '';
-  return lines[hashString(seed)%lines.length];
-}
-function circlePhaseLabel(phase) {
-  if(phase<=2) return `Cerc ${phase} (Early game)`;
-  if(phase<=5) return `Cerc ${phase} (Mid game)`;
-  return `Cerc ${phase} (Late game)`;
-}
+function escHtml(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function shortMapName(m) { const maps={Baltic_Main:'Erangel',Desert_Main:'Miramar',Savage_Main:'Sanhok',DihorOtok_Main:'Vikendi',Tiger_Main:'Taego',Summerland_Main:'Karakin',Chimera_Main:'Paramo',Heaven_Main:'Haven',Kiki_Main:'Deston',Neon_Main:'Rondo'}; return maps[m]||m||'-'; }
+function cleanWeaponName(raw) { if(!raw) return 'Unknown'; return raw.replace(/^WeapID_/,'').replace(/^Weap_/,'').replace(/_C$/,'').replace(/_MainWeapon$/,'').replace(/BP_/,'').replace(/_/g,' ').trim(); }
+function formatRoTime(d) { return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',hour:'2-digit',minute:'2-digit',hour12:false}).format(d); }
+function formatRoDate(d) { return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric'}).format(d); }
+function formatRoDateTime(d) { return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(d); }
+function classifyDamageReason(r) { const s=String(r||'').toLowerCase(); if(!s) return 'unknown'; if(s.includes('head')||s.includes('helmet')) return 'head'; if(s.includes('leg')||s.includes('foot')||s.includes('knee')||s.includes('thigh')) return 'legs'; if(s.includes('body')||s.includes('torso')||s.includes('chest')||s.includes('pelvis')||s.includes('stomach')||s.includes('arm')||s.includes('hand')||s.includes('shoulder')) return 'body'; return 'unknown'; }
+function emptyPlayerStat(name) { return {name,kills:0,damage:0,assists:0,revives:0,downs:0,matches:0,wins:0,knocksTaken:0,head:0,body:0,legs:0,unknown:0,score:0}; }
+function hashString(str) { let h=0; for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;} return Math.abs(h); }
+function pickLine(lines,seed) { if(!lines.length) return ''; return lines[hashString(seed)%lines.length]; }
+function circlePhaseLabel(phase) { if(phase<=2) return `Cerc ${phase} (Early game)`; if(phase<=5) return `Cerc ${phase} (Mid game)`; return `Cerc ${phase} (Late game)`; }
+function secToMin(s) { return `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}`; }
 
-// ===================== PROGRESS =====================
 let logEl, barEl;
-function logMsg(msg, cls='') {
-  if(!logEl) return;
-  const d=document.createElement('div');
-  d.className='log-line'+(cls?' '+cls:'');
-  d.textContent=msg;
-  logEl.appendChild(d);
-  logEl.scrollTop=logEl.scrollHeight;
-}
-function setProgress(pct) {
-  if(barEl) barEl.style.width=pct+'%';
-}
+function logMsg(msg, cls='') { if(!logEl) return; const d=document.createElement('div'); d.className='log-line'+(cls?' '+cls:''); d.textContent=msg; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; }
+function setProgress(pct) { if(barEl) barEl.style.width=pct+'%'; }
 
 // ===================== API =====================
 async function apiGet(url, apiKey, useAuth=true) {
@@ -608,123 +706,443 @@ async function apiGet(url, apiKey, useAuth=true) {
   return res.json();
 }
 
-// ===================== SEASON =====================
 async function fetchSeasonId(platform, apiKey) {
-  try {
-    const res = await apiGet(`https://api.pubg.com/shards/${platform}/seasons`, apiKey);
-    const current = (res.data||[]).find(s=>s.attributes?.isCurrentSeason);
-    return current ? current.id : null;
-  } catch(e) { return null; }
+  try { const res = await apiGet(`https://api.pubg.com/shards/${platform}/seasons`, apiKey); const current = (res.data||[]).find(s=>s.attributes?.isCurrentSeason); return current ? current.id : null; } catch(e) { return null; }
 }
-
 async function fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId) {
-  try {
-    const res = await apiGet(`https://api.pubg.com/shards/${platform}/players/${playerId}/seasons/${seasonId}`, apiKey);
-    return res.data?.attributes?.gameModeStats || null;
-  } catch(e) { return null; }
+  try { const res = await apiGet(`https://api.pubg.com/shards/${platform}/players/${playerId}/seasons/${seasonId}`, apiKey); return res.data?.attributes?.gameModeStats || null; } catch(e) { return null; }
 }
-
 async function fetchGlobalLeaderboard(platform, apiKey, seasonId) {
-  try {
-    const res = await apiGet(`https://api.pubg.com/shards/${platform}/leaderboards/${seasonId}/squad-ranked`, apiKey);
-    const included = res.included||[];
-    return included
-      .filter(x=>x.type==='player')
-      .map(x=>({name:x.attributes?.name||'',kills:safeInt(x.attributes?.stats?.kills)}))
-      .sort((a,b)=>b.kills-a.kills)
-      .slice(0,100);
-  } catch(e) { return []; }
+  try { const res = await apiGet(`https://api.pubg.com/shards/${platform}/leaderboards/${seasonId}/squad-ranked`, apiKey); const included = res.included||[]; return included.filter(x=>x.type==='player').map(x=>({name:x.attributes?.name||'',kills:safeInt(x.attributes?.stats?.kills)})).sort((a,b)=>b.kills-a.kills).slice(0,100); } catch(e) { return []; }
 }
 
 // ===================== CIRCLE PHASES =====================
 function extractCirclePhases(telemetry) {
   const phases=[];let phaseNum=1;
-  for(const ev of telemetry){
-    if(ev?._T==='LogGameStatePeriodically'||ev?._T==='LogPhaseChange'){
-      const t=ev?.common?.elapsedTime||ev?.elapsedTime||0;
-      if(!phases.find(p=>p.phase===phaseNum)){
-        phases.push({phase:phaseNum,start:t,end:t+999999});
-        if(phases.length>1) phases[phases.length-2].end=t;
-        phaseNum++;
+  for(const ev of telemetry){ if(ev?._T==='LogGameStatePeriodically'||ev?._T==='LogPhaseChange'){ const t=ev?.common?.elapsedTime||ev?.elapsedTime||0; if(!phases.find(p=>p.phase===phaseNum)){ phases.push({phase:phaseNum,start:t,end:t+999999}); if(phases.length>1) phases[phases.length-2].end=t; phaseNum++; } } }
+  if(!phases.length){ phases.push({phase:1,start:0,end:300}); phases.push({phase:2,start:300,end:700}); phases.push({phase:3,start:700,end:999999}); }
+  return phases;
+}
+function getCirclePhase(evTime, circlePhases) { const found=circlePhases.find(c=>evTime>=c.start&&evTime<c.end); return Math.min(found?found.phase:Math.ceil(evTime/300)||1, 9); }
+
+// ===================== EXTENDED TELEMETRY =====================
+function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
+  const pnLower = playerName.toLowerCase();
+  const result = {
+    survivalEvents: [], // {time, type, value, from, weapon}
+    killDistances: [], // meters
+    lootEvents: [], // {time, type, item, category}
+    totalMatchTime: matchDuration || 1800,
+    lootTime: 0,
+    activeTime: 0
+  };
+
+  let lastLootStart = null;
+  let totalLootSeconds = 0;
+
+  for(const ev of telemetry) {
+    const evTime = ev?.common?.elapsedTime || 0;
+
+    // Survival - damage taken
+    if(ev?._T === 'LogPlayerTakeDamage') {
+      const vn = (ev?.victim?.name||'').toLowerCase();
+      if(vn === pnLower) {
+        const dmg = safeInt(ev?.damage);
+        const weapon = cleanWeaponName(ev?.damageCauserName||'');
+        const from = ev?.attacker?.name || 'zona';
+        if(dmg > 0) result.survivalEvents.push({time:evTime, type:'damage', value:-dmg, from, weapon});
+      }
+    }
+
+    // Survival - heal/boost
+    if(ev?._T === 'LogItemUse') {
+      const cn = (ev?.character?.name||'').toLowerCase();
+      if(cn === pnLower) {
+        const item = cleanWeaponName(ev?.item?.itemId||'');
+        const cat = (ev?.item?.category||'').toLowerCase();
+        let heal = 0;
+        if(item.toLowerCase().includes('medkit')||item.toLowerCase().includes('med kit')) heal = 100;
+        else if(item.toLowerCase().includes('firstaid')||item.toLowerCase().includes('first aid')) heal = 75;
+        else if(item.toLowerCase().includes('bandage')) heal = 10;
+        else if(item.toLowerCase().includes('painkiller')||item.toLowerCase().includes('boost')) heal = 0;
+        else if(item.toLowerCase().includes('energy')) heal = 0;
+        if(cat.includes('heal') || cat.includes('boost') || heal > 0) {
+          result.survivalEvents.push({time:evTime, type:'heal', value:heal, item});
+        }
+      }
+    }
+
+    // Kill distances
+    if(ev?._T === 'LogPlayerKill') {
+      const kn = (ev?.killer?.name||'').toLowerCase();
+      if(kn === pnLower) {
+        const dist = Math.round(safeInt(ev?.distance)/100);
+        result.killDistances.push(dist);
+        result.survivalEvents.push({time:evTime, type:'kill', value:1, victim:ev?.victim?.name||'unknown', dist});
+      }
+    }
+
+    // Loot tracking
+    if(ev?._T === 'LogItemPickup' || ev?._T === 'LogItemPickupFromCarepackage' || ev?._T === 'LogItemPickupFromLootbox') {
+      const cn = (ev?.character?.name||'').toLowerCase();
+      if(cn === pnLower) {
+        const item = cleanWeaponName(ev?.item?.itemId||'');
+        const cat = (ev?.item?.category||'').toLowerCase();
+        result.lootEvents.push({time:evTime, type:'pickup', item, cat, count:safeInt(ev?.item?.stackCount)||1});
+        if(lastLootStart === null) lastLootStart = evTime;
+        else if(evTime - lastLootStart > 10) { totalLootSeconds += Math.min(evTime - lastLootStart, 30); lastLootStart = evTime; }
+      }
+    }
+    if(ev?._T === 'LogItemDrop') {
+      const cn = (ev?.character?.name||'').toLowerCase();
+      if(cn === pnLower) {
+        const item = cleanWeaponName(ev?.item?.itemId||'');
+        result.lootEvents.push({time:evTime, type:'drop', item});
+        if(lastLootStart !== null) { totalLootSeconds += Math.min(evTime - lastLootStart, 30); lastLootStart = null; }
       }
     }
   }
-  if(!phases.length){
-    phases.push({phase:1,start:0,end:300});
-    phases.push({phase:2,start:300,end:700});
-    phases.push({phase:3,start:700,end:999999});
-  }
-  return phases;
-}
-function getCirclePhase(evTime, circlePhases) {
-  const found=circlePhases.find(c=>evTime>=c.start&&evTime<c.end);
-  return Math.min(found?found.phase:Math.ceil(evTime/300)||1, 9);
+
+  if(lastLootStart !== null) totalLootSeconds += 30;
+  result.lootTime = Math.min(totalLootSeconds, result.totalMatchTime * 0.5);
+  result.activeTime = result.totalMatchTime - result.lootTime;
+
+  return result;
 }
 
-// ===================== COMBAT ANALYSIS =====================
-function buildCombatAnalysis(telemetry, teamNamesLower, circlePhases) {
-  const analysis={};
-  for(const n of teamNamesLower){
-    analysis[n]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{}};
+// ===================== SURVIVAL TIMELINE HTML =====================
+function buildSurvivalTimelineHtml(extData, playerName) {
+  if(!extData || !extData.survivalEvents.length) return '';
+  const events = extData.survivalEvents.sort((a,b)=>a.time-b.time);
+  const maxTime = extData.totalMatchTime || 1800;
+
+  // Build HP line
+  let hp = 100;
+  const hpPoints = [{t:0, hp:100}];
+  for(const ev of events) {
+    if(ev.type === 'damage') { hp = Math.max(0, hp + ev.value); hpPoints.push({t:ev.time, hp}); }
+    else if(ev.type === 'heal' && ev.value > 0) { hp = Math.min(100, hp + ev.value); hpPoints.push({t:ev.time, hp}); }
   }
-  for(const ev of telemetry){
-    if(ev?._T==='LogPlayerMakeGroggy'){
-      const vn=(ev?.victim?.name||'').toLowerCase();
-      const an=(ev?.attacker?.name||'').toLowerCase();
-      const evTime=ev?.common?.elapsedTime||0;
-      const phase=getCirclePhase(evTime,circlePhases);
-      const dist=Math.round(safeInt(ev?.distance)/100);
-      const weapon=cleanWeaponName(ev?.damageCauserName||ev?.attackerWeapon||'');
-      if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'knocked',time:evTime,phase,by:ev?.attacker?.name||'unknown',dist,isEarly});}
-      if(analysis[an]){analysis[an].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[an].weaponKnocked[weapon]=(analysis[an].weaponKnocked[weapon]||0)+1;}
-    }
-    if(ev?._T==='LogPlayerKill'){
-      const kn=(ev?.killer?.name||'').toLowerCase();
-      const vn=(ev?.victim?.name||'').toLowerCase();
-      const evTime=ev?.common?.elapsedTime||0;
-      const phase=getCirclePhase(evTime,circlePhases);
-      const dist=Math.round(safeInt(ev?.distance)/100);
-      const weapon=cleanWeaponName(ev?.damageCauserName||ev?.killerWeapon||'');
-      if(analysis[kn]){analysis[kn].events.push({type:'kill',time:evTime,phase,victim:ev?.victim?.name||'unknown',dist,weapon});analysis[kn].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[kn].weaponKills[weapon]=(analysis[kn].weaponKills[weapon]||0)+1;}
-      if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'died',time:evTime,phase,by:ev?.killer?.name||'unknown',dist,isEarly});}
-    }
-    if(ev?._T==='LogPlayerTakeDamage'){
-      const vn=(ev?.victim?.name||'').toLowerCase();
-      const an=(ev?.attacker?.name||'').toLowerCase();
-      const evTime=ev?.common?.elapsedTime||0;
-      const phase=getCirclePhase(evTime,circlePhases);
-      const dmg=safeInt(ev?.damage);
-      const weapon=cleanWeaponName(ev?.damageCauserName||'');
-      if(analysis[vn]&&String(ev?.damageTypeCategory||'').toLowerCase().includes('zone')){analysis[vn].zoneIssues++;analysis[vn].events.push({type:'zone_damage',time:evTime,phase});}
-      if(analysis[an]&&weapon&&weapon!=='Unknown'&&dmg>0)analysis[an].weaponDamage[weapon]=(analysis[an].weaponDamage[weapon]||0)+dmg;
-    }
-  }
-  for(const n of teamNamesLower){const d=analysis[n].distances;analysis[n].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;}
-  return analysis;
+  hpPoints.push({t:maxTime, hp});
+
+  // SVG
+  const W=800, H=110;
+  const xOf = t => Math.round((t/maxTime)*W);
+  const yOf = h => Math.round(H - (h/100)*(H-10) - 5);
+  const pathD = hpPoints.map((p,i) => `${i===0?'M':'L'}${xOf(p.t)},${yOf(p.hp)}`).join(' ');
+  const areaD = `${pathD} L${W},${H} L0,${H} Z`;
+
+  const dots = events.slice(0,8).map(ev => {
+    const x=xOf(ev.time), y=ev.type==='kill'?yOf(hp):ev.type==='heal'?yOf(Math.min(100,hp+(ev.value||0))):yOf(Math.max(0,hp+(ev.value||0)));
+    const color=ev.type==='kill'?'#f0c040':ev.type==='heal'?'#7ed85b':'#ff4d4f';
+    return `<circle cx="${x}" cy="${yOf(ev.type==='damage'?Math.max(0,hp+(ev.value||0)):ev.type==='heal'?Math.min(100,hp+(ev.value||0)):hp)}" r="5" fill="${color}" stroke="#090b0f" stroke-width="2"/>`;
+  }).join('');
+
+  const dmgCount = events.filter(e=>e.type==='damage').length;
+  const healCount = events.filter(e=>e.type==='heal').length;
+  const killCount = events.filter(e=>e.type==='kill').length;
+
+  const eventListHtml = events.slice(0,6).map(ev => {
+    const icon = ev.type==='damage'?'💥':ev.type==='heal'?'💊':'💀';
+    const desc = ev.type==='damage'?`Damage primit de la ${escHtml(ev.from||'?')} (${escHtml(ev.weapon||'?')})`
+                :ev.type==='heal'?`${escHtml(ev.item||'Heal')} folosit`
+                :`Kill dat — ${escHtml(ev.victim||'?')} eliminat (${ev.dist||0}m)`;
+    const valColor = ev.type==='damage'?'var(--red)':ev.type==='heal'?'var(--green)':'var(--gold)';
+    const valText = ev.type==='damage'?`${ev.value} HP`:ev.type==='heal'?`+${ev.value||'boost'} HP`:'Kill';
+    return `<div class="event-item"><span class="event-time">${secToMin(ev.time)}</span><span style="font-size:14px">${icon}</span><span class="event-desc">${desc}</span><span class="event-val" style="color:${valColor}">${valText}</span></div>`;
+  }).join('');
+
+  return `
+  <div class="collapsible">
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <div class="collapsible-title">❤️ Survival Timeline <span class="collapsible-badge badge-blue">DETAILED</span></div>
+      <div class="collapsible-arrow open">▼</div>
+    </div>
+    <div class="collapsible-body">
+      <div class="surv-stats">
+        <div><div class="surv-stat-val" style="color:var(--blue)">${secToMin(extData.totalMatchTime)}</div><div class="surv-stat-label">Supravietuit</div></div>
+        <div><div class="surv-stat-val" style="color:var(--red)">${dmgCount}x</div><div class="surv-stat-label">Damage primit</div></div>
+        <div><div class="surv-stat-val" style="color:var(--green)">${healCount}x</div><div class="surv-stat-label">Heal folosit</div></div>
+        <div><div class="surv-stat-val" style="color:var(--gold)">${killCount}</div><div class="surv-stat-label">Kills date</div></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-y-labels"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>
+        <svg width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+          <defs><linearGradient id="hpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4da6ff" stop-opacity="0.3"/><stop offset="100%" stop-color="#4da6ff" stop-opacity="0.02"/></linearGradient></defs>
+          <line x1="0" y1="${yOf(75)}" x2="${W}" y2="${yOf(75)}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
+          <line x1="0" y1="${yOf(50)}" x2="${W}" y2="${yOf(50)}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
+          <line x1="0" y1="${yOf(25)}" x2="${W}" y2="${yOf(25)}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
+          <path d="${areaD}" fill="url(#hpG)"/>
+          <path d="${pathD}" fill="none" stroke="#4da6ff" stroke-width="2.5"/>
+          ${dots}
+        </svg>
+      </div>
+      <div class="chart-labels"><span>0:00</span><span>${secToMin(maxTime*0.25)}</span><span>${secToMin(maxTime*0.5)}</span><span>${secToMin(maxTime*0.75)}</span><span>${secToMin(maxTime)}</span></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>HP</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Damage primit</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Heal</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Kill dat</div>
+      </div>
+      ${eventListHtml ? `<div class="event-list">${eventListHtml}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ===================== KILL DISTANCE HTML =====================
+function buildKillDistanceHtml(killDistances) {
+  if(!killDistances || !killDistances.length) return '';
+  const close = killDistances.filter(d=>d<=50).length;
+  const mid = killDistances.filter(d=>d>50&&d<=150).length;
+  const long = killDistances.filter(d=>d>150&&d<=300).length;
+  const sniper = killDistances.filter(d=>d>300).length;
+  const total = killDistances.length;
+  const avg = Math.round(killDistances.reduce((a,b)=>a+b,0)/total);
+  const maxDist = Math.max(...killDistances);
+  const minDist = Math.min(...killDistances);
+
+  function barPct(n) { return total>0?Math.round((n/total)*100):0; }
+
+  // Style detection
+  let style='', styleColor='var(--text2)', proNote='';
+  if(sniper/total>=0.3) { style='🔭 Sniper'; styleColor='var(--blue)'; proNote='Pro players Master+ fac 30-40% din kills la 150m+. Esti pe drumul cel bun.'; }
+  else if(close/total>=0.5) { style='💥 Rusher agresiv'; styleColor='var(--red)'; proNote='Close range e eficient dar riscant. Pro players Master+ echilibreaza cu cel putin 40% kills la mid range.'; }
+  else if(mid/total>=0.5) { style='🎯 Mid-range fighter'; styleColor='var(--green)'; proNote='Stil echilibrat — specific jucatorilor Master+. AVG kill distance la pro level: 100-180m.'; }
+  else { style='⚖ Stil variat'; styleColor='var(--text2)'; proNote='Joci in toate rangele — flexibil dar poate neconsolidat pe un stil. Pro players au de obicei un stil dominant clar.'; }
+
+  return `
+  <div class="collapsible">
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <div class="collapsible-title">🎯 Kill Distance Distribution <span class="collapsible-badge badge-green">DETAILED</span></div>
+      <div class="collapsible-arrow open">▼</div>
+    </div>
+    <div class="collapsible-body">
+      <div class="dist-stats">
+        <div><div class="surv-stat-val" style="color:var(--gold)">${total}</div><div class="surv-stat-label">Total kills</div></div>
+        <div><div class="surv-stat-val" style="color:var(--blue)">${avg}m</div><div class="surv-stat-label">Distanta medie</div></div>
+        <div><div class="surv-stat-val" style="color:var(--green)">${minDist}m</div><div class="surv-stat-label">Cel mai aproape</div></div>
+        <div><div class="surv-stat-val" style="color:var(--orange)">${maxDist}m</div><div class="surv-stat-label">Cel mai departe</div></div>
+      </div>
+      <div class="dist-bar-wrap">
+        <div class="dist-bar-row">
+          <div class="dist-bar-label">0–50m Close</div>
+          <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${barPct(close)}%;background:var(--red)">${barPct(close)>15?barPct(close)+'%':''}</div><div class="dist-bar-count">${close} kills</div></div>
+        </div>
+        <div class="dist-bar-row">
+          <div class="dist-bar-label">50–150m Mid</div>
+          <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${barPct(mid)}%;background:var(--green)">${barPct(mid)>15?barPct(mid)+'%':''}</div><div class="dist-bar-count">${mid} kills</div></div>
+        </div>
+        <div class="dist-bar-row">
+          <div class="dist-bar-label">150–300m Long</div>
+          <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${barPct(long)}%;background:var(--blue)">${barPct(long)>15?barPct(long)+'%':''}</div><div class="dist-bar-count">${long} kills</div></div>
+        </div>
+        <div class="dist-bar-row">
+          <div class="dist-bar-label">300m+ Sniper</div>
+          <div class="dist-bar-track"><div class="dist-bar-fill" style="width:${barPct(sniper)}%;background:var(--purple)">${barPct(sniper)>15?barPct(sniper)+'%':''}</div><div class="dist-bar-count">${sniper} kills</div></div>
+        </div>
+      </div>
+      <div class="dist-verdict">
+        <b style="color:${styleColor}">${style}</b><br>${avg}m distanta medie — ${avg>=200?'joci departe, risc scazut dar impact mai mic in fight-urile directe':avg>=80?'distanta echilibrata, buna pentru ranked':' close range constant, agresivitate mare'}.</div>
+      <div class="pro-comparison">🏆 <b>Comparatie pro level (Master+):</b> ${proNote}</div>
+    </div>
+  </div>`;
+}
+
+// ===================== LOOT EFFICIENCY HTML =====================
+function buildLootEfficiencyHtml(extData) {
+  if(!extData || !extData.lootEvents.length) return '';
+  const lootPct = Math.round((extData.lootTime / extData.totalMatchTime) * 100);
+  const activePct = 100 - lootPct;
+  const pickups = extData.lootEvents.filter(e=>e.type==='pickup');
+  const drops = extData.lootEvents.filter(e=>e.type==='drop');
+  const topItems = {};
+  pickups.forEach(e => { topItems[e.item] = (topItems[e.item]||0) + 1; });
+  const topItemsList = Object.entries(topItems).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  let verdictClass='', verdictText='';
+  if(lootPct <= 15) { verdictClass='verdict-good'; verdictText=`✅ Loot eficient — ${lootPct}% din meci petrecut lootând. Sub 15% e standard la nivel Master+. Rotezi bine si te implici rapid in fight-uri.`; }
+  else if(lootPct <= 25) { verdictClass='verdict-warn'; verdictText=`⚠ Loot acceptabil — ${lootPct}% din meci petrecut lootând. Master+ stau sub 15%. Incearca sa prioritizezi echipamentul si sa reduci vizitele la zone de loot tarziu in meci.`; }
+  else { verdictClass='verdict-bad'; verdictText=`❌ Prea mult loot — ${lootPct}% din meci petrecut lootând. Asta costa zone, pozitionare si uneori viata. Pro players rareori depasesc 20% timp de loot.`; }
+
+  return `
+  <div class="collapsible">
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <div class="collapsible-title">📦 Loot Efficiency <span class="collapsible-badge badge-orange">DETAILED</span></div>
+      <div class="collapsible-arrow open">▼</div>
+    </div>
+    <div class="collapsible-body">
+      <div class="loot-grid">
+        <div class="loot-card"><div class="loot-card-val" style="color:var(--orange)">${secToMin(extData.lootTime)}</div><div class="loot-card-label">Timp lootare</div></div>
+        <div class="loot-card"><div class="loot-card-val" style="color:var(--blue)">${secToMin(extData.activeTime)}</div><div class="loot-card-label">Timp activ</div></div>
+        <div class="loot-card"><div class="loot-card-val" style="color:var(--green)">${pickups.length}</div><div class="loot-card-label">Items luate</div></div>
+        <div class="loot-card"><div class="loot-card-val" style="color:var(--red)">${drops.length}</div><div class="loot-card-label">Items aruncate</div></div>
+      </div>
+      <div class="loot-bar-wrap">
+        <div class="loot-segment" style="width:${lootPct}%;background:var(--orange);min-width:${lootPct>0?'30px':'0'}">${lootPct>8?lootPct+'%':''}</div>
+        <div class="loot-segment" style="width:${activePct}%;background:var(--green)">${activePct>8?activePct+'%':''}</div>
+      </div>
+      <div class="loot-bar-labels"><span style="color:var(--orange)">■ Lootare ${secToMin(extData.lootTime)}</span><span style="color:var(--green)">■ Activ ${secToMin(extData.activeTime)}</span></div>
+      ${topItemsList.length ? `<div class="loot-items-title">Top items luate</div>${topItemsList.map(([item,cnt])=>`<div class="loot-item-row"><span class="loot-item-name">${escHtml(item)}</span><span style="color:var(--text2);font-family:var(--font-mono);font-size:11px">${cnt}x</span></div>`).join('')}` : ''}
+      <div class="loot-verdict ${verdictClass}">${verdictText}</div>
+    </div>
+  </div>`;
+}
+
+// ===================== TEAM DETAILED ANALYSIS =====================
+function buildTeamDetailedHtml(leaderboard, aggregatedCombat, matchesFiltered) {
+  const totalMatches = matchesFiltered.length;
+  if(!totalMatches) return '';
+
+  // 1. Loot Analysis
+  const lootData = leaderboard.map(p => {
+    const cd = aggregatedCombat[p.name.toLowerCase()];
+    const lootPct = cd?.lootPct || 0;
+    return {name:p.name, lootPct, lootTime: cd?.lootTime||0};
+  }).sort((a,b)=>b.lootPct-a.lootPct);
+  const teamAvgLoot = lootData.reduce((s,p)=>s+p.lootPct,0)/Math.max(lootData.length,1);
+  const topLooter = lootData[0];
+  const lootImpact = topLooter && topLooter.lootPct > teamAvgLoot * 1.5 ?
+    `${escHtml(topLooter.name)} a petrecut ${topLooter.lootPct}% din meci lootând — cu ${Math.round(topLooter.lootPct-teamAvgLoot)}% peste media echipei. Asta a redus prezenta sa in fight-urile critice.` :
+    'Distributia timpului de loot in echipa este echilibrata.';
+
+  const maxLootPct = Math.max(...lootData.map(p=>p.lootPct), 1);
+  const lootBars = lootData.map((p,i) => {
+    const pct = maxLootPct > 0 ? Math.round((p.lootPct/maxLootPct)*100) : 0;
+    const colors = ['var(--red)','var(--orange)','var(--green)','var(--blue)'];
+    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${pct}%;background:${colors[i%4]}">&nbsp;</div><div class="player-bar-val">${p.lootPct}%</div></div></div>`;
+  }).join('');
+
+  // 2. Survival Patterns
+  const survData = leaderboard.map(p => {
+    const cd = aggregatedCombat[p.name.toLowerCase()];
+    const earlyDeaths = cd?.earlyDeaths || 0;
+    const knocksTaken = p.knocksTaken || 0;
+    return {name:p.name, earlyDeaths, knocksTaken, matches:p.matches};
+  });
+  const firstToDie = survData.sort((a,b)=>b.earlyDeaths-a.earlyDeaths)[0];
+  const mostSurvival = [...survData].sort((a,b)=>a.knocksTaken-b.knocksTaken)[0];
+  const survImpact = firstToDie && firstToDie.earlyDeaths >= 2 ?
+    `${escHtml(firstToDie.name)} moare devreme frecvent (${firstToDie.earlyDeaths} ori) — lasand echipa in dezavantaj numeric in fight-urile de mid game.` :
+    'Echipa supravietuieste bine in faza de early game.';
+
+  const maxED = Math.max(...survData.map(p=>p.earlyDeaths), 1);
+  const survBars = [...survData].sort((a,b)=>b.earlyDeaths-a.earlyDeaths).map((p,i) => {
+    const pct = maxED > 0 ? Math.round((p.earlyDeaths/maxED)*100) : 0;
+    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${pct}%;background:${p.earlyDeaths>=2?'var(--red)':'var(--green)'}">&nbsp;</div><div class="player-bar-val">${p.earlyDeaths}x early</div></div></div>`;
+  }).join('');
+
+  // 3. Combat Style
+  const combatData = leaderboard.map(p => {
+    const cd = aggregatedCombat[p.name.toLowerCase()];
+    const avgDist = cd?.avgEngagementDistance || 0;
+    return {name:p.name, avgDist};
+  });
+  const maxDist = Math.max(...combatData.map(p=>p.avgDist), 1);
+  const distSpread = maxDist - Math.min(...combatData.map(p=>p.avgDist));
+  const combatImpact = distSpread > 150 ?
+    `Echipa joaca la distante foarte diferite (spread: ${distSpread}m) — lipsa de sistem de engagement comun. Pro teams opereaza in acelasi range de distanta.` :
+    `Echipa are un stil de engagement relativ unitar (spread: ${distSpread}m) — bun pentru coordonare.`;
+
+  const combatBars = combatData.map((p,i) => {
+    const pct = maxDist > 0 ? Math.round((p.avgDist/maxDist)*100) : 0;
+    const color = p.avgDist>200?'var(--blue)':p.avgDist>80?'var(--green)':'var(--red)';
+    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${Math.max(pct,5)}%;background:${color}">&nbsp;</div><div class="player-bar-val">${p.avgDist}m</div></div></div>`;
+  }).join('');
+
+  // 4. Kill Contribution
+  const killData = leaderboard.map(p => {
+    const m = Math.max(p.matches,1);
+    const avgKills = p.kills/m;
+    const avgDmg = p.damage/m;
+    const convertRate = p.downs>0 ? Math.round((p.kills/p.downs)*100) : 0;
+    return {name:p.name, avgKills, avgDmg, convertRate, kills:p.kills, damage:p.damage, downs:p.downs};
+  });
+  const topFragger = [...killData].sort((a,b)=>b.avgKills-a.avgKills)[0];
+  const topDmg = [...killData].sort((a,b)=>b.avgDmg-a.avgDmg)[0];
+  const killImpact = topDmg && topFragger && !nameEq(topDmg.name, topFragger.name) ?
+    `${escHtml(topDmg.name)} face cel mai mult damage (${Math.round(topDmg.avgDmg)}/meci) dar ${escHtml(topFragger.name)} converteste mai mult in kills. Echipa ar beneficia de mai mult follow-up coordonat.` :
+    `${escHtml(topFragger?.name||'')} domina atat damage cat si kills — echipa depinde mult de un singur fragger.`;
+
+  const maxKills = Math.max(...killData.map(p=>p.avgKills), 0.1);
+  const killBars = killData.map((p,i) => {
+    const pct = Math.round((p.avgKills/maxKills)*100);
+    const colors = ['var(--gold)','var(--orange)','var(--green)','var(--blue)'];
+    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${Math.max(pct,5)}%;background:${colors[i%4]}">&nbsp;</div><div class="player-bar-val">${safeNum(p.avgKills,2)}K/m</div></div></div>`;
+  }).join('');
+
+  // Team Verdict
+  const scores = leaderboard.map(p => {
+    const m = Math.max(p.matches,1);
+    const cd = aggregatedCombat[p.name.toLowerCase()];
+    let score = 0;
+    if(p.kills/m >= 2) score += 2;
+    else if(p.kills/m >= 1) score += 1;
+    if(p.damage/m >= 300) score += 2;
+    else if(p.damage/m >= 150) score += 1;
+    if((cd?.earlyDeaths||0) === 0) score += 1;
+    else if((cd?.earlyDeaths||0) >= 3) score -= 1;
+    if(p.wins/m >= 0.2) score += 2;
+    if((cd?.lootPct||0) > 25) score -= 1;
+    return {name:p.name, score: Math.max(0,Math.min(10,score+3))};
+  }).sort((a,b)=>b.score-a.score);
+
+  const wins = matchesFiltered.filter(m=>m.rank===1).length;
+  const winRate = (wins/totalMatches)*100;
+  const teamAvgKills = leaderboard.reduce((s,p)=>s+p.kills/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
+
+  const tips = [];
+  if(distSpread > 150) tips.push('Stabiliti un sistem de engagement — toti jucati la distante prea diferite. Alegeti un stil de echipa si respectati-l.');
+  if(firstToDie && firstToDie.earlyDeaths >= 2) tips.push(`${firstToDie.name} trebuie sa evite fight-urile in primele 5 minute fara avantaj clar — early deaths costa echipa numeric.`);
+  if(topLooter && topLooter.lootPct > 25) tips.push(`${topLooter.name} petrece prea mult timp lootând. Prioritizati echipamentul si reveniti la echipa mai rapid.`);
+  if(teamAvgKills < 1) tips.push('Echipa converteste prea putin damage in kills. Lucrati la follow-up coordonat si finish rapid dupa primul knock.');
+  if(winRate < 15) tips.push('Win rate sub 15% — pozitionarea in late game e problema principala. Intrati in final circle mai devreme si cu avantaj de pozitie.');
+  if(tips.length === 0) tips.push('Sesiune solida. Mentineti coordonarea si continuati sa lucrati la sincronizarea engagement-urilor.');
+
+  const verdictRows = scores.map(s => {
+    const color = s.score>=7?'var(--green)':s.score>=5?'var(--gold)':s.score>=3?'var(--orange)':'var(--red)';
+    const label = s.score>=7?'Impact pozitiv':s.score>=5?'Contributie buna':s.score>=3?'Contributie medie':'Impact negativ';
+    return `<div class="team-verdict-row"><div class="team-verdict-player">${escHtml(s.name)}</div><div class="team-verdict-score" style="color:${color}">${s.score}/10 — ${label}</div></div>`;
+  }).join('');
+
+  return `
+  <div class="team-detailed-box">
+    <div class="section-title">🔬 Team Deep Analysis (Detailed)</div>
+    <div class="team-analysis-grid">
+      <div class="team-analysis-card">
+        <div class="team-analysis-title" style="color:var(--orange)">📦 Loot Impact</div>
+        ${lootBars}
+        <div class="team-impact-line">${lootImpact}</div>
+      </div>
+      <div class="team-analysis-card">
+        <div class="team-analysis-title" style="color:var(--red)">❤️ Survival Patterns</div>
+        ${survBars}
+        <div class="team-impact-line">${survImpact}</div>
+      </div>
+      <div class="team-analysis-card">
+        <div class="team-analysis-title" style="color:var(--blue)">🎯 Combat Style</div>
+        ${combatBars}
+        <div class="team-impact-line">${combatImpact}</div>
+      </div>
+      <div class="team-analysis-card">
+        <div class="team-analysis-title" style="color:var(--gold)">💥 Kill Contribution</div>
+        ${killBars}
+        <div class="team-impact-line">${killImpact}</div>
+      </div>
+    </div>
+    <div class="team-verdict-box">
+      <div class="team-verdict-title">🏆 Team Verdict</div>
+      ${verdictRows}
+      <div class="team-tips-list">${tips.map((t,i)=>`<div class="team-tip-item"><span class="team-tip-num">${i+1}.</span><span>${escHtml(t)}</span></div>`).join('')}</div>
+    </div>
+  </div>`;
 }
 
 // ===================== ARCHETYPES =====================
-const ARCHETYPES={
-  chicken:{icon:'🐔',label:'Gaina Sesiunii',color:'#ffcc00'},
-  camper:{icon:'🌿',label:'Bush Camper',color:'#7ed85b'},
-  hitrun:{icon:'💨',label:'Hit & Run',color:'#aaaaaa'},
-  spray:{icon:'🎯',label:'Spray & Pray',color:'#ff9f1a'},
-  lootgoblin:{icon:'📦',label:'Loot Goblin',color:'#cc88ff'},
-  carry:{icon:'👑',label:'Carry',color:'#ffd700'},
-  fragger:{icon:'🔥',label:'Fragger',color:'#ff4d4f'},
-  igl:{icon:'🧠',label:'IGL / Support',color:'#4da6ff'},
-  entry:{icon:'⚡',label:'Entry Fragger',color:'#ffe066'},
-  clutch:{icon:'🎖',label:'Clutch King',color:'#ffd700'},
-  solid:{icon:'⚖',label:'Solid Player',color:'#9aa3b2'},
-  roleplay:{icon:'🧩',label:'Role Player',color:'#88ccff'},
-  lowimpact:{icon:'📉',label:'Low Impact',color:'#ff6666'}
-};
+const ARCHETYPES={chicken:{icon:'🐔',label:'Gaina Sesiunii',color:'#ffcc00'},camper:{icon:'🌿',label:'Bush Camper',color:'#7ed85b'},hitrun:{icon:'💨',label:'Hit & Run',color:'#aaaaaa'},spray:{icon:'🎯',label:'Spray & Pray',color:'#ff9f1a'},lootgoblin:{icon:'📦',label:'Loot Goblin',color:'#cc88ff'},carry:{icon:'👑',label:'Carry',color:'#ffd700'},fragger:{icon:'🔥',label:'Fragger',color:'#ff4d4f'},igl:{icon:'🧠',label:'IGL / Support',color:'#4da6ff'},entry:{icon:'⚡',label:'Entry Fragger',color:'#ffe066'},clutch:{icon:'🎖',label:'Clutch King',color:'#ffd700'},solid:{icon:'⚖',label:'Solid Player',color:'#9aa3b2'},roleplay:{icon:'🧩',label:'Role Player',color:'#88ccff'},lowimpact:{icon:'📉',label:'Low Impact',color:'#ff6666'}};
 
 function detectArchetype(t, rankingStats, isMvp, combatData) {
   const m=Math.max(t.matches||1,1);
-  const avgKills=t.kills/m,avgDmg=t.damage/m,avgDowns=t.downs/m;
-  const avgRevives=t.revives/m,avgAssists=t.assists/m,avgKnocks=(t.knocksTaken||0)/m;
-  const winRate=(t.wins/m)*100,finishRate=t.downs>0?t.kills/t.downs:0;
+  const avgKills=t.kills/m,avgDmg=t.damage/m,avgDowns=t.downs/m,avgRevives=t.revives/m,avgAssists=t.assists/m,avgKnocks=(t.knocksTaken||0)/m,winRate=(t.wins/m)*100,finishRate=t.downs>0?t.kills/t.downs:0;
   const earlyDeaths=combatData?.earlyDeaths||0,zoneIssues=combatData?.zoneIssues||0;
   if(isMvp&&avgKills>=3) return 'carry';
   if(avgKills>=3&&avgDowns>=2.5) return 'fragger';
@@ -745,37 +1163,13 @@ function detectArchetype(t, rankingStats, isMvp, combatData) {
 
 function savageAI(name,t,rankingStats,isMvp,combatData){
   const m=Math.max(t.matches||1,1);
-  const avgDmg=t.damage/m,avgKills=t.kills/m,avgDowns=t.downs/m;
-  const avgRevives=t.revives/m,avgAssists=t.assists/m,avgKnocks=(t.knocksTaken||0)/m,winRate=(t.wins/m)*100;
+  const avgDmg=t.damage/m,avgKills=t.kills/m,avgDowns=t.downs/m,avgRevives=t.revives/m,avgAssists=t.assists/m,avgKnocks=(t.knocksTaken||0)/m,winRate=(t.wins/m)*100;
   const archetypeKey=detectArchetype(t,rankingStats,isMvp,combatData);
   const archetype=ARCHETYPES[archetypeKey]||ARCHETYPES.solid;
   const notes=[];
-  if(avgDmg>=500) notes.push('damage mare');
-  if(avgKills>=3) notes.push('frag bun');
-  if(avgRevives>=1) notes.push('support bun');
-  if(avgAssists>=1.5) notes.push('assist bun');
-  if(winRate>=30) notes.push('win rate bun');
-  if(avgKnocks<=0.5) notes.push('supravietuire buna');
-  if(avgKnocks>=1.5) notes.push('ia knock des');
-  if(avgDowns>avgKills&&t.downs>0) notes.push('opening bun');
-  if(t.matches<(rankingStats.maxMatches||0)) notes.push('mai putine meciuri');
-  if(avgDmg<120&&avgKills<1) notes.push('impact mic');
+  if(avgDmg>=500) notes.push('damage mare'); if(avgKills>=3) notes.push('frag bun'); if(avgRevives>=1) notes.push('support bun'); if(avgAssists>=1.5) notes.push('assist bun'); if(winRate>=30) notes.push('win rate bun'); if(avgKnocks<=0.5) notes.push('supravietuire buna'); if(avgKnocks>=1.5) notes.push('ia knock des'); if(avgDowns>avgKills&&t.downs>0) notes.push('opening bun'); if(t.matches<(rankingStats.maxMatches||0)) notes.push('mai putine meciuri'); if(avgDmg<120&&avgKills<1) notes.push('impact mic');
   const seed=`${name}|${t.score}|${t.kills}|${t.damage}|${t.downs}|${t.wins}|${t.revives}|${t.assists}|${t.knocksTaken}|${t.matches}`;
-  const msgPools={
-    carry:['A fost clar reperul principal al sesiunii.','A dominat raportul la nivel general.','Cel mai puternic jucator din raport.','A iesit pe primul loc dupa impactul total.'],
-    fragger:['A fost printre cei mai buni din raport.','Impact clar peste restul echipei.','Performanta solida in sesiune.','A tinut nivelul ridicat in echipa.'],
-    igl:['Pilonul de suport al echipei in sesiune.','Revive-urile si assist-urile il fac esential.','Fara el echipa ar fi pierdut mai mult.','Support constant, valoare reala.'],
-    entry:['Deschide fight-urile cu curaj.','Primul in lupta, creeaza spatiu pentru echipa.','Opening-urile lui sunt arma principala.','Agresivitate controlata si eficienta.'],
-    clutch:['Supravietuieste cand altii cad.','Finalizeaza meciurile cu cap.','Cel mai disciplinat in momentele grele.','Castigurile lui vin din rabdare si pozitionare.'],
-    hitrun:['Face damage dar dispare inainte de finish.','Trage si fuge - echipa strange ce lasa in urma.','Mult noise, putin rezultat concret.','Damage-ul lui nu se transforma in kills.'],
-    chicken:['A descoperit ca exista si o viata in afara fight-urilor.','Strategia lui: supravietuiesc deci exist.','A evitat cu succes orice contact direct.','Cea mai lunga ruta ocolita din sesiune.'],
-    camper:['A stat atat de nemicat ca a prins muschi.','Pozitie excelenta. Lipsa completa de actiune.','A descoperit ca bush-ul e cel mai bun prieten.','Invizibil in fight. Invizibil in statistici.'],
-    spray:['Multe gloante, putin efect util.','Crosshair-ul lui are propriile planuri.','Amuzant de urmarit in killcam.','Consuma munitie cu generozitate maxima.'],
-    lootgoblin:['A colectat loot pentru toata echipa.','Inventarul lui e impresionant. Killboard-ul mai putin.','A supravietuit doar ca sa looteze mai bine.','Zero impact, full inventar.'],
-    solid:['A fost stabil si util.','Contributie decenta in echipa.','N-a dominat, dar a ajutat.','Prezenta constanta in meciuri.'],
-    roleplay:['Si-a indeplinit rolul fara sa iasa in evidenta.','Util fara sa fie spectaculos.','Un engrenaj necesar in masinaria echipei.','Prezent acolo unde era nevoie.'],
-    lowimpact:['Sub nivelul echipei in raport.','Impact mai mic decat restul.','A ramas in urma ca aport.','Nu a influentat suficient meciurile.']
-  };
+  const msgPools={carry:['A fost clar reperul principal al sesiunii.','A dominat raportul la nivel general.','Cel mai puternic jucator din raport.'],fragger:['A fost printre cei mai buni din raport.','Impact clar peste restul echipei.','Performanta solida in sesiune.'],igl:['Pilonul de suport al echipei in sesiune.','Revive-urile si assist-urile il fac esential.','Support constant, valoare reala.'],entry:['Deschide fight-urile cu curaj.','Opening-urile lui sunt arma principala.','Agresivitate controlata si eficienta.'],clutch:['Supravietuieste cand altii cad.','Cel mai disciplinat in momentele grele.','Castigurile lui vin din rabdare si pozitionare.'],hitrun:['Face damage dar dispare inainte de finish.','Mult noise, putin rezultat concret.','Damage-ul lui nu se transforma in kills.'],chicken:['A descoperit ca exista si o viata in afara fight-urilor.','A evitat cu succes orice contact direct.'],camper:['A stat atat de nemicat ca a prins muschi.','A descoperit ca bush-ul e cel mai bun prieten.'],spray:['Multe gloante, putin efect util.','Crosshair-ul lui are propriile planuri.'],lootgoblin:['A colectat loot pentru toata echipa.','Zero impact, full inventar.'],solid:['A fost stabil si util.','Contributie decenta in echipa.'],roleplay:['Si-a indeplinit rolul fara sa iasa in evidenta.','Util fara sa fie spectaculos.'],lowimpact:['Sub nivelul echipei in raport.','Nu a influentat suficient meciurile.']};
   const pool=msgPools[archetypeKey]||msgPools.solid;
   return {archetype,msg:pickLine(pool,seed+'|'+archetypeKey),notes:notes.join(' | '),archetypeKey};
 }
@@ -853,21 +1247,9 @@ function buildTacticalProfile(combatData, totalMatches) {
   const knocked=(combatData.events||[]).filter(e=>e.type==='knocked').length;
   const avgKnocks=totalMatches>0?knocked/totalMatches:0;
   let style='',styleColor='#9aa3b2',tips=[];
-  if(avgDist>200){
-    style='🔭 Sniper / Jucator pasiv de distanta';styleColor='#4da6ff';
-    tips.push('Distanta medie mare — te pozitionezi departe de fight-uri.');
-    if(earlyDeaths>=2) tips.push('Totusi intri in contact devreme si mori — inconsistenta de pozitionare.');
-    tips.push('Incearca sa reduci distanta in fight-urile unde ai avantaj de info.');
-  } else if(avgDist>80){
-    style='🎯 Mid-range / Echilibrat';styleColor='#7ed85b';
-    tips.push('Distanta de engagement echilibrata — bun semn tactic.');
-    if(avgKnocks>=1.5) tips.push('Dar iei prea multe knock-uri — expunere mare chiar si la distanta medie.');
-  } else if(avgDist>0){
-    style='💥 Close range / Agresiv';styleColor='#ff9f1a';
-    tips.push('Joci in close range constant — agresivitate mare.');
-    if(avgKnocks>=1.5) tips.push('Close range + knock-uri dese = te expui fara suficient avantaj.');
-    else tips.push('Agresivitate buna daca supravietuiesti in dueluri directe.');
-  }
+  if(avgDist>200){style='🔭 Sniper / Jucator pasiv de distanta';styleColor='#4da6ff';tips.push('Distanta medie mare — te pozitionezi departe de fight-uri.');if(earlyDeaths>=2) tips.push('Totusi intri in contact devreme si mori — inconsistenta de pozitionare.');tips.push('Incearca sa reduci distanta in fight-urile unde ai avantaj de info.');}
+  else if(avgDist>80){style='🎯 Mid-range / Echilibrat';styleColor='#7ed85b';tips.push('Distanta de engagement echilibrata — bun semn tactic.');if(avgKnocks>=1.5) tips.push('Dar iei prea multe knock-uri — expunere mare chiar si la distanta medie.');}
+  else if(avgDist>0){style='💥 Close range / Agresiv';styleColor='#ff9f1a';tips.push('Joci in close range constant — agresivitate mare.');if(avgKnocks>=1.5) tips.push('Close range + knock-uri dese = te expui fara suficient avantaj.');else tips.push('Agresivitate buna daca supravietuiesti in dueluri directe.');}
   if(zoneIssues>=3) tips.push(`Ai luat damage de zona in ${zoneIssues} situatii — rotezi tarziu, urmareste minimap-ul mai des.`);
   else if(zoneIssues>=1) tips.push(`${zoneIssues} situatie(ii) cu damage de zona — atentie la rotatie in mid/late game.`);
   if(earlyDeaths>=3) tips.push(`Mori devreme des (${earlyDeaths}x) — evita fight-urile din primele 5 minute fara avantaj clar.`);
@@ -881,24 +1263,13 @@ function renderTargetSvg(head,body,legs,unknown) {
   function rw(h){return Math.min(3+(h/total)*16,20);}
   function ro(h){return Math.min(0.25+(h/total)*0.7,0.92).toFixed(2);}
   const hw=rw(head),ho=ro(head),bw=rw(body),bo=ro(body),lw=rw(legs),lo=ro(legs),uw=rw(unknown),uo=ro(unknown);
-  return `<svg width="130" height="210" viewBox="0 0 170 265" xmlns="http://www.w3.org/2000/svg">
-<defs><filter id="sg"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-<circle cx="85" cy="42" r="22" fill="#111"/>
-<path d="M58 65 Q85 54 112 65 L118 155 Q85 168 52 155 Z" fill="#111"/>
-<rect x="62" y="155" width="16" height="80" rx="4" fill="#111"/>
-<rect x="92" y="155" width="16" height="80" rx="4" fill="#111"/>
-<circle cx="85" cy="42" r="22" fill="rgba(255,77,79,${ho})" stroke="#ff4d4f" stroke-width="${hw}" filter="url(#sg)" opacity="${ho}"/>
-<ellipse cx="85" cy="108" rx="30" ry="47" fill="rgba(255,159,26,${bo})" stroke="#ff9f1a" stroke-width="${bw}" filter="url(#sg)" opacity="${bo}"/>
-<ellipse cx="85" cy="200" rx="26" ry="38" fill="rgba(77,166,255,${lo})" stroke="#4da6ff" stroke-width="${lw}" filter="url(#sg)" opacity="${lo}"/>
-${unknown>0?`<circle cx="148" cy="24" r="${Math.min(6+(unknown/total)*10,16)}" fill="rgba(180,180,180,${uo})" stroke="#999" stroke-width="${uw}" opacity="${uo}"/><text x="148" y="28" text-anchor="middle" font-size="9" fill="#aaa">?</text>`:''}
-</svg>`;
+  return `<svg width="130" height="210" viewBox="0 0 170 265" xmlns="http://www.w3.org/2000/svg"><defs><filter id="sg"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="85" cy="42" r="22" fill="#111"/><path d="M58 65 Q85 54 112 65 L118 155 Q85 168 52 155 Z" fill="#111"/><rect x="62" y="155" width="16" height="80" rx="4" fill="#111"/><rect x="92" y="155" width="16" height="80" rx="4" fill="#111"/><circle cx="85" cy="42" r="22" fill="rgba(255,77,79,${ho})" stroke="#ff4d4f" stroke-width="${hw}" filter="url(#sg)" opacity="${ho}"/><ellipse cx="85" cy="108" rx="30" ry="47" fill="rgba(255,159,26,${bo})" stroke="#ff9f1a" stroke-width="${bw}" filter="url(#sg)" opacity="${bo}"/><ellipse cx="85" cy="200" rx="26" ry="38" fill="rgba(77,166,255,${lo})" stroke="#4da6ff" stroke-width="${lw}" filter="url(#sg)" opacity="${lo}"/>${unknown>0?`<circle cx="148" cy="24" r="${Math.min(6+(unknown/total)*10,16)}" fill="rgba(180,180,180,${uo})" stroke="#999" stroke-width="${uw}" opacity="${uo}"/>`:''}</svg>`;
 }
 
 // ===================== GLOBAL BENCHMARKS =====================
 const GB={avgKills:{top10:3.5,top25:2.2,top50:1.2},avgDamage:{top10:500,top25:320,top50:180},winRate:{top10:8,top25:4,top50:1.5},kd:{top10:3.2,top25:1.8,top50:0.9}};
 function calcPercentile(v,b){if(v>=b.top10) return{label:'Top 10%',color:'#ffd700'};if(v>=b.top25) return{label:'Top 25%',color:'#4da6ff'};if(v>=b.top50) return{label:'Top 50%',color:'#7ed85b'};return{label:'Bottom 50%',color:'#ff4d4f'};}
 
-// ===================== HTML BUILDERS =====================
 function buildGlobalComparisonHtml(seasonStats) {
   if(!seasonStats) return '';
   const modes=['squad','squad-fpp','duo','duo-fpp','solo','solo-fpp'];
@@ -907,15 +1278,7 @@ function buildGlobalComparisonHtml(seasonStats) {
   if(!totalRounds) return '';
   const avgK=totalKills/totalRounds,avgD=totalDmg/totalRounds,wr=(totalWins/totalRounds)*100,kd=totalDeaths>0?totalKills/totalDeaths:totalKills;
   const pK=calcPercentile(avgK,GB.avgKills),pD=calcPercentile(avgD,GB.avgDamage),pW=calcPercentile(wr,GB.winRate),pKD=calcPercentile(kd,GB.kd);
-  return `<div class="global-box">
-    <div class="section-title">🌍 Global Ranking (Season)</div>
-    <div class="global-grid">
-      <div class="global-card"><div class="global-label">AVG Kills</div><div class="global-val">${safeNum(avgK,2)}</div><div class="global-pct" style="color:${pK.color}">${pK.label}</div></div>
-      <div class="global-card"><div class="global-label">AVG Damage</div><div class="global-val">${safeNum(avgD,0)}</div><div class="global-pct" style="color:${pD.color}">${pD.label}</div></div>
-      <div class="global-card"><div class="global-label">Win Rate</div><div class="global-val">${safeNum(wr,1)}%</div><div class="global-pct" style="color:${pW.color}">${pW.label}</div></div>
-      <div class="global-card"><div class="global-label">K/D</div><div class="global-val">${safeNum(kd,2)}</div><div class="global-pct" style="color:${pKD.color}">${pKD.label}</div></div>
-    </div>
-  </div>`;
+  return `<div class="global-box"><div class="section-title">🌍 Global Ranking (Season)</div><div class="global-grid"><div class="global-card"><div class="global-label">AVG Kills</div><div class="global-val">${safeNum(avgK,2)}</div><div class="global-pct" style="color:${pK.color}">${pK.label}</div></div><div class="global-card"><div class="global-label">AVG Damage</div><div class="global-val">${safeNum(avgD,0)}</div><div class="global-pct" style="color:${pD.color}">${pD.label}</div></div><div class="global-card"><div class="global-label">Win Rate</div><div class="global-val">${safeNum(wr,1)}%</div><div class="global-pct" style="color:${pW.color}">${pW.label}</div></div><div class="global-card"><div class="global-label">K/D</div><div class="global-val">${safeNum(kd,2)}</div><div class="global-pct" style="color:${pKD.color}">${pKD.label}</div></div></div></div>`;
 }
 
 function buildCombatInsightHtml(data, playerName, totalMatches) {
@@ -937,29 +1300,9 @@ function buildCombatInsightHtml(data, playerName, totalMatches) {
   const tactical=buildTacticalProfile(data,totalMatches);
   const timelineEvents=data.events.slice(0,6);
   const maxTime=timelineEvents.length?Math.max(...timelineEvents.map(e=>e.time),1):1;
-  const timelineDots=timelineEvents.map(e=>{
-    const pct=Math.round((e.time/maxTime)*100);
-    const color=e.type==='kill'?'#7ed85b':e.type==='knocked'||e.type==='died'?'#ff4d4f':'#ff9f1a';
-    const label=e.type==='kill'?'K':e.type==='knocked'?'KD':e.type==='died'?'X':'Z';
-    return `<div class="tl-dot" style="left:${pct}%;background:${color}">${label}</div>`;
-  }).join('');
-  const eventLines=negEvents.map(e=>{
-    if(e.type==='knocked') return `<div class="ca-event ca-neg">Knocked in ${circlePhaseLabel(e.phase)}${e.isEarly?' - engagement prea devreme':''} (dist: ${e.dist}m)</div>`;
-    if(e.type==='died') return `<div class="ca-event ca-neg">Eliminat in ${circlePhaseLabel(e.phase)}${e.isEarly?' - prea devreme':''} (dist: ${e.dist}m)</div>`;
-    if(e.type==='zone_damage') return `<div class="ca-event ca-warn">Damage de zona in ${circlePhaseLabel(e.phase)}</div>`;
-    return '';
-  }).join('');
-  return `<div class="ca-player-block">
-    ${topMistake?`<div class="mistake-badge" style="border-color:${topMistake.color};color:${topMistake.color}">${topMistake.icon} ${topMistake.label}</div>`:''}
-    <div class="ca-conclusion">${conclusion}</div>
-    <div class="tactical-profile" style="border-left-color:${tactical.styleColor}">
-      <div class="tactical-style" style="color:${tactical.styleColor}">${tactical.style}</div>
-      <ul class="tactical-tips">${tactical.tips.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul>
-    </div>
-    <div class="ca-timeline"><div class="tl-bar">${timelineDots}</div><div class="tl-labels"><span>Start</span><span>End</span></div></div>
-    ${eventLines}
-    ${data.avgEngagementDistance>0?`<div class="ca-stat">Distanta medie engagement: ${data.avgEngagementDistance}m</div>`:''}
-  </div>`;
+  const timelineDots=timelineEvents.map(e=>{const pct=Math.round((e.time/maxTime)*100);const color=e.type==='kill'?'#7ed85b':e.type==='knocked'||e.type==='died'?'#ff4d4f':'#ff9f1a';const label=e.type==='kill'?'K':e.type==='knocked'?'KD':e.type==='died'?'X':'Z';return `<div class="tl-dot" style="left:${pct}%;background:${color}">${label}</div>`;}).join('');
+  const eventLines=negEvents.map(e=>{if(e.type==='knocked') return `<div class="ca-event ca-neg">Knocked in ${circlePhaseLabel(e.phase)}${e.isEarly?' - engagement prea devreme':''} (dist: ${e.dist}m)</div>`;if(e.type==='died') return `<div class="ca-event ca-neg">Eliminat in ${circlePhaseLabel(e.phase)}${e.isEarly?' - prea devreme':''} (dist: ${e.dist}m)</div>`;if(e.type==='zone_damage') return `<div class="ca-event ca-warn">Damage de zona in ${circlePhaseLabel(e.phase)}</div>`;return '';}).join('');
+  return `<div class="ca-player-block">${topMistake?`<div class="mistake-badge" style="border-color:${topMistake.color};color:${topMistake.color}">${topMistake.icon} ${topMistake.label}</div>`:''}<div class="ca-conclusion">${conclusion}</div><div class="tactical-profile" style="border-left-color:${tactical.styleColor}"><div class="tactical-style" style="color:${tactical.styleColor}">${tactical.style}</div><ul class="tactical-tips">${tactical.tips.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul></div><div class="ca-timeline"><div class="tl-bar">${timelineDots}</div><div class="tl-labels"><span>Start</span><span>End</span></div></div>${eventLines}${data.avgEngagementDistance>0?`<div class="ca-stat">Distanta medie engagement: ${data.avgEngagementDistance}m</div>`:''}</div>`;
 }
 
 function buildWeaponSummaryHtml(data) {
@@ -968,14 +1311,138 @@ function buildWeaponSummaryHtml(data) {
   const dmgEntries=Object.entries(data.weaponDamage||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
   if(!killEntries.length&&!dmgEntries.length) return '';
   const topWeapon=killEntries.length?killEntries[0][0]:(dmgEntries.length?dmgEntries[0][0]:null);
-  const killRows=killEntries.map(([w,k])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(w)}</span><span class="weapon-kills">${k}K</span></div>`).join('');
-  const dmgRows=dmgEntries.map(([w,d])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(w)}</span><span class="weapon-dmg">${Math.round(d)}</span></div>`).join('');
-  return `<div class="weapon-box">
-    <div class="section-title" style="font-size:12px">🔫 Arme folosite</div>
-    ${topWeapon?`<div class="weapon-top">Arma preferata: <b style="color:#ffd700">${escHtml(topWeapon)}</b></div>`:''}
-    <div class="weapon-cols">
-      ${killRows?`<div class="weapon-col"><div class="weapon-col-title">Top kills</div>${killRows}</div>`:''}
-      ${dmgRows?`<div class="weapon-col"><div class="weapon-col-title">Top damage</div>${dmgRows}</div>`:''}
+  return `<div class="weapon-box"><div class="section-title" style="font-size:12px">🔫 Arme folosite</div>${topWeapon?`<div class="weapon-top">Arma preferata: <b style="color:#ffd700">${escHtml(topWeapon)}</b></div>`:''}<div class="weapon-cols">${killEntries.length?`<div class="weapon-col"><div class="weapon-col-title">Top kills</div>${killEntries.map(([w,k])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(w)}</span><span class="weapon-kills">${k}K</span></div>`).join('')}</div>`:''} ${dmgEntries.length?`<div class="weapon-col"><div class="weapon-col-title">Top damage</div>${dmgEntries.map(([w,d])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(w)}</span><span class="weapon-dmg">${Math.round(d)}</span></div>`).join('')}</div>`:''}</div></div>`;
+}
+
+// ===================== COMBAT ANALYSIS =====================
+function buildCombatAnalysis(telemetry, teamNamesLower, circlePhases) {
+  const analysis={};
+  for(const n of teamNamesLower){analysis[n]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{},lootPct:0,lootTime:0};}
+  for(const ev of telemetry){
+    if(ev?._T==='LogPlayerMakeGroggy'){const vn=(ev?.victim?.name||'').toLowerCase();const an=(ev?.attacker?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const phase=getCirclePhase(evTime,circlePhases);const dist=Math.round(safeInt(ev?.distance)/100);const weapon=cleanWeaponName(ev?.damageCauserName||ev?.attackerWeapon||'');if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'knocked',time:evTime,phase,by:ev?.attacker?.name||'unknown',dist,isEarly});}if(analysis[an]){analysis[an].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[an].weaponKnocked[weapon]=(analysis[an].weaponKnocked[weapon]||0)+1;}}
+    if(ev?._T==='LogPlayerKill'){const kn=(ev?.killer?.name||'').toLowerCase();const vn=(ev?.victim?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const phase=getCirclePhase(evTime,circlePhases);const dist=Math.round(safeInt(ev?.distance)/100);const weapon=cleanWeaponName(ev?.damageCauserName||ev?.killerWeapon||'');if(analysis[kn]){analysis[kn].events.push({type:'kill',time:evTime,phase,victim:ev?.victim?.name||'unknown',dist,weapon});analysis[kn].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[kn].weaponKills[weapon]=(analysis[kn].weaponKills[weapon]||0)+1;}if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'died',time:evTime,phase,by:ev?.killer?.name||'unknown',dist,isEarly});}}
+    if(ev?._T==='LogPlayerTakeDamage'){const vn=(ev?.victim?.name||'').toLowerCase();const an=(ev?.attacker?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const dmg=safeInt(ev?.damage);const weapon=cleanWeaponName(ev?.damageCauserName||'');if(analysis[vn]&&String(ev?.damageTypeCategory||'').toLowerCase().includes('zone')){analysis[vn].zoneIssues++;analysis[vn].events.push({type:'zone_damage',time:evTime,phase:getCirclePhase(evTime,circlePhases)});}if(analysis[an]&&weapon&&weapon!=='Unknown'&&dmg>0)analysis[an].weaponDamage[weapon]=(analysis[an].weaponDamage[weapon]||0)+dmg;}
+  }
+  for(const n of teamNamesLower){const d=analysis[n].distances;analysis[n].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;}
+  return analysis;
+}
+
+// ===================== 1VS1 ANALYSIS =====================
+function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
+  const m1 = Math.max(p1.matches||1,1), m2 = Math.max(p2.matches||1,1);
+  const stats = [
+    {label:'AVG Kills', v1:p1.kills/m1, v2:p2.kills/m2, fmt:(v)=>safeNum(v,2)},
+    {label:'AVG Damage', v1:p1.damage/m1, v2:p2.damage/m2, fmt:(v)=>Math.round(v)},
+    {label:'AVG Downs', v1:p1.downs/m1, v2:p2.downs/m2, fmt:(v)=>safeNum(v,2)},
+    {label:'Win Rate', v1:(p1.wins/m1)*100, v2:(p2.wins/m2)*100, fmt:(v)=>safeNum(v,1)+'%'},
+    {label:'K/D', v1:p1.kills/Math.max(m1-p1.wins,1), v2:p2.kills/Math.max(m2-p2.wins,1), fmt:(v)=>safeNum(v,2)},
+    {label:'AVG Knocked', v1:(p1.knocksTaken||0)/m1, v2:(p2.knocksTaken||0)/m2, fmt:(v)=>safeNum(v,2), reverse:true},
+  ];
+
+  let p1Wins=0, p2Wins=0;
+  stats.forEach(s => {
+    const v1Better = s.reverse ? s.v1 < s.v2 : s.v1 > s.v2;
+    if(v1Better) p1Wins++; else if(s.v1 !== s.v2) p2Wins++;
+  });
+
+  const statRows = stats.map(s => {
+    const v1Better = s.reverse ? s.v1 < s.v2 : s.v1 > s.v2;
+    const v2Better = s.reverse ? s.v2 < s.v1 : s.v2 > s.v1;
+    return `<div class="vs-stat-row">
+      <div class="vs-stat-val left ${v1Better?'win':''}">${s.fmt(s.v1)}</div>
+      <div class="vs-stat-label">${s.label}</div>
+      <div class="vs-stat-val right ${v2Better?'win':''}">${s.fmt(s.v2)}</div>
+    </div>`;
+  }).join('');
+
+  // AI Analysis
+  const winner = p1Wins >= p2Wins ? p1 : p2;
+  const loser = p1Wins >= p2Wins ? p2 : p1;
+  const wm = Math.max(winner.matches||1,1), lm = Math.max(loser.matches||1,1);
+  const wAvgKills = winner.kills/wm, lAvgKills = loser.kills/lm;
+  const wAvgDmg = winner.damage/wm, lAvgDmg = loser.damage/lm;
+  const wWinRate = (winner.wins/wm)*100, lWinRate = (loser.wins/lm)*100;
+  const wCombat = p1Wins >= p2Wins ? p1Combat : p2Combat;
+  const lCombat = p1Wins >= p2Wins ? p2Combat : p1Combat;
+
+  const advantages = [];
+  if(wAvgKills > lAvgKills + 0.5) advantages.push(`Kill rate superior: ${safeNum(wAvgKills,2)} vs ${safeNum(lAvgKills,2)} kills/meci`);
+  if(wAvgDmg > lAvgDmg + 50) advantages.push(`Damage superior: ${Math.round(wAvgDmg)} vs ${Math.round(lAvgDmg)} damage/meci`);
+  if(wWinRate > lWinRate + 5) advantages.push(`Win rate mai mare: ${safeNum(wWinRate,1)}% vs ${safeNum(lWinRate,1)}%`);
+  if(wCombat && lCombat && (wCombat.earlyDeaths||0) < (lCombat.earlyDeaths||0)) advantages.push('Mai putine early deaths — mai disciplinat in faza de opening');
+  if(wCombat && lCombat && (wCombat.zoneIssues||0) < (lCombat.zoneIssues||0)) advantages.push('Rotatie mai buna — mai putine damaguri de zona');
+  if(!advantages.length) advantages.push('Statistici apropiate, diferenta este minima');
+
+  const improvements = [];
+  if(lAvgKills < 1) improvements.push(`Creste kill rate-ul de la ${safeNum(lAvgKills,2)} spre cel putin 1.5/meci — limita minima pro level`);
+  if(lAvgDmg < 300) improvements.push(`Creste damage-ul de la ${Math.round(lAvgDmg)} spre 350+/meci — standard Master rank`);
+  if(lWinRate < 10) improvements.push('Imbunatateste pozitionarea in late game pentru a creste win rate-ul');
+  if(lCombat && (lCombat.earlyDeaths||0) >= 2) improvements.push(`Evita fight-urile in primele 5 minute — ${lCombat.earlyDeaths} early deaths il costa`);
+  if(lCombat && (lCombat.zoneIssues||0) >= 2) improvements.push('Rotatie mai rapida — ia des damage de zona');
+  if(!improvements.length) improvements.push('Nivel apropiat — focus pe consistenta si win rate');
+
+  // Detailed side by side if available
+  let detailedSbs = '';
+  if(p1Ext && p2Ext) {
+    const p1DistArr = p1Ext.killDistances||[], p2DistArr = p2Ext.killDistances||[];
+    const p1AvgD = p1DistArr.length ? Math.round(p1DistArr.reduce((a,b)=>a+b,0)/p1DistArr.length) : 0;
+    const p2AvgD = p2DistArr.length ? Math.round(p2DistArr.reduce((a,b)=>a+b,0)/p2DistArr.length) : 0;
+    const p1LootPct = Math.round((p1Ext.lootTime/p1Ext.totalMatchTime)*100);
+    const p2LootPct = Math.round((p2Ext.lootTime/p2Ext.totalMatchTime)*100);
+    detailedSbs = `
+    <div class="vs-side-by-side">
+      <div class="vs-side-card ${p1Wins>=p2Wins?'winner-side':''}">
+        <div class="vs-side-title" style="color:var(--gold)">${p1Wins>=p2Wins?'👑 ':''} ${escHtml(p1.name)}</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.8">
+          Kill distance medie: <b>${p1AvgD}m</b><br>
+          Timp lootare: <b>${p1LootPct}%</b><br>
+          Survived events: <b>${p1Ext.survivalEvents?.length||0}</b>
+        </div>
+      </div>
+      <div class="vs-side-card ${p2Wins>p1Wins?'winner-side':''}">
+        <div class="vs-side-title" style="color:var(--gold)">${p2Wins>p1Wins?'👑 ':''} ${escHtml(p2.name)}</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.8">
+          Kill distance medie: <b>${p2AvgD}m</b><br>
+          Timp lootare: <b>${p2LootPct}%</b><br>
+          Survived events: <b>${p2Ext.survivalEvents?.length||0}</b>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="vs-wrap">
+    <div class="section-title">⚔️ 1VS1 Comparison</div>
+    <div class="vs-header">
+      <div class="vs-player-card ${p1Wins>=p2Wins?'winner':'loser'}">
+        <div class="vs-player-name">${escHtml(p1.name)}</div>
+        <div class="vs-player-score">${p1Wins}</div>
+        <div class="vs-player-label">categorii castigate</div>
+        ${p1Wins>=p2Wins?'<div style="color:var(--gold);font-family:var(--font-head);font-size:14px;margin-top:6px">👑 WINNER</div>':''}
+      </div>
+      <div class="vs-separator">VS</div>
+      <div class="vs-player-card ${p2Wins>p1Wins?'winner':'loser'}">
+        <div class="vs-player-name">${escHtml(p2.name)}</div>
+        <div class="vs-player-score">${p2Wins}</div>
+        <div class="vs-player-label">categorii castigate</div>
+        ${p2Wins>p1Wins?'<div style="color:var(--gold);font-family:var(--font-head);font-size:14px;margin-top:6px">👑 WINNER</div>':''}
+      </div>
+    </div>
+
+    ${statRows}
+
+    ${detailedSbs}
+
+    <div class="vs-analysis-box">
+      <div class="vs-analysis-title">🧠 De ce ${escHtml(winner.name)} e mai bun?</div>
+      <div class="vs-analysis-section">
+        <div class="vs-analysis-label">✅ Avantaje ${escHtml(winner.name)}</div>
+        <div class="vs-analysis-text">${advantages.map(a=>`• ${escHtml(a)}`).join('<br>')}</div>
+      </div>
+      <div class="vs-analysis-section">
+        <div class="vs-analysis-label">🚀 Ce trebuie ${escHtml(loser.name)} sa imbunatateasca</div>
+        <div class="vs-analysis-text">${improvements.map(a=>`• ${escHtml(a)}`).join('<br>')}</div>
+      </div>
     </div>
   </div>`;
 }
@@ -984,14 +1451,17 @@ function buildWeaponSummaryHtml(data) {
 async function runReport() {
   const apiKey = document.getElementById('apiKey').value.trim();
   const playerName = document.getElementById('playerName').value.trim();
-  if(!apiKey || !playerName) { alert('Introdu API Key si Username!'); return; }
+  if(!apiKey || !playerName) { alert(i('errorFillFields')); return; }
 
-  // Save key
+  const reportType = state.reportType;
+  const vsPlayerName = reportType === 'vs' ? document.getElementById('vsPlayerName').value.trim() : '';
+  if(reportType === 'vs' && !vsPlayerName) { alert(i('errorFillP2')); return; }
+
   saveApiKey(apiKey);
   document.getElementById('savedKeyNote').style.display = 'inline';
 
   const platform = state.platform;
-  const reportType = state.reportType;
+  const matchMode = state.matchMode;
   const detailLevel = state.detailLevel;
   const rangeVal = state.range;
 
@@ -999,10 +1469,9 @@ async function runReport() {
   if(rangeVal === 'custom') {
     const fv = document.getElementById('fromDate').value;
     const tv = document.getElementById('toDate').value;
-    if(!fv || !tv) { alert('Selecteaza intervalul custom!'); return; }
-    fromDate = new Date(fv);
-    toDate = new Date(tv);
-    if(toDate <= fromDate) { alert('Data finala trebuie sa fie dupa cea initiala!'); return; }
+    if(!fv || !tv) { alert(i('errorSelectCustom')); return; }
+    fromDate = new Date(fv); toDate = new Date(tv);
+    if(toDate <= fromDate) { alert(i('errorDateRange')); return; }
   }
 
   const extra1 = document.getElementById('extra1').value.trim();
@@ -1012,11 +1481,9 @@ async function runReport() {
   function isInRange(date) {
     if(rangeVal === 'custom') return date >= fromDate && date <= toDate;
     const hours = parseInt(rangeVal);
-    const diff = Date.now() - date.getTime();
-    return diff >= 0 && diff <= hours * 3600000;
+    return Date.now() - date.getTime() <= hours * 3600000;
   }
 
-  // Show progress
   document.getElementById('setupWrap').style.display = 'none';
   document.getElementById('progressWrap').classList.add('show');
   document.getElementById('report').classList.remove('show');
@@ -1028,456 +1495,346 @@ async function runReport() {
     logMsg('Conectare la PUBG API...');
     setProgress(5);
 
-    // Fetch player
-    logMsg(`Cautare player: ${playerName}...`);
+    // Fetch main player
     let playerRes;
-    try {
-      playerRes = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${encodeURIComponent(playerName)}`, apiKey);
-    } catch(e) {
-      throw new Error('CORS sau API Key invalid. Verifica cheia API si incearca dintr-un browser care permite CORS.');
-    }
-
-    if(!playerRes.data?.length) throw new Error('Playerul nu a fost gasit pe aceasta platforma.');
+    try { playerRes = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${encodeURIComponent(playerName)}`, apiKey); }
+    catch(e) { throw new Error(i('corsError')); }
+    if(!playerRes.data?.length) throw new Error(i('playerNotFound'));
     const player = playerRes.data[0];
     const playerId = player.id;
     const matchRefs = player.relationships?.matches?.data || [];
-    logMsg(`Player gasit: ${playerName} (${matchRefs.length} meciuri recente)`, 'ok');
+    logMsg(`Player gasit: ${playerName} (${matchRefs.length} meciuri)`, 'ok');
     setProgress(10);
+
+    // Fetch VS player if needed
+    let vsPlayer = null, vsMatchRefs = [], vsPlayerId = null;
+    if(reportType === 'vs') {
+      logMsg(`Cautare Player 2: ${vsPlayerName}...`);
+      try {
+        const vsRes = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${encodeURIComponent(vsPlayerName)}`, apiKey);
+        if(vsRes.data?.length) { vsPlayer = vsRes.data[0]; vsPlayerId = vsPlayer.id; vsMatchRefs = vsPlayer.relationships?.matches?.data || []; logMsg(`Player 2 gasit: ${vsPlayerName}`, 'ok'); }
+      } catch(e) { logMsg('Player 2 nu a fost gasit', 'warn'); }
+    }
 
     // Season + Leaderboard
     let seasonStats = null, globalLeaderboard = [];
-    logMsg('Fetch season ID...');
     const seasonId = await fetchSeasonId(platform, apiKey);
     if(seasonId) {
-      logMsg(`Season: ${seasonId}`, 'ok');
-      if(reportType === 'personal') {
-        logMsg('Fetch season stats...');
-        seasonStats = await fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId);
-      }
-      if(detailLevel === 'detailed') {
-        logMsg('Fetch global leaderboard (top 100 kills)...');
-        globalLeaderboard = await fetchGlobalLeaderboard(platform, apiKey, seasonId);
-        logMsg(`Leaderboard: ${globalLeaderboard.length} jucatori`, globalLeaderboard.length ? 'ok' : 'warn');
-      }
+      if(reportType === 'personal') seasonStats = await fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId);
+      if(detailLevel === 'detailed') { globalLeaderboard = await fetchGlobalLeaderboard(platform, apiKey, seasonId); logMsg(`Leaderboard: ${globalLeaderboard.length} jucatori`, 'ok'); }
     }
-    setProgress(20);
+    setProgress(18);
 
-    // Fetch matches
-    const surprizeVictims = [];
-    let matchesFiltered = [];
-    const total = matchRefs.length;
-
-    for(let i = 0; i < total; i++) {
-      const matchRef = matchRefs[i];
-      setProgress(20 + Math.round((i / total) * 65));
-      let matchRes;
-      try { matchRes = await apiGet(`https://api.pubg.com/shards/${platform}/matches/${matchRef.id}`, apiKey); }
-      catch(e) { continue; }
-
-      const createdAt = new Date(matchRes.data?.attributes?.createdAt || 0);
-      if(!createdAt || isNaN(createdAt.getTime())) continue;
-      if(!isInRange(createdAt)) continue;
-
-      // Ranked only
-      const matchType = (matchRes.data?.attributes?.matchType || '').toLowerCase();
-      if(matchType !== 'competitive') continue;
-
-      logMsg(`Meci ${matchesFiltered.length + 1}: ${shortMapName(matchRes.data?.attributes?.mapName)} @ ${formatRoTime(createdAt)}`);
-
-      const included = matchRes.included || [];
-      const participants = included.filter(x => x.type === 'participant');
-      const rosters = included.filter(x => x.type === 'roster');
-      const myParticipant = participants.find(p => nameEq(p.attributes?.stats?.name, playerName));
-      if(!myParticipant) continue;
-      const myRoster = rosters.find(r => (r.relationships?.participants?.data?.map(x => x.id) || []).includes(myParticipant.id));
-      if(!myRoster) continue;
-      const teamIds = myRoster.relationships?.participants?.data?.map(x => x.id) || [];
-      const teamParticipants = teamIds.map(id => participants.find(p => p.id === id)).filter(Boolean);
-      const teamStats = teamParticipants.map(p => ({
-        name: p.attributes?.stats?.name || 'Unknown',
-        kills: safeInt(p.attributes?.stats?.kills),
-        damage: safeInt(p.attributes?.stats?.damageDealt),
-        assists: safeInt(p.attributes?.stats?.assists),
-        revives: safeInt(p.attributes?.stats?.revives),
-        downs: safeInt(p.attributes?.stats?.dBNOs ?? p.attributes?.stats?.DBNOs ?? 0),
-        knocksTaken: 0, head: 0, body: 0, legs: 0, unknown: 0
-      }));
-
-      let matchCombatData = null;
-      if(detailLevel === 'detailed') {
-        const telemetryUrl = (() => {
-          const asset = included.find(x => x.type === 'asset' && (x.attributes?.name === 'telemetry' || x.attributes?.URL));
-          return asset?.attributes?.URL || null;
-        })();
-        if(telemetryUrl) {
-          try {
-            logMsg(`  → Telemetry...`);
-            const telemetry = await apiGet(telemetryUrl, apiKey, false);
-            const teamNamesLower = teamStats.map(x => x.name.toLowerCase());
-            const circlePhases = extractCirclePhases(telemetry);
-            for(const ev of telemetry) {
-              if(ev?._T === 'LogPlayerMakeGroggy') {
-                const vn = (ev?.victim?.name || '').toLowerCase();
-                const idx = teamNamesLower.indexOf(vn);
-                if(idx >= 0) teamStats[idx].knocksTaken += 1;
+    // Helper to fetch matches for a player
+    async function fetchMatchesForPlayer(pName, mRefs, startProgress, endProgress) {
+      const matches = [];
+      const extendedDataMap = {}; // matchId -> extData
+      const surprizes = [];
+      const total = mRefs.length;
+      for(let i=0; i<total; i++) {
+        setProgress(startProgress + Math.round((i/total)*(endProgress-startProgress)));
+        let matchRes;
+        try { matchRes = await apiGet(`https://api.pubg.com/shards/${platform}/matches/${mRefs[i].id}`, apiKey); }
+        catch(e) { continue; }
+        const createdAt = new Date(matchRes.data?.attributes?.createdAt || 0);
+        if(!createdAt || isNaN(createdAt.getTime())) continue;
+        if(!isInRange(createdAt)) continue;
+        const matchType = (matchRes.data?.attributes?.matchType || '').toLowerCase();
+        if(matchMode === 'ranked' && matchType !== 'competitive') continue;
+        if(matchMode === 'normal' && matchType === 'competitive') continue;
+        const included = matchRes.included || [];
+        const participants = included.filter(x => x.type === 'participant');
+        const rosters = included.filter(x => x.type === 'roster');
+        const myParticipant = participants.find(p => nameEq(p.attributes?.stats?.name, pName));
+        if(!myParticipant) continue;
+        const myRoster = rosters.find(r => (r.relationships?.participants?.data?.map(x=>x.id)||[]).includes(myParticipant.id));
+        if(!myRoster) continue;
+        const teamIds = myRoster.relationships?.participants?.data?.map(x=>x.id)||[];
+        const teamParticipants = teamIds.map(id=>participants.find(p=>p.id===id)).filter(Boolean);
+        const teamStats = teamParticipants.map(p => ({
+          name:p.attributes?.stats?.name||'Unknown',
+          kills:safeInt(p.attributes?.stats?.kills), damage:safeInt(p.attributes?.stats?.damageDealt),
+          assists:safeInt(p.attributes?.stats?.assists), revives:safeInt(p.attributes?.stats?.revives),
+          downs:safeInt(p.attributes?.stats?.dBNOs??p.attributes?.stats?.DBNOs??0),
+          knocksTaken:0, head:0, body:0, legs:0, unknown:0
+        }));
+        const matchDuration = safeInt(matchRes.data?.attributes?.duration) || 1800;
+        let matchCombatData = null;
+        let extData = null;
+        if(detailLevel === 'detailed') {
+          const asset = included.find(x=>x.type==='asset'&&(x.attributes?.name==='telemetry'||x.attributes?.URL));
+          const telemetryUrl = asset?.attributes?.URL || null;
+          if(telemetryUrl) {
+            try {
+              logMsg(`  → Telemetry ${shortMapName(matchRes.data?.attributes?.mapName)}...`);
+              const telemetry = await apiGet(telemetryUrl, apiKey, false);
+              const teamNamesLower = teamStats.map(x=>x.name.toLowerCase());
+              const circlePhases = extractCirclePhases(telemetry);
+              for(const ev of telemetry) {
+                if(ev?._T==='LogPlayerMakeGroggy'){const vn=(ev?.victim?.name||'').toLowerCase();const idx=teamNamesLower.indexOf(vn);if(idx>=0)teamStats[idx].knocksTaken+=1;}
+                if(ev?._T==='LogPlayerTakeDamage'){const an=(ev?.attacker?.name||'').toLowerCase();const idx=teamNamesLower.indexOf(an);if(idx>=0){const z=classifyDamageReason(ev?.damageReason);if(z==='head')teamStats[idx].head++;else if(z==='body')teamStats[idx].body++;else if(z==='legs')teamStats[idx].legs++;else teamStats[idx].unknown++;}}
+                if(ev?._T==='LogPlayerKill'&&globalLeaderboard.length){const kn=ev?.killer?.name||'';const vn=ev?.victim?.name||'';const isTeamKill=teamStats.some(x=>nameEq(x.name,kn));if(isTeamKill){const gIdx=globalLeaderboard.findIndex(x=>nameEq(x.name,vn));if(gIdx!==-1){surprizes.push({killerName:kn,victimName:vn,globalRank:gIdx+1,kills:globalLeaderboard[gIdx].kills,mapName:shortMapName(matchRes.data?.attributes?.mapName),time:formatRoTime(createdAt)});logMsg(`  ⭐ SURPRIZE: Top ${gIdx+1} eliminated!`,'ok');}}}
               }
-              if(ev?._T === 'LogPlayerTakeDamage') {
-                const an = (ev?.attacker?.name || '').toLowerCase();
-                const idx = teamNamesLower.indexOf(an);
-                if(idx >= 0) {
-                  const z = classifyDamageReason(ev?.damageReason);
-                  if(z === 'head') teamStats[idx].head++;
-                  else if(z === 'body') teamStats[idx].body++;
-                  else if(z === 'legs') teamStats[idx].legs++;
-                  else teamStats[idx].unknown++;
-                }
-              }
-              if(ev?._T === 'LogPlayerKill' && globalLeaderboard.length) {
-                const killerName = ev?.killer?.name || '';
-                const victimName = ev?.victim?.name || '';
-                const isTeamKill = teamStats.some(x => nameEq(x.name, killerName));
-                if(isTeamKill) {
-                  const gIdx = globalLeaderboard.findIndex(x => nameEq(x.name, victimName));
-                  if(gIdx !== -1) {
-                    surprizeVictims.push({killerName, victimName, globalRank: gIdx + 1, kills: globalLeaderboard[gIdx].kills, mapName: shortMapName(matchRes.data?.attributes?.mapName), time: formatRoTime(createdAt)});
-                    logMsg(`  ⭐ SURPRIZE: ${killerName} a eliminat Top ${gIdx+1} global!`, 'ok');
-                  }
-                }
-              }
-            }
-            matchCombatData = buildCombatAnalysis(telemetry, teamNamesLower, circlePhases);
-          } catch(e) { logMsg('  → Telemetry indisponibil', 'warn'); }
+              matchCombatData = buildCombatAnalysis(telemetry, teamNamesLower, circlePhases);
+              extData = buildExtendedTelemetry(telemetry, pName, matchDuration);
+              extendedDataMap[mRefs[i].id] = extData;
+            } catch(e) { logMsg('  → Telemetry indisponibil','warn'); }
+          }
         }
+        matches.push({createdAt, mapName:shortMapName(matchRes.data?.attributes?.mapName), mode:matchRes.data?.attributes?.gameMode||'-', duration:matchDuration, rank:safeInt(myRoster.attributes?.stats?.rank), teamStats, combatData:matchCombatData, extData});
+        logMsg(`Meci ${matches.length}: ${shortMapName(matchRes.data?.attributes?.mapName)} @ ${formatRoTime(createdAt)}`);
       }
-
-      matchesFiltered.push({
-        createdAt,
-        mapName: shortMapName(matchRes.data?.attributes?.mapName),
-        mode: matchRes.data?.attributes?.gameMode || '-',
-        duration: safeInt(matchRes.data?.attributes?.duration),
-        rank: safeInt(myRoster.attributes?.stats?.rank),
-        teamStats, combatData: matchCombatData
-      });
+      matches.sort((a,b)=>a.createdAt-b.createdAt);
+      return {matches, surprizes};
     }
 
-    matchesFiltered.sort((a, b) => a.createdAt - b.createdAt);
-    setProgress(88);
+    const {matches:matchesFiltered, surprizes:surprizeVictims} = await fetchMatchesForPlayer(playerName, matchRefs, 18, reportType==='vs'?55:85);
+    setProgress(reportType==='vs'?55:85);
 
-    if(!matchesFiltered.length) throw new Error(`Nu exista meciuri ranked in intervalul selectat.`);
-    logMsg(`Total meciuri ranked gasite: ${matchesFiltered.length}`, 'ok');
+    if(!matchesFiltered.length) throw new Error(i('noMatches'));
+    logMsg(`Total meciuri ${matchMode}: ${matchesFiltered.length}`, 'ok');
+
+    // VS player matches
+    let vsMatchesFiltered = [];
+    if(reportType === 'vs' && vsMatchRefs.length) {
+      logMsg(`Fetch meciuri Player 2: ${vsPlayerName}...`);
+      const {matches:vm} = await fetchMatchesForPlayer(vsPlayerName, vsMatchRefs, 55, 85);
+      vsMatchesFiltered = vm;
+      logMsg(`Player 2: ${vsMatchesFiltered.length} meciuri`, 'ok');
+    }
+    setProgress(85);
 
     // Build totals
     let allTeamPlayers = [];
-    for(const match of matchesFiltered)
-      for(const p of match.teamStats)
-        if(!allTeamPlayers.some(x => nameEq(x, p.name))) allTeamPlayers.push(p.name);
+    for(const match of matchesFiltered) for(const p of match.teamStats) if(!allTeamPlayers.some(x=>nameEq(x,p.name))) allTeamPlayers.push(p.name);
 
-    let displayPlayers = reportType === 'personal' ? [playerName] : (() => {
-      let all = [...allTeamPlayers];
-      const forced = [playerName, ...extraPlayers];
-      for(const f of forced) if(!all.some(x => nameEq(x, f))) all.push(f);
-      return [playerName, ...extraPlayers.filter(n => !nameEq(n, playerName)), ...all.filter(n => !nameEq(n, playerName) && !extraPlayers.some(e => nameEq(e, n)))];
+    let displayPlayers = reportType === 'personal' ? [playerName] : reportType === 'vs' ? [playerName] : (() => {
+      let all=[...allTeamPlayers]; const forced=[playerName,...extraPlayers]; for(const f of forced) if(!all.some(x=>nameEq(x,f))) all.push(f);
+      return [playerName,...extraPlayers.filter(n=>!nameEq(n,playerName)),...all.filter(n=>!nameEq(n,playerName)&&!extraPlayers.some(e=>nameEq(e,n)))];
     })();
 
-    const totals = {}, zeroLines = {};
-    for(const name of allTeamPlayers) { totals[name] = emptyPlayerStat(name); zeroLines[name] = 0; }
+    const totals={}, zeroLines={};
+    for(const name of allTeamPlayers){totals[name]=emptyPlayerStat(name);zeroLines[name]=0;}
+    const aggregatedCombat={};
+    for(const name of allTeamPlayers) aggregatedCombat[name.toLowerCase()]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{},lootPct:0,lootTime:0};
 
-    const aggregatedCombat = {};
-    for(const name of allTeamPlayers) aggregatedCombat[name.toLowerCase()] = {events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{}};
+    // Aggregate extended data per player
+    const aggregatedExt = {};
+    for(const name of allTeamPlayers) aggregatedExt[name.toLowerCase()]={survivalEvents:[],killDistances:[],lootEvents:[],totalMatchTime:0,lootTime:0,activeTime:0};
 
     for(const match of matchesFiltered) {
       for(const name of allTeamPlayers) {
-        const p = match.teamStats.find(x => nameEq(x.name, name));
+        const p=match.teamStats.find(x=>nameEq(x.name,name));
         if(!p) continue;
-        totals[name].kills += p.kills; totals[name].damage += p.damage;
-        totals[name].assists += p.assists; totals[name].revives += p.revives;
-        totals[name].downs += p.downs; totals[name].knocksTaken += p.knocksTaken;
-        totals[name].head += p.head; totals[name].body += p.body;
-        totals[name].legs += p.legs; totals[name].unknown += p.unknown;
-        totals[name].matches += 1;
-        if(match.rank === 1) totals[name].wins += 1;
-        if(!p.kills && !p.damage && !p.assists && !p.downs && !p.knocksTaken) zeroLines[name] += 1;
+        totals[name].kills+=p.kills;totals[name].damage+=p.damage;totals[name].assists+=p.assists;totals[name].revives+=p.revives;totals[name].downs+=p.downs;totals[name].knocksTaken+=p.knocksTaken;totals[name].head+=p.head;totals[name].body+=p.body;totals[name].legs+=p.legs;totals[name].unknown+=p.unknown;totals[name].matches+=1;
+        if(match.rank===1) totals[name].wins+=1;
+        if(!p.kills&&!p.damage&&!p.assists&&!p.downs&&!p.knocksTaken) zeroLines[name]+=1;
       }
       if(match.combatData) {
         for(const key of Object.keys(match.combatData)) {
           if(!aggregatedCombat[key]) continue;
-          const src = match.combatData[key];
-          aggregatedCombat[key].events.push(...src.events);
-          aggregatedCombat[key].earlyDeaths += src.earlyDeaths;
-          aggregatedCombat[key].zoneIssues += src.zoneIssues;
-          aggregatedCombat[key].distances.push(...src.distances);
+          const src=match.combatData[key];
+          aggregatedCombat[key].events.push(...src.events);aggregatedCombat[key].earlyDeaths+=src.earlyDeaths;aggregatedCombat[key].zoneIssues+=src.zoneIssues;aggregatedCombat[key].distances.push(...src.distances);
           for(const[w,v] of Object.entries(src.weaponKills||{})) aggregatedCombat[key].weaponKills[w]=(aggregatedCombat[key].weaponKills[w]||0)+v;
           for(const[w,v] of Object.entries(src.weaponDamage||{})) aggregatedCombat[key].weaponDamage[w]=(aggregatedCombat[key].weaponDamage[w]||0)+v;
           for(const[w,v] of Object.entries(src.weaponKnocked||{})) aggregatedCombat[key].weaponKnocked[w]=(aggregatedCombat[key].weaponKnocked[w]||0)+v;
         }
       }
+      if(match.extData) {
+        const key = playerName.toLowerCase();
+        if(aggregatedExt[key]) {
+          aggregatedExt[key].survivalEvents.push(...(match.extData.survivalEvents||[]));
+          aggregatedExt[key].killDistances.push(...(match.extData.killDistances||[]));
+          aggregatedExt[key].lootEvents.push(...(match.extData.lootEvents||[]));
+          aggregatedExt[key].totalMatchTime += match.extData.totalMatchTime||0;
+          aggregatedExt[key].lootTime += match.extData.lootTime||0;
+          aggregatedExt[key].activeTime += match.extData.activeTime||0;
+        }
+      }
     }
-    for(const key of Object.keys(aggregatedCombat)){const d=aggregatedCombat[key].distances;aggregatedCombat[key].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;}
+    for(const key of Object.keys(aggregatedCombat)){const d=aggregatedCombat[key].distances;aggregatedCombat[key].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;if(aggregatedCombat[key].totalMatchTime) aggregatedCombat[key].lootPct=Math.round((aggregatedCombat[key].lootTime/aggregatedCombat[key].totalMatchTime)*100);}
 
-    const leaderboard = Object.values(totals).map(t => {
-      const score = t.kills*12+t.damage*0.015+t.downs*6+t.wins*40+t.assists*4+t.revives*5-(t.knocksTaken||0)*5;
-      return {...t, score, zeroLine: zeroLines[t.name]||0};
-    }).sort((a,b) => b.score - a.score);
+    // VS totals
+    let vsTotals = null;
+    if(reportType === 'vs' && vsMatchesFiltered.length) {
+      vsTotals = emptyPlayerStat(vsPlayerName);
+      const vsAggCombat = {events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{}};
+      const vsAggExt = {survivalEvents:[],killDistances:[],lootEvents:[],totalMatchTime:0,lootTime:0,activeTime:0};
+      for(const match of vsMatchesFiltered) {
+        const p=match.teamStats.find(x=>nameEq(x.name,vsPlayerName));
+        if(!p) continue;
+        vsTotals.kills+=p.kills;vsTotals.damage+=p.damage;vsTotals.assists+=p.assists;vsTotals.revives+=p.revives;vsTotals.downs+=p.downs;vsTotals.knocksTaken+=p.knocksTaken;vsTotals.matches+=1;
+        if(match.rank===1) vsTotals.wins+=1;
+        if(match.combatData) {
+          const key=vsPlayerName.toLowerCase();
+          if(match.combatData[key]){const src=match.combatData[key];vsAggCombat.events.push(...src.events);vsAggCombat.earlyDeaths+=src.earlyDeaths;vsAggCombat.zoneIssues+=src.zoneIssues;vsAggCombat.distances.push(...src.distances);}
+        }
+        if(match.extData){vsAggExt.survivalEvents.push(...(match.extData.survivalEvents||[]));vsAggExt.killDistances.push(...(match.extData.killDistances||[]));vsAggExt.lootEvents.push(...(match.extData.lootEvents||[]));vsAggExt.totalMatchTime+=match.extData.totalMatchTime||0;vsAggExt.lootTime+=match.extData.lootTime||0;vsAggExt.activeTime+=match.extData.activeTime||0;}
+      }
+      const vsDist=vsAggCombat.distances;vsAggCombat.avgEngagementDistance=vsDist.length?Math.round(vsDist.reduce((a,b)=>a+b,0)/vsDist.length):0;
+      vsTotals._combat=vsAggCombat;
+      vsTotals._ext=vsAggExt;
+    }
 
-    const top3 = leaderboard.slice(0,3);
-    const mvp = leaderboard[0] || emptyPlayerStat(playerName);
-    const mainTotals = totals[playerName] || emptyPlayerStat(playerName);
-    const overallMatches = Math.max(mainTotals.matches||1,1);
-    const bestScore = leaderboard.length ? leaderboard[0].score : 0;
-    const avgScoreTeam = leaderboard.reduce((a,p)=>a+p.score,0)/Math.max(leaderboard.length,1);
-    const maxMatches = Math.max(...leaderboard.map(p=>p.matches||0),1);
-    const rankingStats = {bestScore, avgScoreTeam, maxMatches};
-    const streaks = detectStreaks(matchesFiltered, playerName);
-    const colors = ['#5f4b66','#6a4e00','#2c4563','#4b5d2a','#613c3c','#54436b'];
+    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*12+t.damage*0.015+t.downs*6+t.wins*40+t.assists*4+t.revives*5-(t.knocksTaken||0)*5;return{...t,score,zeroLine:zeroLines[t.name]||0};}).sort((a,b)=>b.score-a.score);
+    const top3=leaderboard.slice(0,3);
+    const mvp=leaderboard[0]||emptyPlayerStat(playerName);
+    const mainTotals=totals[playerName]||emptyPlayerStat(playerName);
+    const overallMatches=Math.max(mainTotals.matches||1,1);
+    const bestScore=leaderboard.length?leaderboard[0].score:0;
+    const avgScoreTeam=leaderboard.reduce((a,p)=>a+p.score,0)/Math.max(leaderboard.length,1);
+    const maxMatches=Math.max(...leaderboard.map(p=>p.matches||0),1);
+    const rankingStats={bestScore,avgScoreTeam,maxMatches};
+    const streaks=detectStreaks(matchesFiltered,playerName);
+    const colors=['#5f4b66','#6a4e00','#2c4563','#4b5d2a','#613c3c','#54436b'];
 
-    // ── Build HTML ──
     setProgress(95);
-    logMsg('Generare raport HTML...', 'ok');
+    logMsg('Generare raport...','ok');
 
-    const rangeText = rangeVal === 'custom' ? `${formatRoDateTime(fromDate)} - ${formatRoDateTime(toDate)}` : `${rangeVal}h`;
-    const firstTime = formatRoTime(matchesFiltered[0].createdAt);
-    const lastTime = formatRoTime(matchesFiltered[matchesFiltered.length-1].createdAt);
+    const rangeText=rangeVal==='custom'?`${formatRoDateTime(fromDate)} - ${formatRoDateTime(toDate)}`:`${rangeVal}h`;
+    const firstTime=formatRoTime(matchesFiltered[0].createdAt);
+    const lastTime=formatRoTime(matchesFiltered[matchesFiltered.length-1].createdAt);
+    const mainWinRate=(mainTotals.wins/overallMatches)*100;
 
-    // Hero
-    const mainWinRate = (mainTotals.wins/overallMatches)*100;
-    const heroCards = reportType === 'personal' ? [
-      ['Main player', playerName],
-      ['Total kills', mainTotals.kills],
-      ['Total damage', Math.round(mainTotals.damage)],
-      ['Win rate', safeNum(mainWinRate,1)+'%'],
-      ['AVG kills', safeNum(mainTotals.kills/overallMatches,2)],
-      ['AVG damage', safeNum(mainTotals.damage/overallMatches,2)],
-      ['Meciuri ranked', matchesFiltered.length],
-      ['Mode', detailLevel.toUpperCase()]
+    // Hero cards
+    const heroCards = reportType==='personal' ? [
+      ['Main player',playerName],['Total kills',mainTotals.kills],['Total damage',Math.round(mainTotals.damage)],
+      ['Win rate',safeNum(mainWinRate,1)+'%'],['AVG kills',safeNum(mainTotals.kills/overallMatches,2)],
+      ['AVG damage',safeNum(mainTotals.damage/overallMatches,2)],['Meciuri',matchesFiltered.length],['Mode',detailLevel.toUpperCase()]
+    ] : reportType==='vs' ? [
+      ['Player 1',playerName],['Meciuri P1',matchesFiltered.length],['Player 2',vsPlayerName],['Meciuri P2',vsMatchesFiltered.length],
+      ['Mode',matchMode.toUpperCase()],['Detail',detailLevel.toUpperCase()]
     ] : [
-      ['Tracked players', leaderboard.length],
-      ['Report', 'TEAM'],
-      ['MVP', mvp.name],
-      ['Best score', safeNum(bestScore,0)],
-      ['Avg score', safeNum(avgScoreTeam,0)],
-      ['Meciuri ranked', matchesFiltered.length],
-      ['Main player', playerName],
-      ['Mode', detailLevel.toUpperCase()]
+      ['Tracked',leaderboard.length],['Report','TEAM'],['MVP',mvp.name],['Best score',safeNum(bestScore,0)],
+      ['Avg score',safeNum(avgScoreTeam,0)],['Meciuri',matchesFiltered.length],['Main player',playerName],['Mode',detailLevel.toUpperCase()]
     ];
-
-    const heroHtml = `<div class="hero-grid">${heroCards.map(([l,v])=>`<div class="hero-card"><div class="hero-label">${l}</div><div class="hero-value">${escHtml(String(v))}</div></div>`).join('')}</div>`;
+    const heroHtml=`<div class="hero-grid">${heroCards.map(([l,v])=>`<div class="hero-card"><div class="hero-label">${l}</div><div class="hero-value">${escHtml(String(v))}</div></div>`).join('')}</div>`;
 
     // Podium
-    const podiumHtml = reportType === 'team' ? `
+    const podiumHtml = reportType==='team' ? `
       <div class="section-title">🏆 Podium</div>
-      <div class="podium">${top3.map((p,i)=>{
-        const cls=['gold','silver','bronze'][i]||'';
-        const icon=['🥇','🥈','🥉'][i]||'';
-        return `<div class="podium-card ${cls}"><div class="podium-icon">${icon}</div><div class="podium-name">${escHtml(p.name)}</div><div class="podium-stats">${p.kills}K &nbsp; ${Math.round(p.damage)}D &nbsp; ${p.downs}Down &nbsp; ${p.knocksTaken}Taken</div></div>`;
-      }).join('')}</div>
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;">⭐ MVP: <b style="color:var(--gold)">${escHtml(mvp.name)}</b> — ${mvp.kills}K &nbsp; ${Math.round(mvp.damage)}D &nbsp; ${mvp.downs}Down &nbsp; ${mvp.knocksTaken}Taken</div>` : '';
+      <div class="podium">${top3.map((p,i)=>`<div class="podium-card ${['gold','silver','bronze'][i]||''}"><div class="podium-icon">${['🥇','🥈','🥉'][i]||''}</div><div class="podium-name">${escHtml(p.name)}</div><div class="podium-stats">${p.kills}K &nbsp; ${Math.round(p.damage)}D &nbsp; ${p.downs}Down &nbsp; ${p.knocksTaken}Taken</div></div>`).join('')}</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;">⭐ MVP: <b style="color:var(--gold)">${escHtml(mvp.name)}</b> — ${mvp.kills}K &nbsp; ${Math.round(mvp.damage)}D &nbsp; ${mvp.downs}Down</div>` : '';
 
-    // Table
-    let headerTop = `<th rowspan="2">#</th>`;
-    let headerBottom = '';
-    displayPlayers.forEach((name, i) => {
-      const color = colors[i % colors.length];
-      headerTop += `<th colspan="6" style="background:${color};color:#fff;">${escHtml(name)}</th>`;
-      headerBottom += `<th style="background:${color};color:#fff;">Kill</th><th style="background:${color};color:#fff;">Dmg</th><th style="background:${color};color:#fff;">Asst</th><th style="background:${color};color:#fff;">Rev</th><th style="background:${color};color:#fff;">Down</th><th style="background:${color};color:#fff;">KTkn</th>`;
-    });
-    headerTop += `<th rowspan="2">Map</th><th rowspan="2">Ora</th><th rowspan="2">Loc</th><th rowspan="2">Status</th>`;
-
-    function cellFor(match, name) {
-      const p = match.teamStats.find(x => nameEq(x.name, name));
-      if(!p) return '<td class="absent">-</td>'.repeat(6);
-      return `<td>${p.kills}</td><td>${Math.round(p.damage)}</td><td>${p.assists}</td><td>${p.revives}</td><td>${p.downs}</td><td>${p.knocksTaken}</td>`;
+    // Table (not for 1vs1)
+    let tableHtml = '';
+    if(reportType !== 'vs') {
+      let headerTop=`<th rowspan="2">#</th>`, headerBottom='';
+      displayPlayers.forEach((name,i)=>{const color=colors[i%colors.length];headerTop+=`<th colspan="6" style="background:${color};color:#fff;">${escHtml(name)}</th>`;headerBottom+=`<th style="background:${color};color:#fff;">Kill</th><th style="background:${color};color:#fff;">Dmg</th><th style="background:${color};color:#fff;">Asst</th><th style="background:${color};color:#fff;">Rev</th><th style="background:${color};color:#fff;">Down</th><th style="background:${color};color:#fff;">KTkn</th>`;});
+      headerTop+=`<th rowspan="2">Map</th><th rowspan="2">Ora</th><th rowspan="2">Loc</th><th rowspan="2">Status</th>`;
+      function cellFor(match,name){const p=match.teamStats.find(x=>nameEq(x.name,name));if(!p) return '<td class="absent">-</td>'.repeat(6);return `<td>${p.kills}</td><td>${Math.round(p.damage)}</td><td>${p.assists}</td><td>${p.revives}</td><td>${p.downs}</td><td>${p.knocksTaken}</td>`;}
+      let rows=matchesFiltered.map((match,idx)=>{const isWinner=match.rank===1;return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td></tr>`;}).join('');
+      let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr><td><b>Zero</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
+      displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
+      tableHtml=`<div class="section-title">📊 Match Table</div><div class="table-wrap"><table><tr>${headerTop}</tr><tr>${headerBottom}</tr>${rows}${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></table></div>`;
     }
-    let rows = matchesFiltered.map((match, idx) => {
-      const isWinner = match.rank === 1;
-      return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?'🍗 Chicken Dinner':''}</td></tr>`;
-    }).join('');
-
-    let totalRow='<tr class="total-row"><td>Total</td>';
-    let avgRow='<tr class="avg-row"><td><b>AVG</b></td>';
-    let winRow='<tr><td><b>Wins</b></td>';
-    let zeroRow='<tr><td><b>Zero</b></td>';
-    let playedRow='<tr><td><b>Played</b></td>';
-    let missedRow='<tr><td><b>Missed</b></td>';
-    displayPlayers.forEach(name=>{
-      const t=totals[name]||emptyPlayerStat(name);
-      totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;
-      avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;
-      winRow+=`<td colspan="6">${t.wins}</td>`;
-      zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;
-      playedRow+=`<td colspan="6">${t.matches}</td>`;
-      missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;
-    });
-    const tableHtml = `
-      <div class="section-title">📊 Match Table</div>
-      <div class="table-wrap"><table>
-        <tr>${headerTop}</tr><tr>${headerBottom}</tr>
-        ${rows}
-        ${totalRow}<td colspan="4"></td></tr>
-        ${avgRow}<td colspan="4"></td></tr>
-        ${winRow}<td colspan="4"></td></tr>
-        ${zeroRow}<td colspan="4"></td></tr>
-        ${playedRow}<td colspan="4"></td></tr>
-        ${missedRow}<td colspan="4"></td></tr>
-      </table></div>`;
 
     // AI
-    const withAI = (reportType === 'personal' ? [totals[playerName]].filter(Boolean) : leaderboard).map((p,idx)=>{
-      const combatKey = p.name.toLowerCase();
-      const combat = aggregatedCombat[combatKey]||null;
-      const isMvp = reportType === 'team' ? idx === 0 : false;
-      const ai = savageAI(p.name, p, rankingStats, isMvp, combat);
-      const target = detailLevel === 'detailed' ? renderTargetSvg(p.head||0,p.body||0,p.legs||0,p.unknown||0) : '';
-      return {...p, ai, target};
+    const withAI = (reportType==='personal'?[totals[playerName]].filter(Boolean):reportType==='vs'?[totals[playerName]].filter(Boolean):leaderboard).map((p,idx)=>{
+      const combatKey=p.name.toLowerCase();const combat=aggregatedCombat[combatKey]||null;const isMvp=reportType==='team'?idx===0:false;const ai=savageAI(p.name,p,rankingStats,isMvp,combat);const target=detailLevel==='detailed'?renderTargetSvg(p.head||0,p.body||0,p.legs||0,p.unknown||0):'';return{...p,ai,target};
     });
-
-    const aiHtml = `
-      <div class="section-title">🤖 AI Analysis</div>
-      <div class="ai-grid">${withAI.map(p=>{
-        const arch=p.ai.archetype;
-        const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';
-        return `<div class="ai-card ${isMvpCard?'mvp':''}">
-          <div class="ai-name">${escHtml(p.name)}</div>
-          <div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div>
-          <div class="ai-msg">${escHtml(p.ai.msg)}</div>
-          <div class="ai-notes">${escHtml(p.ai.notes||' ')}</div>
-          <div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div>
-        </div>`;
-      }).join('')}</div>`;
+    const aiHtml=`<div class="section-title">🤖 AI Analysis</div><div class="ai-grid">${withAI.map(p=>{const arch=p.ai.archetype;const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';return `<div class="ai-card ${isMvpCard?'mvp':''}"><div class="ai-name">${escHtml(p.name)}</div><div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div><div class="ai-msg">${escHtml(p.ai.msg)}</div><div class="ai-notes">${escHtml(p.ai.notes||' ')}</div><div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div></div>`;}).join('')}</div>`;
 
     // Personal
-    let personalHtml = '';
-    if(reportType === 'personal') {
-      const tips = buildPersonalImproveTips(mainTotals, totals);
-      let streakAlert = '';
+    let personalHtml='';
+    if(reportType==='personal'){
+      const tips=buildPersonalImproveTips(mainTotals,totals);
+      let streakAlert='';
       if(streaks.maxZeroStreak>=3) streakAlert+=`<div class="streak-alert">⚠ ${streaks.maxZeroStreak} meciuri consecutive fara kill</div>`;
       if(streaks.maxKillStreak>=3) streakAlert+=`<div class="streak-good">🔥 ${streaks.maxKillStreak} meciuri consecutive cu cel putin un kill</div>`;
       if(streaks.bestHour) streakAlert+=`<div class="streak-info">⏰ Performezi cel mai bine in jurul orei <b>${streaks.bestHour}:00</b></div>`;
       if(streaks.bestMatchIdx>=0){const bm=matchesFiltered[streaks.bestMatchIdx];const bp=bm.teamStats.find(x=>nameEq(x.name,playerName));if(bp) streakAlert+=`<div class="streak-best">⭐ Cel mai bun meci: ${bm.mapName} @ ${formatRoTime(bm.createdAt)} — ${bp.kills}K / ${Math.round(bp.damage)}D / ${bp.downs}Down</div>`;}
-      personalHtml = `
-        <div class="section-title" style="color:var(--blue)">🎯 Personal Analysis</div>
-        <div class="personal-box">
-          ${streakAlert}
-          <div class="personal-section"><b>Profil:</b> ${escHtml(tips.profile)}</div>
-          <div class="personal-section"><b>Insight:</b> ${escHtml(tips.insight)}</div>
-          <div class="personal-section"><b>✔ Strengths</b><ul>${tips.strengths.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div>
-          <div class="personal-section"><b>⚠ Weaknesses</b><ul>${tips.weaknesses.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div>
-          <div class="personal-section"><b>🚀 Improve</b><ul>${tips.tips.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div>
-        </div>`;
+      personalHtml=`<div class="section-title" style="color:var(--blue)">🎯 Personal Analysis</div><div class="personal-box">${streakAlert}<div class="personal-section"><b>Profil:</b> ${escHtml(tips.profile)}</div><div class="personal-section"><b>Insight:</b> ${escHtml(tips.insight)}</div><div class="personal-section"><b>✔ Strengths</b><ul>${tips.strengths.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div><div class="personal-section"><b>⚠ Weaknesses</b><ul>${tips.weaknesses.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div><div class="personal-section"><b>🚀 Improve</b><ul>${tips.tips.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div></div>`;
     }
 
-    // Global
-    const globalHtml = reportType === 'personal' ? buildGlobalComparisonHtml(seasonStats) : '';
+    const globalHtml=reportType==='personal'?buildGlobalComparisonHtml(seasonStats):'';
 
-    // Team summary
-    let teamSummaryHtml = '';
-    if(reportType === 'team') {
-      const wins = matchesFiltered.filter(m=>m.rank===1).length;
-      const winRate = (wins/matchesFiltered.length)*100;
-      const teamAvgKills = leaderboard.reduce((s,p)=>s+p.kills/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
-      const teamAvgDmg = leaderboard.reduce((s,p)=>s+p.damage/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
-      const tips2=[];
-      if(teamAvgKills<1) tips2.push('Echipa converteste prea putin damage in kills - follow-up slab.');
-      if(teamAvgDmg<200) tips2.push('Damage general scazut - echipa evita prea mult contactul direct.');
-      if(winRate<10) tips2.push('Win rate sub 10% - deciziile de late game sunt problema principala.');
-      if(tips2.length===0) tips2.push('Sesiune decenta per total. Continuati coordonarea si follow-up-ul.');
-      teamSummaryHtml = `<div class="team-summary">
-        <div class="section-title">📈 Team Session Summary</div>
-        <div class="team-summary-stats">Win rate: <b>${safeNum(winRate,1)}%</b> &nbsp;|&nbsp; AVG kills/player: <b>${safeNum(teamAvgKills,2)}</b> &nbsp;|&nbsp; AVG damage/player: <b>${safeNum(teamAvgDmg,0)}</b></div>
-        <ul class="team-tips">${tips2.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul>
-      </div>`;
+    // Team Summary
+    let teamSummaryHtml='';
+    if(reportType==='team'){
+      const wins=matchesFiltered.filter(m=>m.rank===1).length;const winRate=(wins/matchesFiltered.length)*100;const teamAvgKills=leaderboard.reduce((s,p)=>s+p.kills/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);const teamAvgDmg=leaderboard.reduce((s,p)=>s+p.damage/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
+      const tips2=[];if(teamAvgKills<1)tips2.push('Echipa converteste prea putin damage in kills.');if(teamAvgDmg<200)tips2.push('Damage general scazut.');if(winRate<10)tips2.push('Win rate sub 10% — pozitionarea in late game e problema.');if(tips2.length===0)tips2.push('Sesiune decenta. Continuati coordonarea.');
+      teamSummaryHtml=`<div class="team-summary"><div class="section-title">📈 Team Session Summary</div><div class="team-summary-stats">Win rate: <b>${safeNum(winRate,1)}%</b> &nbsp;|&nbsp; AVG kills: <b>${safeNum(teamAvgKills,2)}</b> &nbsp;|&nbsp; AVG damage: <b>${safeNum(teamAvgDmg,0)}</b></div><ul class="team-tips">${tips2.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul></div>`;
     }
 
-    // Detailed targets
-    let detailedHtml = '';
-    if(detailLevel === 'detailed') {
-      const cards = withAI.map(p => {
-        const combatData = aggregatedCombat[p.name.toLowerCase()];
-        const combatInsight = combatData ? buildCombatInsightHtml(combatData, p.name, p.matches) : '';
-        const weaponHtml = combatData ? buildWeaponSummaryHtml(combatData) : '';
-        const isMvpCard = nameEq(p.name, mvp.name) && reportType === 'team';
-        return `<div class="target-card ${isMvpCard?'mvp-target':''}">
-          <div class="target-player">${escHtml(p.name)}</div>
-          <div class="target-svg-wrap">${p.target}</div>
-          <div class="target-stats">
-            <span class="hit-head">Head: ${p.head||0}</span> &nbsp;
-            <span class="hit-body">Body: ${p.body||0}</span> &nbsp;
-            <span class="hit-legs">Legs: ${p.legs||0}</span> &nbsp;
-            <span class="hit-unknown">Unk: ${p.unknown||0}</span>
-          </div>
-          ${weaponHtml}
-          ${combatInsight?`<div class="ca-block"><div class="section-title" style="font-size:12px">🧠 Combat Analysis</div>${combatInsight}</div>`:''}
-        </div>`;
+    // Detailed sections
+    let detailedHtml='';
+    if(detailLevel==='detailed') {
+      const mainExtData = aggregatedExt[playerName.toLowerCase()];
+      const survivalHtml = reportType !== 'vs' ? buildSurvivalTimelineHtml(mainExtData, playerName) : '';
+      const distHtml = reportType !== 'vs' ? buildKillDistanceHtml(mainExtData?.killDistances) : '';
+      const lootHtml = reportType !== 'vs' ? buildLootEfficiencyHtml(mainExtData) : '';
+
+      const cards=withAI.map(p=>{
+        const combatData=aggregatedCombat[p.name.toLowerCase()];
+        const combatInsight=combatData?buildCombatInsightHtml(combatData,p.name,p.matches):'';
+        const weaponHtml=combatData?buildWeaponSummaryHtml(combatData):'';
+        const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';
+        return `<div class="target-card ${isMvpCard?'mvp-target':''}"><div class="target-player">${escHtml(p.name)}</div><div class="target-svg-wrap">${p.target}</div><div class="target-stats"><span class="hit-head">Head: ${p.head||0}</span> &nbsp; <span class="hit-body">Body: ${p.body||0}</span> &nbsp; <span class="hit-legs">Legs: ${p.legs||0}</span> &nbsp; <span class="hit-unknown">Unk: ${p.unknown||0}</span></div>${weaponHtml}${combatInsight?`<div class="ca-block"><div class="section-title" style="font-size:12px">🧠 Combat Analysis</div>${combatInsight}</div>`:''}</div>`;
       }).join('');
-      detailedHtml = `<div class="targets-section"><div class="section-title">🎯 Hit Distribution + Weapons + Combat</div><div class="targets-grid">${cards}</div></div>`;
+
+      const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, matchesFiltered) : '';
+
+      detailedHtml=`${teamDetailedHtml}<div class="targets-section"><div class="section-title">🎯 Hit Distribution + Weapons + Combat</div><div class="targets-grid">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
     }
 
     // Surprize
-    let surprizeHtml = '';
-    if(detailLevel === 'detailed' && surprizeVictims.length) {
-      surprizeHtml = `<div class="surprize-box">
-        <div class="section-title">🎉 Surprize Surprize! Top 100 Global Eliminated</div>
-        ${surprizeVictims.map(v=>`<div class="surprize-row">
-          <div class="surprize-icon">🏆</div>
-          <div class="surprize-text"><b style="color:var(--gold)">${escHtml(v.killerName)}</b> a eliminat pe <b style="color:var(--red)">${escHtml(v.victimName)}</b> <span style="color:var(--text3)">(Top ${v.globalRank} global kills | ${v.kills} kills sezon | ${escHtml(v.mapName)} ${escHtml(v.time)})</span></div>
-        </div>`).join('')}
-      </div>`;
+    let surprizeHtml='';
+    if(detailLevel==='detailed'&&surprizeVictims.length){
+      surprizeHtml=`<div class="surprize-box"><div class="section-title">🎉 Surprize Surprize! Top 100 Global Eliminated</div>${surprizeVictims.map(v=>`<div class="surprize-row"><div style="font-size:18px">🏆</div><div><b style="color:var(--gold)">${escHtml(v.killerName)}</b> a eliminat pe <b style="color:var(--red)">${escHtml(v.victimName)}</b> <span style="color:var(--text3)">(Top ${v.globalRank} global | ${v.kills} kills sezon | ${escHtml(v.mapName)} ${escHtml(v.time)})</span></div></div>`).join('')}</div>`;
     }
 
-    // Download button
-    const modeBadge = `<span class="mode-badge ${detailLevel==='simple'?'mode-simple':'mode-detailed'}">${detailLevel==='simple'?'⚡ SIMPLE':'🔍 DETAILED'}</span>`;
+    // 1VS1
+    let vsHtml='';
+    if(reportType==='vs'&&vsTotals) {
+      const p1Combat=aggregatedCombat[playerName.toLowerCase()]||null;
+      const p1Ext=aggregatedExt[playerName.toLowerCase()]||null;
+      vsHtml=build1vs1Html(mainTotals,vsTotals,p1Combat,vsTotals._combat,detailLevel==='detailed'?p1Ext:null,detailLevel==='detailed'?vsTotals._ext:null);
+    }
 
-    const fullHtml = `
+    const modeBadge=`<span class="mode-badge ${detailLevel==='simple'?'mode-simple':'mode-detailed'}">${detailLevel==='simple'?'⚡ SIMPLE':'🔍 DETAILED'}</span>`;
+    const matchModeBadge=`<span class="mode-badge" style="background:rgba(77,166,255,0.1);color:var(--blue);border-color:var(--blue)">${matchMode.toUpperCase()}</span>`;
+
+    const fullHtml=`
       <div class="report-header">
         <div>
-          <div class="report-title">🔥 PUBG ${rangeText.toUpperCase()} — ${reportType.toUpperCase()} — RANKED</div>
+          <div class="report-title">🔥 PUBG ${rangeText.toUpperCase()} — ${reportType.toUpperCase()}</div>
           <div class="report-sub">${escHtml(playerName)} · ${platform.toUpperCase()} · ${matchesFiltered.length} meciuri · ${firstTime}–${lastTime} · ${formatRoDate(new Date())}</div>
         </div>
         <div class="report-actions">
-          ${modeBadge}
+          ${modeBadge}${matchModeBadge}
           <button class="btn-secondary" onclick="downloadReport()">⬇ Download HTML</button>
           <button class="btn-secondary" onclick="location.reload()">↩ Reset</button>
         </div>
       </div>
-      ${heroHtml}
-      ${podiumHtml}
-      ${tableHtml}
-      ${aiHtml}
-      ${personalHtml}
-      ${globalHtml}
-      ${teamSummaryHtml}
-      ${detailedHtml}
-      ${surprizeHtml}
+      ${heroHtml}${podiumHtml}${tableHtml}${aiHtml}${vsHtml}${personalHtml}${globalHtml}${teamSummaryHtml}${detailedHtml}${surprizeHtml}
     `;
 
     setProgress(100);
     document.getElementById('progressWrap').classList.remove('show');
-    const reportEl = document.getElementById('report');
-    reportEl.innerHTML = fullHtml;
+    const reportEl=document.getElementById('report');
+    reportEl.innerHTML=fullHtml;
     reportEl.classList.add('show');
-    window._reportHtml = fullHtml;
-    window._reportTitle = `pubg_${playerName}_${platform}_${detailLevel}_${rangeVal}_v7.html`;
+    window._reportHtml=fullHtml;
+    window._reportTitle=`pubg_${playerName}_${platform}_${detailLevel}_${rangeVal}.html`;
 
   } catch(e) {
     setProgress(100);
     document.getElementById('progressWrap').classList.remove('show');
-    document.getElementById('setupWrap').style.display = 'block';
-    const reportEl = document.getElementById('report');
-    reportEl.innerHTML = `<div class="error-box">❌ Eroare: ${escHtml(e.message)}<br><br><small>Nota: Daca primesti eroare CORS, browserul blocheaza requestul catre PUBG API. Incearca din alt browser sau adauga un proxy CORS.</small></div>`;
+    document.getElementById('setupWrap').style.display='block';
+    const reportEl=document.getElementById('report');
+    reportEl.innerHTML=`<div class="error-box">❌ Eroare: ${escHtml(e.message)}<br><br><small>Nota: Daca primesti eroare CORS, foloseste Vercel cu proxy sau un alt browser.</small></div>`;
     reportEl.classList.add('show');
   }
 }
 
-// ===================== DOWNLOAD =====================
 function downloadReport() {
   if(!window._reportHtml) return;
-  const fullPage = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PUBG Stats V7</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>${document.querySelector('style').textContent}</style></head>
-<body style="padding:24px">${window._reportHtml}</body></html>`;
-  const blob = new Blob([fullPage], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = window._reportTitle || 'pubg_report_v7.html';
+  const fullPage=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PUBG Stats V8</title><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"><style>${document.querySelector('style').textContent}</style></head><body style="padding:24px">${window._reportHtml}</body></html>`;
+  const blob=new Blob([fullPage],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=window._reportTitle||'pubg_global_stats.html';
   a.click();
 }
 </script>
