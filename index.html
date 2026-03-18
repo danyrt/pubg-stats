@@ -1524,20 +1524,58 @@ function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
   if(lCombat && (lCombat.zoneIssues||0) >= 2) improvements.push('Rotatie mai rapida — ia des damage de zona');
   if(!improvements.length) improvements.push('Nivel apropiat — focus pe consistenta si win rate');
 
-  // Detailed side by side if available
+  // Detailed side by side + personal records
   let detailedSbs = '';
   if(p1Ext && p2Ext) {
     const p1DistArr = p1Ext.killDistances||[], p2DistArr = p2Ext.killDistances||[];
     const p1AvgD = p1DistArr.length ? Math.round(p1DistArr.reduce((a,b)=>a+b,0)/p1DistArr.length) : 0;
     const p2AvgD = p2DistArr.length ? Math.round(p2DistArr.reduce((a,b)=>a+b,0)/p2DistArr.length) : 0;
-    const p1LootPct = Math.round((p1Ext.lootTime/p1Ext.totalMatchTime)*100);
-    const p2LootPct = Math.round((p2Ext.lootTime/p2Ext.totalMatchTime)*100);
     const p1Target = renderTargetSvg(p1.head||0,p1.body||0,p1.legs||0,p1.unknown||0);
     const p2Target = renderTargetSvg(p2.head||0,p2.body||0,p2.legs||0,p2.unknown||0);
     const p1LongestKill = p1DistArr.length ? Math.max(...p1DistArr) : 0;
     const p2LongestKill = p2DistArr.length ? Math.max(...p2DistArr) : 0;
+    const p1DmgTaken = Math.round(p1Ext.survivalEvents?.filter(e=>e.type==='damage').reduce((s,e)=>s+Math.abs(e.value||0),0)||0);
+    const p2DmgTaken = Math.round(p2Ext.survivalEvents?.filter(e=>e.type==='damage').reduce((s,e)=>s+Math.abs(e.value||0),0)||0);
+
+    // Personal records from fetched matches
+    const records = [
+      {
+        icon:'🎯', label:'Longest Kill',
+        v1: p1LongestKill+'m', v2: p2LongestKill+'m',
+        w1: p1LongestKill >= p2LongestKill
+      },
+      {
+        icon:'📏', label:'AVG Kill Dist',
+        v1: p1AvgD+'m', v2: p2AvgD+'m',
+        w1: p1AvgD >= p2AvgD
+      },
+      {
+        icon:'💥', label:'Total Damage Dat',
+        v1: Math.round(p1.damage), v2: Math.round(p2.damage),
+        w1: p1.damage >= p2.damage
+      },
+      {
+        icon:'❤️', label:'Damage Primit',
+        v1: p1DmgTaken, v2: p2DmgTaken,
+        w1: p1DmgTaken <= p2DmgTaken
+      },
+      {
+        icon:'🎯', label:'Headshot %',
+        v1: (p1.head||0)+(p1.body||0)+(p1.legs||0) > 0 ? Math.round(((p1.head||0)/((p1.head||0)+(p1.body||0)+(p1.legs||0)))*100)+'%' : '0%',
+        v2: (p2.head||0)+(p2.body||0)+(p2.legs||0) > 0 ? Math.round(((p2.head||0)/((p2.head||0)+(p2.body||0)+(p2.legs||0)))*100)+'%' : '0%',
+        w1: ((p1.head||0)/Math.max((p1.head||0)+(p1.body||0)+(p1.legs||0),1)) >= ((p2.head||0)/Math.max((p2.head||0)+(p2.body||0)+(p2.legs||0),1))
+      },
+    ];
+
+    const recordRows = records.map(r=>`
+      <div class="vs-stat-row">
+        <div class="vs-stat-val left ${r.w1?'win':''}">${r.v1}</div>
+        <div class="vs-stat-label">${r.icon} ${r.label}</div>
+        <div class="vs-stat-val right ${!r.w1?'win':''}">${r.v2}</div>
+      </div>`).join('');
+
     detailedSbs = `
-    <div class="section-title" style="margin-top:20px">🎯 Hit Distribution & Stats Detailed</div>
+    <div class="section-title" style="margin-top:20px">🎯 Hit Distribution</div>
     <div class="vs-side-by-side">
       <div class="vs-side-card ${p1Wins>=p2Wins?'winner-side':''}">
         <div class="vs-side-title" style="color:var(--gold)">${p1Wins>=p2Wins?'👑 ':''} ${escHtml(p1.name)}</div>
@@ -1546,12 +1584,6 @@ function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
           <span class="hit-head">Head: ${p1.head||0}</span> &nbsp;
           <span class="hit-body">Body: ${p1.body||0}</span> &nbsp;
           <span class="hit-legs">Legs: ${p1.legs||0}</span>
-        </div>
-        <div style="font-size:12px;color:var(--text2);line-height:2;margin-top:8px;font-family:var(--font-mono)">
-          AVG kill dist: <b style="color:var(--text)">${p1AvgD}m</b><br>
-          Longest kill: <b style="color:var(--purple)">${p1LongestKill}m</b><br>
-          Loot time: <b style="color:var(--text)">${p1LootPct}%</b><br>
-          Damage taken: <b style="color:var(--red)">${Math.round(p1Ext.survivalEvents?.filter(e=>e.type==='damage').reduce((s,e)=>s+Math.abs(e.value||0),0)||0)}</b>
         </div>
       </div>
       <div class="vs-side-card ${p2Wins>p1Wins?'winner-side':''}">
@@ -1562,14 +1594,11 @@ function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
           <span class="hit-body">Body: ${p2.body||0}</span> &nbsp;
           <span class="hit-legs">Legs: ${p2.legs||0}</span>
         </div>
-        <div style="font-size:12px;color:var(--text2);line-height:2;margin-top:8px;font-family:var(--font-mono)">
-          AVG kill dist: <b style="color:var(--text)">${p2AvgD}m</b><br>
-          Longest kill: <b style="color:var(--purple)">${p2LongestKill}m</b><br>
-          Loot time: <b style="color:var(--text)">${p2LootPct}%</b><br>
-          Damage taken: <b style="color:var(--red)">${Math.round(p2Ext.survivalEvents?.filter(e=>e.type==='damage').reduce((s,e)=>s+Math.abs(e.value||0),0)||0)}</b>
-        </div>
       </div>
-    </div>`;
+    </div>
+    <div class="section-title" style="margin-top:20px">🏆 Recorduri Personale</div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:10px">* Din ultimele ${Math.max(p1.matches||0,p2.matches||0)} meciuri fetchuite</div>
+    ${recordRows}`;
   }
 
   return `
@@ -1732,6 +1761,8 @@ async function runReport() {
               logMsg(`  → Telemetry ${shortMapName(matchRes.data?.attributes?.mapName)}...`);
               const telemetry = await apiGet(telemetryUrl, apiKey, false);
               const teamNamesLower = teamStats.map(x=>x.name.toLowerCase());
+              // Always ensure pName is included (in case not found in teamStats)
+              if(!teamNamesLower.includes(pName.toLowerCase())) teamNamesLower.push(pName.toLowerCase());
               const circlePhases = extractCirclePhases(telemetry);
               for(const ev of telemetry) {
                 if(ev?._T==='LogPlayerMakeGroggy'){const vn=(ev?.victim?.name||'').toLowerCase();const idx=teamNamesLower.indexOf(vn);if(idx>=0)teamStats[idx].knocksTaken+=1;}
@@ -1739,12 +1770,17 @@ async function runReport() {
                 if(ev?._T==='LogPlayerKill'&&globalLeaderboard.length){const kn=ev?.killer?.name||'';const vn=ev?.victim?.name||'';const isTeamKill=teamStats.some(x=>nameEq(x.name,kn));if(isTeamKill){const gIdx=globalLeaderboard.findIndex(x=>nameEq(x.name,vn));if(gIdx!==-1){surprizes.push({killerName:kn,victimName:vn,globalRank:gIdx+1,kills:globalLeaderboard[gIdx].kills,mapName:shortMapName(matchRes.data?.attributes?.mapName),time:formatRoTime(createdAt)});logMsg(`  ⭐ SURPRIZE: Top ${gIdx+1} eliminated!`,'ok');}}}
               }
               matchCombatData = buildCombatAnalysis(telemetry, teamNamesLower, circlePhases);
-              // Build ext data for ALL team members
+              // Build ext data for pName + all team members
               const allExtData = {};
+              // Always build for pName first (most important)
+              allExtData[pName.toLowerCase()] = buildExtendedTelemetry(telemetry, pName, matchDuration);
+              // Also build for other team members
               for(const tName of teamNamesLower) {
-                allExtData[tName] = buildExtendedTelemetry(telemetry, tName, matchDuration);
+                if(tName !== pName.toLowerCase()) {
+                  allExtData[tName] = buildExtendedTelemetry(telemetry, tName, matchDuration);
+                }
               }
-              extData = allExtData[pName.toLowerCase()] || buildExtendedTelemetry(telemetry, pName, matchDuration);
+              extData = allExtData[pName.toLowerCase()];
               extendedDataMap[mRefs[i].id] = allExtData;
             } catch(e) { logMsg('  → Telemetry indisponibil','warn'); }
           }
@@ -1835,11 +1871,13 @@ async function runReport() {
       for(const match of vsMatchesFiltered) {
         const p=match.teamStats.find(x=>nameEq(x.name,vsPlayerName));
         if(!p) continue;
-        vsTotals.kills+=p.kills;vsTotals.damage+=p.damage;vsTotals.assists+=p.assists;vsTotals.revives+=p.revives;vsTotals.downs+=p.downs;vsTotals.knocksTaken+=p.knocksTaken;vsTotals.matches+=1;
+        vsTotals.kills+=p.kills;vsTotals.damage+=p.damage;vsTotals.assists+=p.assists;vsTotals.revives+=p.revives;vsTotals.downs+=p.downs;vsTotals.knocksTaken+=p.knocksTaken;
+        vsTotals.head+=(p.head||0);vsTotals.body+=(p.body||0);vsTotals.legs+=(p.legs||0);vsTotals.unknown+=(p.unknown||0);
+        vsTotals.matches+=1;
         if(match.rank===1) vsTotals.wins+=1;
         if(match.combatData) {
           const key=vsPlayerName.toLowerCase();
-          if(match.combatData[key]){const src=match.combatData[key];vsAggCombat.events.push(...src.events);vsAggCombat.earlyDeaths+=src.earlyDeaths;vsAggCombat.zoneIssues+=src.zoneIssues;vsAggCombat.distances.push(...src.distances);}
+          if(match.combatData[key]){const src=match.combatData[key];vsAggCombat.events.push(...src.events);vsAggCombat.earlyDeaths+=src.earlyDeaths;vsAggCombat.zoneIssues+=src.zoneIssues;vsAggCombat.distances.push(...src.distances);vsAggExt.killDistances.push(...src.distances);}
         }
         if(match.extData){
           // extData is a map - find vsPlayerName's data
