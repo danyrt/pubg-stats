@@ -103,8 +103,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 .podium-stats { font-size: 11px; color: var(--text2); line-height: 1.6; }
 
 /* TABLE */
-.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
-.table-wrap table thead th { position: sticky; top: 0; z-index: 10; background: var(--bg2); box-shadow: 0 1px 0 var(--border); }
+.table-wrap { overflow: auto; max-height: 600px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
+.table-wrap table thead th { position: sticky; top: 0; z-index: 10; background: var(--bg2); box-shadow: 0 2px 0 var(--border); }
 table { border-collapse: collapse; width: 100%; min-width: 500px; font-size: 13px; }
 td, th { border: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: center; }
 th { background: var(--bg3); font-family: var(--font-mono); font-size: 11px; color: var(--text2); text-transform: uppercase; }
@@ -340,6 +340,8 @@ textarea.modal-input { resize: vertical; min-height: 100px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -779,18 +781,27 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
 
     // Survival - damage taken
     if(ev?._T === 'LogPlayerTakeDamage') {
-      const vn = (ev?.victim?.name||'').toLowerCase();
+      const vn = (ev?.victim?.name||ev?.victim?.Name||'').toLowerCase();
       if(vn === pnLower) {
         const dmg = safeInt(ev?.damage);
-        const weapon = cleanWeaponName(ev?.damageCauserName||'');
-        const from = ev?.attacker?.name || 'zona';
-        if(dmg > 0) result.survivalEvents.push({time:evTime, type:'damage', value:-dmg, from, weapon});
+        const causerName = (ev?.damageCauserName||'').toLowerCase();
+        const attackerName = (ev?.attacker?.name||'').toLowerCase();
+        // Exclude zone/environment damage
+        const isZone = causerName.includes('bluezone')||causerName.includes('redzone')||
+                       causerName.includes('poison')||causerName.includes('zone')||
+                       causerName.includes('drown')||causerName.includes('exhaust')||
+                       attackerName === '' || attackerName === vn;
+        if(dmg > 0 && !isZone) {
+          const weapon = cleanWeaponName(ev?.damageCauserName||'');
+          const from = ev?.attacker?.name || '';
+          result.survivalEvents.push({time:evTime, type:'damage', value:-dmg, from, weapon});
+        }
       }
     }
 
     // Survival - heal/boost
     if(ev?._T === 'LogItemUse') {
-      const cn = (ev?.character?.name||'').toLowerCase();
+      const cn = (ev?.character?.name||ev?.character?.Name||'').toLowerCase();
       if(cn === pnLower) {
         const item = cleanWeaponName(ev?.item?.itemId||'');
         const cat = (ev?.item?.category||'').toLowerCase();
@@ -808,7 +819,7 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
 
     // Kill distances
     if(ev?._T === 'LogPlayerKill') {
-      const kn = (ev?.killer?.name||'').toLowerCase();
+      const kn = (ev?.killer?.name||ev?.killer?.Name||'').toLowerCase();
       if(kn === pnLower) {
         const dist = Math.round(safeInt(ev?.distance)/100);
         result.killDistances.push(dist);
@@ -817,9 +828,11 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
     }
 
     // Loot tracking
-    if(ev?._T === 'LogItemPickup' || ev?._T === 'LogItemPickupFromCarepackage' || ev?._T === 'LogItemPickupFromLootbox' || ev?._T === 'LogItemPickupFromLootBox') {
-      const cn = (ev?.character?.name||'').toLowerCase();
-      if(cn === pnLower) {
+    if(ev?._T === 'LogItemPickup' || ev?._T === 'LogItemPickupFromCarepackage' || 
+       ev?._T === 'LogItemPickupFromLootbox' || ev?._T === 'LogItemPickupFromLootBox' ||
+       ev?._T === 'LogItemPickupFromCustomPackage') {
+      const cn = (ev?.character?.name||ev?.character?.Name||'').toLowerCase();
+      if(cn === pnLower || cn.includes(pnLower) || pnLower.includes(cn)) {
         const item = cleanWeaponName(ev?.item?.itemId||'');
         const cat = (ev?.item?.category||'').toLowerCase();
         result.lootEvents.push({time:evTime, type:'pickup', item, cat, count:safeInt(ev?.item?.stackCount)||1});
@@ -835,8 +848,8 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
       }
     }
     if(ev?._T === 'LogItemDrop') {
-      const cn = (ev?.character?.name||'').toLowerCase();
-      if(cn === pnLower) {
+      const cn = (ev?.character?.name||ev?.character?.Name||'').toLowerCase();
+      if(cn === pnLower || cn.includes(pnLower) || pnLower.includes(cn)) {
         const item = cleanWeaponName(ev?.item?.itemId||'');
         result.lootEvents.push({time:evTime, type:'drop', item});
         if(lastLootStart !== null) {
@@ -1784,10 +1797,15 @@ async function runReport() {
           if(match.combatData[key]){const src=match.combatData[key];vsAggCombat.events.push(...src.events);vsAggCombat.earlyDeaths+=src.earlyDeaths;vsAggCombat.zoneIssues+=src.zoneIssues;vsAggCombat.distances.push(...src.distances);}
         }
         if(match.extData){
-          // extData is now a map - get vsPlayerName's data
+          // extData is a map - find vsPlayerName's data
           const vsKey = vsPlayerName.toLowerCase();
-          const vsExt = match.extData[vsKey] || match.extData;
-          const src = vsExt.survivalEvents ? vsExt : (Object.values(match.extData)[0] || {});
+          // Try exact key first, then find key that matches vsPlayerName
+          let src = match.extData[vsKey];
+          if(!src) {
+            const foundKey = Object.keys(match.extData).find(k=>k===vsKey||k.includes(vsKey)||vsKey.includes(k));
+            src = foundKey ? match.extData[foundKey] : null;
+          }
+          if(!src) src = {}; // empty fallback
           vsAggExt.survivalEvents.push(...(src.survivalEvents||[]));
           vsAggExt.killDistances.push(...(src.killDistances||[]));
           vsAggExt.lootEvents.push(...(src.lootEvents||[]));
@@ -1928,7 +1946,7 @@ async function runReport() {
         </div>
         <div class="report-actions">
           ${modeBadge}${matchModeBadge}
-          <button class="btn-secondary" onclick="downloadReport()">⬇ Download HTML</button>
+          <button class="btn-secondary" onclick="downloadPDF()" id="btnPdf">⬇ Download PDF</button>
           <button class="btn-secondary" onclick="location.reload()">↩ Reset</button>
         </div>
       </div>
@@ -1951,6 +1969,50 @@ async function runReport() {
     reportEl.innerHTML=`<div class="error-box">❌ Eroare: ${escHtml(e.message)}<br><br><small>Nota: Daca primesti eroare CORS, foloseste Vercel cu proxy sau un alt browser.</small></div>`;
     reportEl.classList.add('show');
   }
+}
+
+async function downloadPDF() {
+  const btn = document.getElementById('btnPdf');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generare PDF...';
+  try {
+    const report = document.getElementById('report');
+    // Temporarily expand all overflow elements
+    const scrollEls = report.querySelectorAll('*');
+    const overflows = [];
+    scrollEls.forEach(el => {
+      const s = window.getComputedStyle(el);
+      if(s.overflow === 'auto' || s.overflow === 'scroll' || s.overflowX === 'auto' || s.overflowX === 'scroll') {
+        overflows.push({el, ox: el.style.overflowX, oy: el.style.overflow});
+        el.style.overflow = 'visible';
+        el.style.overflowX = 'visible';
+      }
+    });
+    const canvas = await html2canvas(report, {
+      scale: 1.5,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#090b0f',
+      scrollX: 0,
+      scrollY: -window.scrollY,
+      windowWidth: Math.max(report.scrollWidth, 1200),
+    });
+    // Restore overflows
+    overflows.forEach(({el, ox, oy}) => { el.style.overflow = oy; el.style.overflowX = ox; });
+    const imgData = canvas.toDataURL('image/jpeg', 0.85);
+    const { jsPDF } = window.jspdf;
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+    const pdfW = imgW * 0.75; // px to pt
+    const pdfH = imgH * 0.75;
+    const pdf = new jsPDF({ orientation: pdfW > pdfH ? 'l' : 'p', unit: 'pt', format: [pdfW, pdfH] });
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+    pdf.save(window._reportTitle?.replace('.html','.pdf') || 'pubg_global_stats.pdf');
+  } catch(e) {
+    alert('Eroare la generare PDF: ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '⬇ Download PDF';
 }
 
 function downloadReport() {
