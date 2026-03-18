@@ -962,9 +962,11 @@ function buildLootEfficiencyHtml(extData) {
   const topItemsList = Object.entries(topItems).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   let verdictClass='', verdictText='';
-  if(lootPct <= 15) { verdictClass='verdict-good'; verdictText=`✅ Loot eficient — ${lootPct}% din meci petrecut lootând. Sub 15% e standard la nivel Master+. Rotezi bine si te implici rapid in fight-uri.`; }
-  else if(lootPct <= 25) { verdictClass='verdict-warn'; verdictText=`⚠ Loot acceptabil — ${lootPct}% din meci petrecut lootând. Master+ stau sub 15%. Incearca sa prioritizezi echipamentul si sa reduci vizitele la zone de loot tarziu in meci.`; }
-  else { verdictClass='verdict-bad'; verdictText=`❌ Prea mult loot — ${lootPct}% din meci petrecut lootând. Asta costa zone, pozitionare si uneori viata. Pro players rareori depasesc 20% timp de loot.`; }
+    // Loot verdict based on avg minutes per match
+  const avgLootMin = extData.totalMatchTime > 0 ? (extData.lootTime / Math.max(extData.totalMatchTime/1800, 1)) / 60 : 0;
+  if(avgLootMin <= 4) { verdictClass='verdict-good'; verdictText=`✅ Loot eficient — ~${avgLootMin.toFixed(1)} minute/meci. Sub 4 minute e optim. Rotezi bine si te implici rapid in fight-uri.`; }
+  else if(avgLootMin <= 8) { verdictClass='verdict-warn'; verdictText=`⚠ Loot acceptabil — ~${avgLootMin.toFixed(1)} minute/meci. Intre 4-8 minute e acceptabil. Incearca sa reduci vizitele la zone de loot in late game.`; }
+  else { verdictClass='verdict-bad'; verdictText=`❌ Prea mult loot — ~${avgLootMin.toFixed(1)} minute/meci. Peste 8 minute e excesiv. Asta costa zone, pozitionare si uneori viata.`; }
 
   return `
   <div class="collapsible">
@@ -990,47 +992,103 @@ function buildLootEfficiencyHtml(extData) {
   </div>`;
 }
 
+// ===================== LOOT STANDARDS =====================
+const LOOT_LIMITS = {
+  ammo556: 330, ammo762: 220, ammo9mm: 220, ammo45: 165,
+  firstaid: 8, medkit: 4, bandage: 15, energy: 10, painkiller: 8, boost: 10
+};
+
+function getLootWarnings(lootEvents) {
+  const counts = {};
+  (lootEvents||[]).filter(e=>e.type==='pickup').forEach(e=>{
+    const k = (e.item||'').toLowerCase().replace(/item\s*/i,'').replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+    counts[k] = (counts[k]||0) + (e.count||1);
+  });
+  const warnings = [];
+  const a556 = (counts['ammo556mm']||0)+(counts['556mm']||0);
+  const a762 = (counts['ammo762mm']||0)+(counts['762mm']||0);
+  const a9mm = (counts['ammo9mm']||0)+(counts['9mm']||0);
+  const heals = (counts['healfirstaid']||0)+(counts['firstaid']||0)+(counts['firstaidkit']||0)+(counts['healfirstaidkit']||0);
+  const medkits = (counts['healmedkit']||0)+(counts['medkit']||0);
+  const boosts = (counts['boostenergydrin']||0)+(counts['boostenergydrink']||0)+(counts['energydrink']||0)+(counts['boostpainkiller']||0)+(counts['painkiller']||0);
+  const bandages = (counts['healbandage']||0)+(counts['bandage']||0);
+  if(a556 > LOOT_LIMITS.ammo556) warnings.push(`${a556}x 5.56mm ⚠`);
+  if(a762 > LOOT_LIMITS.ammo762) warnings.push(`${a762}x 7.62mm ⚠`);
+  if(a9mm > LOOT_LIMITS.ammo9mm) warnings.push(`${a9mm}x 9mm ⚠`);
+  if(heals > LOOT_LIMITS.firstaid) warnings.push(`${heals}x FirstAid ⚠`);
+  if(medkits > LOOT_LIMITS.medkit) warnings.push(`${medkits}x MedKit ⚠`);
+  if(boosts > LOOT_LIMITS.boost) warnings.push(`${boosts}x Boost ⚠`);
+  if(bandages > LOOT_LIMITS.bandage) warnings.push(`${bandages}x Bandage ⚠`);
+  return warnings;
+}
+
 // ===================== TEAM DETAILED ANALYSIS =====================
-function buildTeamDetailedHtml(leaderboard, aggregatedCombat, matchesFiltered) {
+function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, matchesFiltered) {
   const totalMatches = matchesFiltered.length;
   if(!totalMatches) return '';
 
-  // 1. Loot Analysis
+  // 1. Loot Analysis - using aggregatedExt per player
   const lootData = leaderboard.map(p => {
-    const cd = aggregatedCombat[p.name.toLowerCase()];
-    const lootPct = cd?.lootPct || 0;
-    return {name:p.name, lootPct, lootTime: cd?.lootTime||0};
-  }).sort((a,b)=>b.lootPct-a.lootPct);
-  const teamAvgLoot = lootData.reduce((s,p)=>s+p.lootPct,0)/Math.max(lootData.length,1);
-  const topLooter = lootData[0];
-  const lootImpact = topLooter && topLooter.lootPct > teamAvgLoot * 1.5 ?
-    `${escHtml(topLooter.name)} a petrecut ${topLooter.lootPct}% din meci lootând — cu ${Math.round(topLooter.lootPct-teamAvgLoot)}% peste media echipei. Asta a redus prezenta sa in fight-urile critice.` :
-    'Distributia timpului de loot in echipa este echilibrata.';
+    const ext = aggregatedExt[p.name.toLowerCase()];
+    const totalLootTime = ext?.lootTime || 0;
+    const totalMatchTime = ext?.totalMatchTime || (totalMatches * 1800);
+    const avgLootPerMatch = totalMatches > 0 ? totalLootTime / totalMatches : 0; // seconds
+    const avgLootMin = avgLootPerMatch / 60;
+    const lootPct = totalMatchTime > 0 ? Math.round((totalLootTime/totalMatchTime)*100) : 0;
+    const warnings = ext ? getLootWarnings(ext.lootEvents||[]) : [];
+    const topItems = {};
+    (ext?.lootEvents||[]).filter(e=>e.type==='pickup').forEach(e=>{
+      if(e.item) topItems[e.item]=(topItems[e.item]||0)+(e.count||1);
+    });
+    const topItemsList = Object.entries(topItems).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    return {name:p.name, lootPct, totalLootTime, avgLootPerMatch, avgLootMin, warnings, topItemsList};
+  }).sort((a,b)=>b.avgLootMin-a.avgLootMin);
 
-  const maxLootPct = Math.max(...lootData.map(p=>p.lootPct), 1);
+  const topLooter = lootData[0];
+  const topLooterMin = topLooter ? topLooter.avgLootMin.toFixed(1) : 0;
+  const lootImpact = topLooter && topLooter.avgLootMin > 8 ?
+    `${escHtml(topLooter.name)} petrece ~${topLooterMin} min/meci lootând — EXCESIV (peste 8 min). Reduce prezenta in fight-uri.` :
+    topLooter && topLooter.avgLootMin > 4 ?
+    `${escHtml(topLooter.name)} petrece ~${topLooterMin} min/meci lootând — acceptabil (4-8 min), dar poate fi optimizat.` :
+    lootData.every(p=>p.totalLootTime===0) ? 'Date insuficiente din telemetry.' :
+    'Loot eficient pentru toti jucatorii — sub 4 min/meci.';
+
+  const maxLootMin = Math.max(...lootData.map(p=>p.avgLootMin), 0.1);
   const lootBars = lootData.map((p,i) => {
-    const pct = maxLootPct > 0 ? Math.round((p.lootPct/maxLootPct)*100) : 0;
-    const colors = ['var(--red)','var(--orange)','var(--green)','var(--blue)'];
-    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${pct}%;background:${colors[i%4]}">&nbsp;</div><div class="player-bar-val">${p.lootPct}%</div></div></div>`;
+    const pct = maxLootMin > 0 ? Math.round((p.avgLootMin/maxLootMin)*100) : 0;
+    const color = p.avgLootMin>8?'var(--red)':p.avgLootMin>4?'var(--orange)':'var(--green)';
+    const warningHtml = p.warnings.length ? `<div style="font-size:10px;color:var(--red);margin-top:2px">⚠ ${p.warnings.slice(0,3).map(w=>escHtml(w)).join(' · ')}</div>` : '';
+    const topItemHtml = p.topItemsList.length ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${p.topItemsList.map(([k,v])=>`${escHtml(k)} ${v}x`).join(' · ')}</div>` : '';
+    return `<div style="margin-bottom:10px">
+      <div class="player-bar-row">
+        <div class="player-bar-name">${escHtml(p.name)}</div>
+        <div class="player-bar-track"><div class="player-bar-fill" style="width:${Math.max(pct,3)}%;background:${color}">&nbsp;</div><div class="player-bar-val">~${p.avgLootMin.toFixed(1)} min/meci</div></div>
+      </div>
+      ${warningHtml}${topItemHtml}
+    </div>`;
   }).join('');
 
   // 2. Survival Patterns
   const survData = leaderboard.map(p => {
     const cd = aggregatedCombat[p.name.toLowerCase()];
-    const earlyDeaths = cd?.earlyDeaths || 0;
+    // earlyDeaths = total events across all matches, estimate matches affected
+    const earlyDeathsRaw = cd?.earlyDeaths || 0;
+    const earlyDeaths = Math.min(Math.ceil(earlyDeathsRaw / 2), p.matches);
     const knocksTaken = p.knocksTaken || 0;
-    return {name:p.name, earlyDeaths, knocksTaken, matches:p.matches};
+    return {name:p.name, earlyDeaths, earlyDeathsRaw, knocksTaken, matches:p.matches};
   });
   const firstToDie = survData.sort((a,b)=>b.earlyDeaths-a.earlyDeaths)[0];
   const mostSurvival = [...survData].sort((a,b)=>a.knocksTaken-b.knocksTaken)[0];
-  const survImpact = firstToDie && firstToDie.earlyDeaths >= 2 ?
-    `${escHtml(firstToDie.name)} moare devreme frecvent (${firstToDie.earlyDeaths} ori) — lasand echipa in dezavantaj numeric in fight-urile de mid game.` :
+  const survImpact = firstToDie && firstToDie.earlyDeaths >= 3 ?
+    `${escHtml(firstToDie.name)} moare devreme in ~${firstToDie.earlyDeaths} din ${firstToDie.matches} meciuri — lasa echipa in dezavantaj numeric in mid game.` :
+    firstToDie && firstToDie.earlyDeaths >= 1 ?
+    `${escHtml(firstToDie.name)} are ${firstToDie.earlyDeaths} meciuri cu early engagement — de monitorizat.` :
     'Echipa supravietuieste bine in faza de early game.';
 
   const maxED = Math.max(...survData.map(p=>p.earlyDeaths), 1);
   const survBars = [...survData].sort((a,b)=>b.earlyDeaths-a.earlyDeaths).map((p,i) => {
     const pct = maxED > 0 ? Math.round((p.earlyDeaths/maxED)*100) : 0;
-    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${pct}%;background:${p.earlyDeaths>=2?'var(--red)':'var(--green)'}">&nbsp;</div><div class="player-bar-val">${p.earlyDeaths}x early</div></div></div>`;
+    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${pct}%;background:${p.earlyDeaths>=3?'var(--red)':p.earlyDeaths>=1?'var(--orange)':'var(--green)'}">&nbsp;</div><div class="player-bar-val">~${p.earlyDeaths}/${p.matches} meciuri</div></div></div>`;
   }).join('');
 
   // 3. Combat Style
@@ -1804,7 +1862,7 @@ async function runReport() {
         return `<div class="target-card ${isMvpCard?'mvp-target':''}"><div class="target-player">${escHtml(p.name)}</div><div class="target-svg-wrap">${p.target}</div><div class="target-stats"><span class="hit-head">Head: ${p.head||0}</span> &nbsp; <span class="hit-body">Body: ${p.body||0}</span> &nbsp; <span class="hit-legs">Legs: ${p.legs||0}</span> &nbsp; <span class="hit-unknown">Unk: ${p.unknown||0}</span></div>${weaponHtml}${combatInsight?`<div class="ca-block"><div class="section-title" style="font-size:12px">🧠 Combat Analysis</div>${combatInsight}</div>`:''}</div>`;
       }).join('');
 
-      const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, matchesFiltered) : '';
+      const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, matchesFiltered) : '';
 
       detailedHtml=`${teamDetailedHtml}<div class="targets-section"><div class="section-title">🎯 Hit Distribution + Weapons + Combat</div><div class="targets-grid">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
     }
