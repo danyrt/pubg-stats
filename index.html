@@ -1667,6 +1667,7 @@ async function runReport() {
         const matchDuration = safeInt(matchRes.data?.attributes?.duration) || 1800;
         let matchCombatData = null;
         let extData = null;
+        let allExtData = null;
         if(detailLevel === 'detailed') {
           const asset = included.find(x=>x.type==='asset'&&(x.attributes?.name==='telemetry'||x.attributes?.URL));
           const telemetryUrl = asset?.attributes?.URL || null;
@@ -1692,7 +1693,7 @@ async function runReport() {
             } catch(e) { logMsg('  → Telemetry indisponibil','warn'); }
           }
         }
-        matches.push({createdAt, mapName:shortMapName(matchRes.data?.attributes?.mapName), mode:matchRes.data?.attributes?.gameMode||'-', duration:matchDuration, rank:safeInt(myRoster.attributes?.stats?.rank), teamStats, combatData:matchCombatData, extData});
+        matches.push({createdAt, mapName:shortMapName(matchRes.data?.attributes?.mapName), mode:matchRes.data?.attributes?.gameMode||'-', duration:matchDuration, rank:safeInt(myRoster.attributes?.stats?.rank), teamStats, combatData:matchCombatData, extData: allExtData || (extData ? {[pName.toLowerCase()]: extData} : null)});
         logMsg(`Meci ${matches.length}: ${shortMapName(matchRes.data?.attributes?.mapName)} @ ${formatRoTime(createdAt)}`);
       }
       matches.sort((a,b)=>a.createdAt-b.createdAt);
