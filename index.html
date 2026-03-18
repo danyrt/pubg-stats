@@ -753,15 +753,21 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
     activeTime: 0
   };
 
-  // Get match start time from first event with _D
-  const firstEventWithD = telemetry.find(ev => ev?._D);
-  const matchStartMs = firstEventWithD ? new Date(firstEventWithD._D).getTime() : 0;
+  // Use LogMatchStart as time reference
+  // LogMatchStart fires when the match actually begins (players jump from plane)
+  const matchStartEv = telemetry.find(ev => ev?._T === 'LogMatchStart') || 
+                       telemetry.find(ev => ev?._T === 'LogParachuteLanding') ||
+                       telemetry.find(ev => ev?._D);
+  const matchStartMs = matchStartEv?._D ? new Date(matchStartEv._D).getTime() : 0;
 
   function getEvTime(ev) {
-    // Try elapsedTime first (seconds from match start)
+    // LogGameStatePeriodic and LogPlayerPosition have common.elapsedTime
     if(ev?.common?.elapsedTime != null && ev.common.elapsedTime > 0) return ev.common.elapsedTime;
-    // Fallback: calculate from _D timestamp
-    if(ev?._D && matchStartMs > 0) return Math.max(0, (new Date(ev._D).getTime() - matchStartMs) / 1000);
+    // For all other events (LogItemPickup, LogPlayerTakeDamage etc) use _D timestamp
+    if(ev?._D && matchStartMs > 0) {
+      const t = (new Date(ev._D).getTime() - matchStartMs) / 1000;
+      return t > 0 ? t : 0;
+    }
     return 0;
   }
 
@@ -842,6 +848,13 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
   }
 
   if(lastLootStart !== null) totalLootSeconds += 30;
+  // Fallback: if no loot time calculated but we have pickups, estimate
+  // Average loot session = 8 seconds per pickup group
+  if(totalLootSeconds === 0 && result.lootEvents.filter(e=>e.type==='pickup').length > 0) {
+    const pickupCount = result.lootEvents.filter(e=>e.type==='pickup').length;
+    // Group pickups - assume 1 session per 5 pickups, 30 sec each
+    totalLootSeconds = Math.min(Math.ceil(pickupCount / 5) * 30, result.totalMatchTime * 0.3);
+  }
   result.lootTime = Math.min(totalLootSeconds, result.totalMatchTime * 0.5);
   result.activeTime = result.totalMatchTime - result.lootTime;
 
