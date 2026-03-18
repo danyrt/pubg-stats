@@ -745,19 +745,31 @@ function getCirclePhase(evTime, circlePhases) { const found=circlePhases.find(c=
 function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
   const pnLower = playerName.toLowerCase();
   const result = {
-    survivalEvents: [], // {time, type, value, from, weapon}
-    killDistances: [], // meters
-    lootEvents: [], // {time, type, item, category}
+    survivalEvents: [],
+    killDistances: [],
+    lootEvents: [],
     totalMatchTime: matchDuration || 1800,
     lootTime: 0,
     activeTime: 0
   };
 
+  // Get match start time from first event with _D
+  const firstEventWithD = telemetry.find(ev => ev?._D);
+  const matchStartMs = firstEventWithD ? new Date(firstEventWithD._D).getTime() : 0;
+
+  function getEvTime(ev) {
+    // Try elapsedTime first (seconds from match start)
+    if(ev?.common?.elapsedTime != null && ev.common.elapsedTime > 0) return ev.common.elapsedTime;
+    // Fallback: calculate from _D timestamp
+    if(ev?._D && matchStartMs > 0) return Math.max(0, (new Date(ev._D).getTime() - matchStartMs) / 1000);
+    return 0;
+  }
+
   let lastLootStart = null;
   let totalLootSeconds = 0;
 
   for(const ev of telemetry) {
-    const evTime = ev?.common?.elapsedTime || 0;
+    const evTime = getEvTime(ev);
 
     // Survival - damage taken
     if(ev?._T === 'LogPlayerTakeDamage') {
@@ -799,14 +811,21 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
     }
 
     // Loot tracking
-    if(ev?._T === 'LogItemPickup' || ev?._T === 'LogItemPickupFromCarepackage' || ev?._T === 'LogItemPickupFromLootbox') {
+    if(ev?._T === 'LogItemPickup' || ev?._T === 'LogItemPickupFromCarepackage' || ev?._T === 'LogItemPickupFromLootbox' || ev?._T === 'LogItemPickupFromLootBox') {
       const cn = (ev?.character?.name||'').toLowerCase();
       if(cn === pnLower) {
         const item = cleanWeaponName(ev?.item?.itemId||'');
         const cat = (ev?.item?.category||'').toLowerCase();
         result.lootEvents.push({time:evTime, type:'pickup', item, cat, count:safeInt(ev?.item?.stackCount)||1});
-        if(lastLootStart === null) lastLootStart = evTime;
-        else if(evTime - lastLootStart > 10) { totalLootSeconds += Math.min(evTime - lastLootStart, 30); lastLootStart = evTime; }
+        if(lastLootStart === null) {
+          lastLootStart = evTime;
+        } else if(evTime - lastLootStart <= 15) {
+          // Still looting - continue session
+        } else {
+          // Gap > 15s = end of loot session
+          totalLootSeconds += Math.min(evTime - lastLootStart, 60);
+          lastLootStart = evTime;
+        }
       }
     }
     if(ev?._T === 'LogItemDrop') {
@@ -814,7 +833,10 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
       if(cn === pnLower) {
         const item = cleanWeaponName(ev?.item?.itemId||'');
         result.lootEvents.push({time:evTime, type:'drop', item});
-        if(lastLootStart !== null) { totalLootSeconds += Math.min(evTime - lastLootStart, 30); lastLootStart = null; }
+        if(lastLootStart !== null) {
+          totalLootSeconds += Math.min(evTime - lastLootStart, 60);
+          lastLootStart = null;
+        }
       }
     }
   }
@@ -829,78 +851,56 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
 // ===================== SURVIVAL TIMELINE HTML =====================
 function buildSurvivalTimelineHtml(extData, playerName, totalMatches) {
   if(!extData || !extData.survivalEvents.length) return '';
-  const events = extData.survivalEvents.sort((a,b)=>a.time-b.time);
-  const maxTime = extData.totalMatchTime || 1800;
+  const tm = Math.max(totalMatches||1, 1);
 
-  // Build HP line
-  let hp = 100;
-  const hpPoints = [{t:0, hp:100}];
-  for(const ev of events) {
-    if(ev.type === 'damage') { hp = Math.max(0, hp + ev.value); hpPoints.push({t:ev.time, hp}); }
-    else if(ev.type === 'heal' && ev.value > 0) { hp = Math.min(100, hp + ev.value); hpPoints.push({t:ev.time, hp}); }
-  }
-  hpPoints.push({t:maxTime, hp});
+  const dmgEvents = extData.survivalEvents.filter(e=>e.type==='damage');
+  const healEvents = extData.survivalEvents.filter(e=>e.type==='heal');
 
-  // SVG
-  const W=800, H=110;
-  const xOf = t => Math.round((t/maxTime)*W);
-  const yOf = h => Math.round(H - (h/100)*(H-10) - 5);
-  const pathD = hpPoints.map((p,i) => `${i===0?'M':'L'}${xOf(p.t)},${yOf(p.hp)}`).join(' ');
-  const areaD = `${pathD} L${W},${H} L0,${H} Z`;
+  const totalDmg = Math.round(dmgEvents.reduce((s,e)=>s+Math.abs(e.value||0),0));
+  const totalHeal = Math.round(healEvents.reduce((s,e)=>s+Math.abs(e.value||0),0));
+  const avgDmgPerMatch = Math.round(totalDmg/tm);
+  const avgHealPerMatch = Math.round(totalHeal/tm);
+  const worstHit = dmgEvents.reduce((max,e)=>Math.abs(e.value||0)>Math.abs(max.value||0)?e:max, {value:0});
+  const worstHitVal = Math.round(Math.abs(worstHit.value||0));
 
-  const dots = events.slice(0,8).map(ev => {
-    const x=xOf(ev.time), y=ev.type==='kill'?yOf(hp):ev.type==='heal'?yOf(Math.min(100,hp+(ev.value||0))):yOf(Math.max(0,hp+(ev.value||0)));
-    const color=ev.type==='kill'?'#f0c040':ev.type==='heal'?'#7ed85b':'#ff4d4f';
-    return `<circle cx="${x}" cy="${yOf(ev.type==='damage'?Math.max(0,hp+(ev.value||0)):ev.type==='heal'?Math.min(100,hp+(ev.value||0)):hp)}" r="5" fill="${color}" stroke="#090b0f" stroke-width="2"/>`;
-  }).join('');
+  // Top weapons that damaged player
+  const dmgByWeapon = {};
+  dmgEvents.forEach(e=>{if(e.weapon&&e.weapon!=='Unknown'&&e.weapon!=='zona')dmgByWeapon[e.weapon]=(dmgByWeapon[e.weapon]||0)+Math.round(Math.abs(e.value||0));});
+  const topDmgWeapons = Object.entries(dmgByWeapon).sort((a,b)=>b[1]-a[1]).slice(0,4);
 
-  const dmgCount = events.filter(e=>e.type==='damage').length;
-  const healCount = events.filter(e=>e.type==='heal').length;
-  const killCount = events.filter(e=>e.type==='kill').length;
+  // Heals breakdown
+  const healBreakdown = {};
+  healEvents.forEach(e=>{const k=(e.item||'Heal').replace(/Item\s*/i,'').trim()||'Heal';healBreakdown[k]=(healBreakdown[k]||0)+1;});
+  const topHeals = Object.entries(healBreakdown).sort((a,b)=>b[1]-a[1]).slice(0,4);
 
-  const eventListHtml = events.slice(0,6).map(ev => {
-    const icon = ev.type==='damage'?'💥':ev.type==='heal'?'💊':'💀';
-    const desc = ev.type==='damage'?`Damage primit de la ${escHtml(ev.from||'?')} (${escHtml(ev.weapon||'?')})`
-                :ev.type==='heal'?`${escHtml(ev.item||'Heal')} folosit`
-                :`Kill dat — ${escHtml(ev.victim||'?')} eliminat (${ev.dist||0}m)`;
-    const valColor = ev.type==='damage'?'var(--red)':ev.type==='heal'?'var(--green)':'var(--gold)';
-    const valText = ev.type==='damage'?`${ev.value} HP`:ev.type==='heal'?`+${ev.value||'boost'} HP`:'Kill';
-    return `<div class="event-item"><span class="event-time">${secToMin(ev.time)}</span><span style="font-size:14px">${icon}</span><span class="event-desc">${desc}</span><span class="event-val" style="color:${valColor}">${valText}</span></div>`;
-  }).join('');
+  // Verdict
+  let verdictText='', verdictColor='var(--green)';
+  if(dmgEvents.length===0){verdictText='Date insuficiente din telemetry.';verdictColor='var(--text3)';}
+  else if(avgDmgPerMatch>300&&healEvents.length/tm<1){verdictText=`Primesti mult damage (~${avgDmgPerMatch}/meci) dar te healezi rar — risc mare de knockout.`;verdictColor='var(--red)';}
+  else if(avgDmgPerMatch>200){verdictText=`Damage primit ridicat (~${avgDmgPerMatch}/meci). Atentie la expunere in fight-uri.`;verdictColor='var(--orange)';}
+  else{verdictText=`Management HP bun — ~${avgDmgPerMatch} damage primit/meci, heals regulate.`;verdictColor='var(--green)';}
+
+  const weaponRows = topDmgWeapons.map(([w,d])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(w)}</span><span class="weapon-dmg">${Math.round(d)} dmg</span></div>`).join('');
+  const healRows = topHeals.map(([h,c])=>`<div class="weapon-row"><span class="weapon-name">${escHtml(h)}</span><span style="color:var(--green);font-family:var(--font-mono);font-size:11px">${c}x folosit</span></div>`).join('');
 
   return `
   <div class="collapsible">
     <div class="collapsible-header" onclick="toggleCollapsible(this)">
-      <div class="collapsible-title">❤️ Survival Timeline <span class="collapsible-badge badge-blue">DETAILED</span></div>
+      <div class="collapsible-title">❤️ Survival Summary <span class="collapsible-badge badge-blue">DETAILED</span></div>
       <div class="collapsible-arrow open">▼</div>
     </div>
-    <div class="collapsible-body">
-      <div class="surv-stats">
-        <div><div class="surv-stat-val" style="color:var(--blue)">${secToMin(extData.totalMatchTime)}</div><div class="surv-stat-label">Supravietuit</div></div>
-        <div><div class="surv-stat-val" style="color:var(--red)">${dmgCount}x</div><div class="surv-stat-label">Damage primit</div></div>
-        <div><div class="surv-stat-val" style="color:var(--green)">${healCount}x</div><div class="surv-stat-label">Heal folosit</div></div>
-        <div><div class="surv-stat-val" style="color:var(--gold)">${killCount}</div><div class="surv-stat-label">Kills date</div></div>
+    <div class="collapsible-body" style="padding-top:14px">
+      <div class="global-grid" style="margin-bottom:14px">
+        <div class="global-card"><div class="global-label">Total Damage Primit</div><div class="global-val" style="color:var(--red)">${totalDmg}</div><div class="global-pct" style="color:var(--text3)">~${avgDmgPerMatch}/meci</div></div>
+        <div class="global-card"><div class="global-label">Total Heals HP</div><div class="global-val" style="color:var(--green)">${totalHeal}</div><div class="global-pct" style="color:var(--text3)">~${avgHealPerMatch}/meci</div></div>
+        <div class="global-card"><div class="global-label">Heals folosite</div><div class="global-val" style="color:var(--blue)">${healEvents.length}</div><div class="global-pct" style="color:var(--text3)">~${(healEvents.length/tm).toFixed(1)}/meci</div></div>
+        ${worstHitVal>0?`<div class="global-card"><div class="global-label">Cel mai mare hit</div><div class="global-val" style="color:var(--red)">${worstHitVal} HP</div><div class="global-pct" style="color:var(--text3)">${escHtml(worstHit.weapon||'?')}</div></div>`:''}
       </div>
-      <div class="chart-wrap">
-        <div class="chart-y-labels"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>
-        <svg width="100%" height="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-          <defs><linearGradient id="hpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4da6ff" stop-opacity="0.3"/><stop offset="100%" stop-color="#4da6ff" stop-opacity="0.02"/></linearGradient></defs>
-          <line x1="0" y1="${yOf(75)}" x2="${W}" y2="${yOf(75)}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
-          <line x1="0" y1="${yOf(50)}" x2="${W}" y2="${yOf(50)}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
-          <line x1="0" y1="${yOf(25)}" x2="${W}" y2="${yOf(25)}" stroke="var(--border)" stroke-width="1" opacity="0.5"/>
-          <path d="${areaD}" fill="url(#hpG)"/>
-          <path d="${pathD}" fill="none" stroke="#4da6ff" stroke-width="2.5"/>
-          ${dots}
-        </svg>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        ${weaponRows?`<div class="weapon-box"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Arme care ti-au dat damage</div>${weaponRows}</div>`:''}
+        ${healRows?`<div class="weapon-box"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Heals folosite</div>${healRows}</div>`:''}
       </div>
-      <div class="chart-labels"><span>0:00</span><span>${secToMin(maxTime*0.25)}</span><span>${secToMin(maxTime*0.5)}</span><span>${secToMin(maxTime*0.75)}</span><span>${secToMin(maxTime)}</span></div>
-      <div class="chart-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>HP</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Damage primit</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Heal</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Kill dat</div>
-      </div>
-      ${eventListHtml ? `<div class="event-list">${eventListHtml}</div>` : ''}
+      <div class="ca-conclusion" style="border-left-color:${verdictColor}">💊 <b>Verdict:</b> ${verdictText}</div>
     </div>
   </div>`;
 }
