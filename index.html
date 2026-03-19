@@ -744,14 +744,31 @@ async function downloadTablePNG() {
     const tfsBody = document.getElementById('tfsBody');
     const table = tfsBody.querySelector('table');
     if(!table) { alert('No table found'); btn.disabled=false; btn.textContent='⬇ Download PNG'; return; }
-    // Clone table into temp invisible div with no size constraints
+
+    // Temporarily disable sticky on all thead th
+    const stickyThs = tfsBody.querySelectorAll('thead th');
+    const savedStyles = [];
+    stickyThs.forEach(th => {
+      savedStyles.push({position: th.style.position, top: th.style.top, zIndex: th.style.zIndex});
+      th.style.position = 'relative';
+      th.style.top = 'auto';
+      th.style.zIndex = 'auto';
+    });
+
+    // Clone table into temp invisible div
     const tempDiv = document.createElement('div');
     tempDiv.style.cssText = 'position:fixed;top:-99999px;left:0;background:#090b0f;padding:16px;width:auto;height:auto;overflow:visible;';
     const tableClone = table.cloneNode(true);
+    // Remove sticky from clone too
+    tableClone.querySelectorAll('thead th').forEach(th => {
+      th.style.position = 'relative';
+      th.style.top = 'auto';
+      th.style.zIndex = 'auto';
+    });
     tableClone.style.cssText = 'width:auto;min-width:auto;border-collapse:collapse;';
     tempDiv.appendChild(tableClone);
     document.body.appendChild(tempDiv);
-    // Wait for render
+
     await new Promise(r => setTimeout(r, 100));
     const canvas = await html2canvas(tempDiv, {
       scale: 3,
@@ -766,6 +783,14 @@ async function downloadTablePNG() {
       logging: false,
     });
     document.body.removeChild(tempDiv);
+
+    // Restore sticky
+    stickyThs.forEach((th, i) => {
+      th.style.position = savedStyles[i].position;
+      th.style.top = savedStyles[i].top;
+      th.style.zIndex = savedStyles[i].zIndex;
+    });
+
     const a = document.createElement('a');
     a.download = window._reportTitle?.replace('.html','_table.png') || 'pubg_table.png';
     a.href = canvas.toDataURL('image/png');
@@ -2059,7 +2084,7 @@ async function runReport() {
       vsTotals._ext=vsAggExt;
     }
 
-    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*12+t.damage*0.015+t.downs*6+t.assists*4+t.revives*5-(t.knocksTaken||0)*5;return{...t,score,zeroLine:zeroLines[t.name]||0};}).sort((a,b)=>b.score-a.score);
+    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.1+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0};}).sort((a,b)=>b.score-a.score);
     const top3=leaderboard.slice(0,3);
     const mvp=leaderboard[0]||emptyPlayerStat(playerName);
     const mainTotals=totals[playerName]||emptyPlayerStat(playerName);
@@ -2194,7 +2219,7 @@ async function runReport() {
           <button class="btn-secondary" onclick="location.reload()">↩ Reset</button>
         </div>
       </div>
-      ${heroHtml}${podiumHtml}${tableHtml}${aiHtml}${vsHtml}${personalHtml}${globalHtml}${teamSummaryHtml}${detailedHtml}${surprizeHtml}
+      ${heroHtml}${podiumHtml}${tableHtml}${reportType==='vs'?'':aiHtml}${vsHtml}${personalHtml}${globalHtml}${teamSummaryHtml}${detailedHtml}${surprizeHtml}
     `;
 
     setProgress(100);
