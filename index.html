@@ -1626,83 +1626,111 @@ function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
   if(lCombat && (lCombat.zoneIssues||0) >= 2) improvements.push('Rotatie mai rapida — ia des damage de zona');
   if(!improvements.length) improvements.push('Nivel apropiat — focus pe consistenta si win rate');
 
-  // Detailed side by side + personal records
+  // Detailed side by side - 4 sections
   let detailedSbs = '';
   if(p1Ext && p2Ext) {
     const p1DistArr = p1Ext.killDistances||[], p2DistArr = p2Ext.killDistances||[];
     const p1AvgD = p1DistArr.length ? Math.round(p1DistArr.reduce((a,b)=>a+b,0)/p1DistArr.length) : 0;
     const p2AvgD = p2DistArr.length ? Math.round(p2DistArr.reduce((a,b)=>a+b,0)/p2DistArr.length) : 0;
-    const p1Target = renderTargetSvg(p1.head||0,p1.body||0,p1.legs||0,p1.unknown||0);
-    const p2Target = renderTargetSvg(p2.head||0,p2.body||0,p2.legs||0,p2.unknown||0);
     const p1LongestKill = p1DistArr.length ? Math.max(...p1DistArr) : 0;
     const p2LongestKill = p2DistArr.length ? Math.max(...p2DistArr) : 0;
-    const p1DmgTaken = Math.round(p1Ext.survivalEvents?.filter(e=>e.type==='damage').reduce((s,e)=>s+Math.abs(e.value||0),0)||0);
-    const p2DmgTaken = Math.round(p2Ext.survivalEvents?.filter(e=>e.type==='damage').reduce((s,e)=>s+Math.abs(e.value||0),0)||0);
 
-    // Personal records from fetched matches
-    const records = [
-      {
-        icon:'🎯', label:'Longest Kill',
-        v1: p1LongestKill+'m', v2: p2LongestKill+'m',
-        w1: p1LongestKill >= p2LongestKill
-      },
-      {
-        icon:'📏', label:'AVG Kill Dist',
-        v1: p1AvgD+'m', v2: p2AvgD+'m',
-        w1: p1AvgD >= p2AvgD
-      },
-      {
-        icon:'💥', label:'Total Damage Dat',
-        v1: Math.round(p1.damage), v2: Math.round(p2.damage),
-        w1: p1.damage >= p2.damage
-      },
-      {
-        icon:'❤️', label:'Damage Primit',
-        v1: p1DmgTaken, v2: p2DmgTaken,
-        w1: p1DmgTaken <= p2DmgTaken
-      },
-      {
-        icon:'🎯', label:'Headshot %',
-        v1: (p1.head||0)+(p1.body||0)+(p1.legs||0) > 0 ? Math.round(((p1.head||0)/((p1.head||0)+(p1.body||0)+(p1.legs||0)))*100)+'%' : '0%',
-        v2: (p2.head||0)+(p2.body||0)+(p2.legs||0) > 0 ? Math.round(((p2.head||0)/((p2.head||0)+(p2.body||0)+(p2.legs||0)))*100)+'%' : '0%',
-        w1: ((p1.head||0)/Math.max((p1.head||0)+(p1.body||0)+(p1.legs||0),1)) >= ((p2.head||0)/Math.max((p2.head||0)+(p2.body||0)+(p2.legs||0),1))
-      },
-    ];
+    // Hit distribution SVGs
+    const p1Target = renderTargetSvg(p1.head||0,p1.body||0,p1.legs||0,p1.unknown||0);
+    const p2Target = renderTargetSvg(p2.head||0,p2.body||0,p2.legs||0,p2.unknown||0);
 
-    const recordRows = records.map(r=>`
-      <div class="vs-stat-row">
-        <div class="vs-stat-val left ${r.w1?'win':''}">${r.v1}</div>
-        <div class="vs-stat-label">${r.icon} ${r.label}</div>
-        <div class="vs-stat-val right ${!r.w1?'win':''}">${r.v2}</div>
-      </div>`).join('');
+    // Weapons from aggregatedCombat
+    function weaponRowsHtml(combat, topN=3) {
+      if(!combat) return '<div style="font-size:11px;color:var(--text3)">Date insuficiente</div>';
+      const wDmg = combat.weaponDamage||{};
+      const wKills = combat.weaponKills||{};
+      const topW = Object.entries(wDmg).sort((a,b)=>b[1]-a[1]).slice(0,topN);
+      const favW = Object.entries(wKills).sort((a,b)=>b[1]-a[1])[0];
+      const favName = favW ? escHtml(favW[0]) : '-';
+      const rows = topW.map(([w,d])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text2)">${escHtml(w)}</span><span style="font-family:var(--font-mono);font-size:11px;color:var(--orange);font-weight:700">${Math.round(d)} dmg</span></div>`).join('');
+      return `<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:6px">Arma preferata: <b style="color:var(--gold)">${favName}</b></div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Top Damage</div>
+        ${rows}`;
+    }
+
+    // Combat style detection
+    function combatStyleHtml(combat, killDists, earlyDeaths, totalMatches) {
+      if(!combat) return '<div style="font-size:11px;color:var(--text3)">Date insuficiente</div>';
+      const avgD = combat.avgEngagementDistance||0;
+      let style='', styleColor='var(--text2)';
+      if(avgD>200){style='🔭 Sniper / Distanta';styleColor='var(--blue)';}
+      else if(avgD>80){style='🎯 Mid-range / Echilibrat';styleColor='var(--green)';}
+      else if(avgD>0){style='💥 Close range / Agresiv';styleColor='var(--orange)';}
+      else{style='⚖ Nedefinit';styleColor='var(--text2)';}
+      const longest = killDists.length ? Math.max(...killDists) : 0;
+      const ed = Math.min(Math.ceil((earlyDeaths||0)/2), totalMatches);
+      const edColor = ed>=3?'var(--red)':ed>=1?'var(--orange)':'var(--green)';
+      return `<div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between"><span style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase">AVG Kill Dist</span><span style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--blue)">${avgD}m</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase">Longest Kill</span><span style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--purple)">${longest}m</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase">Early Deaths</span><span style="font-family:var(--font-head);font-size:14px;font-weight:700;color:${edColor}">~${ed}/${totalMatches} meciuri</span></div>
+      </div>
+      <div style="display:inline-block;font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;margin-top:8px;color:${styleColor};border:1px solid ${styleColor};background:${styleColor}18">${style}</div>`;
+    }
+
+    // Survival patterns
+    function survivalPatternHtml(ext, totalMatches) {
+      if(!ext || !ext.survivalEvents.length) return '<div style="font-size:11px;color:var(--text3)">Date insuficiente</div>';
+      const tm = Math.max(totalMatches||1,1);
+      const dmgEvs = ext.survivalEvents.filter(e=>e.type==='damage');
+      const healEvs = ext.survivalEvents.filter(e=>e.type==='heal');
+      // Max damage received in a single match (approximate from total/matches)
+      const totalDmg = Math.round(dmgEvs.reduce((s,e)=>s+Math.abs(e.value||0),0));
+      const maxDmgPerMatch = Math.round(totalDmg/tm); // avg as proxy since we don't have per-match breakdown
+      const avgDmg = Math.round(totalDmg/tm);
+      const worstHit = dmgEvs.reduce((max,e)=>Math.abs(e.value||0)>Math.abs(max.value||0)?e:max,{value:0});
+      const worstVal = Math.round(Math.abs(worstHit.value||0));
+      const dmgByWeapon={};
+      dmgEvs.forEach(e=>{if(e.weapon&&e.weapon!=='Unknown')dmgByWeapon[e.weapon]=(dmgByWeapon[e.weapon]||0)+Math.round(Math.abs(e.value||0));});
+      const topWeapon=Object.entries(dmgByWeapon).sort((a,b)=>b[1]-a[1])[0];
+      return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--red)">${avgDmg}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase">Dmg primit</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">~${avgDmg}/meci</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--green)">${healEvs.length}x</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase">Heals</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">~${(healEvs.length/tm).toFixed(1)}/meci</div>
+        </div>
+      </div>
+      ${worstVal>0?`<div style="font-size:11px;color:var(--text2);margin-bottom:4px">💥 Cel mai mare hit: <b style="color:var(--red)">${worstVal} HP</b>${worstHit.weapon?' ('+escHtml(worstHit.weapon)+')':''}</div>`:''}
+      ${topWeapon?`<div style="font-size:11px;color:var(--text2)">⚔️ Top armă adversar: <b style="color:var(--orange)">${escHtml(topWeapon[0])}</b></div>`:''}`;
+    }
+
+    const sbsCard = (name, content, isWinner) => `
+      <div style="background:var(--bg2);border:1px solid var(--border);border-top:3px solid ${isWinner?'var(--gold)':'var(--red)'};border-radius:10px;padding:14px">
+        <div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:${isWinner?'var(--gold)':'var(--red)'};margin-bottom:10px">${isWinner?'👑 ':''} ${escHtml(name)}</div>
+        ${content}
+      </div>`;
+
+    const sbsRow = (title, c1, c2) => `
+      <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 10px;display:flex;align-items:center;gap:8px">${title}<div style="flex:1;height:1px;background:var(--border)"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px">${c1}${c2}</div>`;
 
     detailedSbs = `
-    <div class="section-title" style="margin-top:20px">🎯 Hit Distribution</div>
-    <div class="vs-side-by-side">
-      <div class="vs-side-card ${p1Wins>=p2Wins?'winner-side':''}">
-        <div class="vs-side-title" style="color:var(--gold)">${p1Wins>=p2Wins?'👑 ':''} ${escHtml(p1.name)}</div>
-        <div class="target-svg-wrap">${p1Target}</div>
-        <div class="target-stats">
-          <span class="hit-head">Head: ${p1.head||0}</span> &nbsp;
-          <span class="hit-body">Body: ${p1.body||0}</span> &nbsp;
-          <span class="hit-legs">Legs: ${p1.legs||0}</span>
-        </div>
-      </div>
-      <div class="vs-side-card ${p2Wins>p1Wins?'winner-side':''}">
-        <div class="vs-side-title" style="color:var(--gold)">${p2Wins>p1Wins?'👑 ':''} ${escHtml(p2.name)}</div>
-        <div class="target-svg-wrap">${p2Target}</div>
-        <div class="target-stats">
-          <span class="hit-head">Head: ${p2.head||0}</span> &nbsp;
-          <span class="hit-body">Body: ${p2.body||0}</span> &nbsp;
-          <span class="hit-legs">Legs: ${p2.legs||0}</span>
-        </div>
-      </div>
-    </div>
-    <div class="section-title" style="margin-top:20px">🏆 Recorduri Personale</div>
-    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:10px">* Din ultimele ${Math.max(p1.matches||0,p2.matches||0)} meciuri fetchuite</div>
-    ${recordRows}`;
-  }
-
+    ${sbsRow('🎯 Hit Distribution',
+      sbsCard(p1.name, `<div style="background:var(--bg3);border-radius:8px;padding:10px;text-align:center;margin-bottom:8px">${p1Target}<div style="font-family:var(--font-mono);font-size:11px;margin-top:6px"><span style="color:var(--red)">Head: ${p1.head||0}</span> &nbsp;<span style="color:var(--orange)">Body: ${p1.body||0}</span> &nbsp;<span style="color:var(--blue)">Legs: ${p1.legs||0}</span></div></div>`, p1Wins>=p2Wins),
+      sbsCard(p2.name, `<div style="background:var(--bg3);border-radius:8px;padding:10px;text-align:center;margin-bottom:8px">${p2Target}<div style="font-family:var(--font-mono);font-size:11px;margin-top:6px"><span style="color:var(--red)">Head: ${p2.head||0}</span> &nbsp;<span style="color:var(--orange)">Body: ${p2.body||0}</span> &nbsp;<span style="color:var(--blue)">Legs: ${p2.legs||0}</span></div></div>`, p2Wins>p1Wins)
+    )}
+    ${sbsRow('🔫 Weapons',
+      sbsCard(p1.name, weaponRowsHtml(p1Combat), p1Wins>=p2Wins),
+      sbsCard(p2.name, weaponRowsHtml(p2Combat), p2Wins>p1Wins)
+    )}
+    ${sbsRow('🎯 Combat Style',
+      sbsCard(p1.name, combatStyleHtml(p1Combat, p1DistArr, p1Combat?.earlyDeaths||0, m1), p1Wins>=p2Wins),
+      sbsCard(p2.name, combatStyleHtml(p2Combat, p2DistArr, p2Combat?.earlyDeaths||0, m2), p2Wins>p1Wins)
+    )}
+    ${sbsRow('❤️ Survival Patterns',
+      sbsCard(p1.name, survivalPatternHtml(p1Ext, m1), p1Wins>=p2Wins),
+      sbsCard(p2.name, survivalPatternHtml(p2Ext, m2), p2Wins>p1Wins)
+    )}`;
   return `
   <div class="vs-wrap">
     <div class="section-title">⚔️ 1VS1 Comparison</div>
@@ -2030,7 +2058,7 @@ async function runReport() {
       vsTotals._ext=vsAggExt;
     }
 
-    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*12+t.damage*0.015+t.downs*6+t.wins*40+t.assists*4+t.revives*5-(t.knocksTaken||0)*5;return{...t,score,zeroLine:zeroLines[t.name]||0};}).sort((a,b)=>b.score-a.score);
+    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*12+t.damage*0.015+t.downs*6+t.assists*4+t.revives*5-(t.knocksTaken||0)*5;return{...t,score,zeroLine:zeroLines[t.name]||0};}).sort((a,b)=>b.score-a.score);
     const top3=leaderboard.slice(0,3);
     const mvp=leaderboard[0]||emptyPlayerStat(playerName);
     const mainTotals=totals[playerName]||emptyPlayerStat(playerName);
@@ -2129,7 +2157,11 @@ async function runReport() {
 
       const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, matchesFiltered) : '';
 
-      detailedHtml=`${teamDetailedHtml}<div class="targets-section"><div class="section-title">🎯 Hit Distribution + Weapons + Combat</div><div class="targets-grid">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
+      if(reportType === 'vs') {
+        detailedHtml = ''; // 1VS1 detailed is handled inside build1vs1Html
+      } else {
+        detailedHtml=`${teamDetailedHtml}<div class="targets-section"><div class="section-title">🎯 Hit Distribution + Weapons + Combat</div><div class="targets-grid">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
+      }
     }
 
     // Surprize
