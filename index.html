@@ -448,6 +448,21 @@ textarea.modal-input { resize: vertical; min-height: 100px; }
         </div>
       </div>
 
+      <div class="field full" id="teamFilterWrap" style="display:none">
+        <label>Echipa mea (optional)</label>
+        <div id="teamMembersList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="teamMemberInput" placeholder="Adauga coechipier..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:13px;padding:9px 12px;outline:none;">
+          <button onclick="addTeamMember()" style="background:rgba(240,192,64,0.12);border:1px solid var(--gold);border-radius:8px;color:var(--gold);font-family:var(--font-head);font-size:14px;font-weight:700;padding:9px 16px;cursor:pointer">+ Adauga</button>
+        </div>
+        <div id="minMembersWrap" style="display:none;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">Minim prezenti:</span>
+          <div id="minBtns" style="display:flex;gap:6px"></div>
+          <span id="minLabel" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)"></span>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--blue)">ℹ️ Dacă nu adaugi membri, se afișează toate meciurile.</div>
+      </div>
+
       <div class="field full" id="vsPlayerWrap" style="display:none">
         <label>Player 2 (pentru 1VS1)</label>
         <div class="input-wrap"><input type="text" id="vsPlayerName" placeholder="ex: Adversar_PUBG"></div>
@@ -662,8 +677,11 @@ document.addEventListener('DOMContentLoaded', () => {
       state[group] = btn.dataset.val;
       if(group === 'range') document.getElementById('customRange').classList.toggle('show', btn.dataset.val === 'custom');
       if(group === 'reportType') {
-        document.getElementById('extraPlayersWrap').style.display = btn.dataset.val === 'team' ? 'block' : 'none';
+        document.getElementById('extraPlayersWrap').style.display = 'none'; // replaced by teamFilterWrap
+        document.getElementById('teamFilterWrap').style.display = btn.dataset.val === 'team' ? 'block' : 'none';
         document.getElementById('vsPlayerWrap').style.display = btn.dataset.val === 'vs' ? 'block' : 'none';
+        const platformField = document.querySelector('[data-group="platform"]')?.closest('.field');
+        if(platformField) platformField.style.display = btn.dataset.val === 'vs' ? 'none' : '';
         // Hide platform selector for 1VS1 (searches all platforms automatically)
         const platformField = document.querySelector('[data-group="platform"]')?.closest('.field');
         if(platformField) platformField.style.display = btn.dataset.val === 'vs' ? 'none' : '';
@@ -673,6 +691,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnRun').addEventListener('click', runReport);
   document.getElementById('btnClearKey').addEventListener('click', () => { clearApiKey(); document.getElementById('apiKey').value = ''; document.getElementById('savedKeyNote').style.display = 'none'; });
+  // Enter key for team member input
+  const teamInp = document.getElementById('teamMemberInput');
+  if(teamInp) teamInp.addEventListener('keydown', e => { if(e.key==='Enter') addTeamMember(); });
 });
 
 // ===================== FEEDBACK =====================
@@ -708,13 +729,16 @@ async function sendFeedback() {
 
 // ===================== COLLAPSIBLE =====================
 function openTableFullscreen(btn) {
-  // Find the nearest .table-wrap from the button
-  const tw = btn ? btn.closest('.section-title').nextElementSibling : document.querySelector('.table-wrap');
-  if(!tw) return;
+  let tw = null;
+  if(btn) {
+    const sectionTitle = btn.closest('.section-title') || btn.parentElement;
+    tw = sectionTitle ? sectionTitle.nextElementSibling : null;
+  }
+  if(!tw || !tw.querySelector('table')) tw = document.querySelector('.table-wrap');
+  if(!tw || !tw.querySelector('table')) return;
   const tfsBody = document.getElementById('tfsBody');
   tfsBody.innerHTML = '';
   const clone = tw.querySelector('table').cloneNode(true);
-  // Remove inline styles that limit width
   clone.style.width = 'auto';
   clone.style.minWidth = '100%';
   tfsBody.appendChild(clone);
@@ -812,6 +836,65 @@ function fixStickyHeaders() {
     }
   });
 }
+
+// ── TEAM FILTER ──
+let teamMembers = [];
+let minMembers = 3;
+
+function addTeamMember() {
+  const input = document.getElementById('teamMemberInput');
+  const name = input.value.trim();
+  if(!name) return;
+  const playerName = document.getElementById('playerName').value.trim();
+  if(name.toLowerCase() === playerName.toLowerCase()) { alert('Ești deja Player 1!'); return; }
+  if(teamMembers.some(m=>m.toLowerCase()===name.toLowerCase())) { alert('Deja adăugat!'); return; }
+  teamMembers.push(name);
+  input.value = '';
+  renderTeamMembers();
+}
+
+function removeTeamMember(name) {
+  teamMembers = teamMembers.filter(m=>m!==name);
+  renderTeamMembers();
+}
+
+function renderTeamMembers() {
+  const playerName = document.getElementById('playerName').value.trim() || 'Tu';
+  const list = document.getElementById('teamMembersList');
+  const minWrap = document.getElementById('minMembersWrap');
+  
+  // Render members
+  const allMembers = [{ name: playerName, isMe: true }, ...teamMembers.map(m=>({name:m,isMe:false}))];
+  list.innerHTML = allMembers.map(m=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid ${m.isMe?'var(--gold)':'var(--border)'};border-radius:8px;padding:8px 12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:${m.isMe?'var(--gold)':'var(--text)'}">${m.name}</span>
+        <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3);background:var(--bg2);padding:2px 6px;border-radius:4px">${m.isMe?'TU':'coechipier'}</span>
+      </div>
+      ${m.isMe?'':'<button onclick="removeTeamMember(''+m.name+'')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1">✕</button>'}
+    </div>`).join('');
+
+  // Show/hide min selector
+  if(teamMembers.length > 0) {
+    minWrap.style.display = 'flex';
+    const total = teamMembers.length + 1; // +1 for player
+    const minBtns = document.getElementById('minBtns');
+    minBtns.innerHTML = '';
+    for(let i=2; i<=Math.min(total,6); i++) {
+      const btn = document.createElement('div');
+      btn.style.cssText = `width:32px;height:32px;background:${i===minMembers?'rgba(240,192,64,0.12)':'var(--bg3)'};border:1px solid ${i===minMembers?'var(--gold)':'var(--border)'};border-radius:6px;color:${i===minMembers?'var(--gold)':'var(--text2)'};font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center`;
+      btn.textContent = i;
+      btn.onclick = () => { minMembers = i; renderTeamMembers(); };
+      minBtns.appendChild(btn);
+    }
+    document.getElementById('minLabel').textContent = `din ${total} membri`;
+    if(minMembers > total) minMembers = Math.max(2, total);
+  } else {
+    minWrap.style.display = 'none';
+  }
+}
+
+// Enter key for team member input - added inside main DOMContentLoaded
 
 function toggleCollapsible(header) {
   const body = header.nextElementSibling;
@@ -1977,6 +2060,23 @@ async function runReport() {
     const {matches:matchesFiltered, surprizes:surprizeVictims} = await fetchMatchesForPlayer(playerName, matchRefs, 18, reportType==='vs'?55:85);
     setProgress(reportType==='vs'?55:85);
 
+    // Apply team filter if members defined
+    let matchesFinal = matchesFiltered;
+    if(reportType === 'team' && teamMembers.length > 0) {
+      const allTeamNamesLower = [playerName.toLowerCase(), ...teamMembers.map(m=>m.toLowerCase())];
+      matchesFinal = matchesFiltered.filter(match => {
+        const presentNames = match.teamStats.map(p=>p.name.toLowerCase());
+        const presentCount = allTeamNamesLower.filter(n=>presentNames.some(p=>p===n||p.includes(n)||n.includes(p))).length;
+        return presentCount >= minMembers;
+      });
+      logMsg(`Meciuri cu echipa definita: ${matchesFinal.length} din ${matchesFiltered.length}`, 'ok');
+      if(!matchesFinal.length) {
+        logMsg('Niciun meci gasit cu minim '+minMembers+' membri din echipa!', 'warn');
+        matchesFinal = matchesFiltered; // fallback to all
+      }
+    }
+    const matchesFiltered2 = matchesFinal;
+
     if(!matchesFiltered.length) throw new Error(i('noMatches'));
     logMsg(`Total meciuri ${matchMode}: ${matchesFiltered.length}`, 'ok');
 
@@ -2008,13 +2108,13 @@ async function runReport() {
     const aggregatedExt = {};
     for(const name of allTeamPlayers) aggregatedExt[name.toLowerCase()]={survivalEvents:[],killDistances:[],lootEvents:[],totalMatchTime:0,lootTime:0,activeTime:0};
 
-    for(const match of matchesFiltered) {
+    for(const match of (typeof matchesFiltered2!=="undefined"&&reportType==="team"?matchesFiltered2:matchesFiltered)) {
       for(const name of allTeamPlayers) {
         const p=match.teamStats.find(x=>nameEq(x.name,name));
         if(!p) continue;
         totals[name].kills+=p.kills;totals[name].damage+=p.damage;totals[name].assists+=p.assists;totals[name].revives+=p.revives;totals[name].downs+=p.downs;totals[name].knocksTaken+=p.knocksTaken;totals[name].head+=p.head;totals[name].body+=p.body;totals[name].legs+=p.legs;totals[name].unknown+=p.unknown;totals[name].matches+=1;
         if(match.rank===1) totals[name].wins+=1;
-        if(!p.kills&&!p.damage&&!p.assists&&!p.downs&&!p.knocksTaken) zeroLines[name]+=1;
+        if(!p.kills&&!p.damage&&!p.assists&&!p.downs&&!p.revives) zeroLines[name]+=1;
       }
       if(match.combatData) {
         for(const key of Object.keys(match.combatData)) {
@@ -2132,7 +2232,7 @@ async function runReport() {
       headerTop+=`<th rowspan="2">Map</th><th rowspan="2">Ora</th><th rowspan="2">Loc</th><th rowspan="2">Status</th>`;
       function cellFor(match,name){const p=match.teamStats.find(x=>nameEq(x.name,name));if(!p) return '<td class="absent">-</td>'.repeat(6);return `<td>${p.kills}</td><td>${Math.round(p.damage)}</td><td>${p.assists}</td><td>${p.revives}</td><td>${p.downs}</td><td>${p.knocksTaken}</td>`;}
       let rows=matchesFiltered.map((match,idx)=>{const isWinner=match.rank===1;return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td></tr>`;}).join('');
-      let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr><td><b>Zero</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
+      let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr class="rusinica-row"><td>🥚 <b>Rușine</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
       displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
       const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Match Table <button onclick="openTableFullscreen(this)" style="font-family:var(--font-mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer">⛶ Fullscreen</button></div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
     }
@@ -2141,7 +2241,11 @@ async function runReport() {
     const withAI = (reportType==='personal'?[totals[playerName]].filter(Boolean):reportType==='vs'?[totals[playerName]].filter(Boolean):leaderboard).map((p,idx)=>{
       const combatKey=p.name.toLowerCase();const combat=aggregatedCombat[combatKey]||null;const isMvp=reportType==='team'?idx===0:false;const ai=savageAI(p.name,p,rankingStats,isMvp,combat);const target=detailLevel==='detailed'?renderTargetSvg(p.head||0,p.body||0,p.legs||0,p.unknown||0):'';return{...p,ai,target};
     });
-    const aiHtml=`<div class="section-title">🤖 AI Analysis</div><div class="ai-grid">${withAI.map(p=>{const arch=p.ai.archetype;const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';return `<div class="ai-card ${isMvpCard?'mvp':''}"><div class="ai-name">${escHtml(p.name)}</div><div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div><div class="ai-msg">${escHtml(p.ai.msg)}</div><div class="ai-notes">${escHtml(p.ai.notes||' ')}</div><div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div></div>`;}).join('')}</div>`;
+    // Top Rusinica wildcard
+    const rusinicaPlayers = leaderboard.filter(p=>(p.zeroLine||0)>0).sort((a,b)=>(b.zeroLine||0)-(a.zeroLine||0));
+    const topRusinica = rusinicaPlayers[0];
+    const rusinicaCard = reportType==='team' && topRusinica ? `<div class="ai-card" style="border-color:var(--red);background:rgba(255,77,79,0.05)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div class="ai-name" style="color:var(--red)">${escHtml(topRusinica.name)}</div><div style="background:rgba(255,77,79,0.15);border:1px solid var(--red);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;color:var(--red)">🥚 TOP RUȘINICĂ</div></div><div style="font-size:28px;margin-bottom:6px">🥚</div><div style="font-size:13px;color:var(--text2);margin-bottom:6px">${topRusinica.zeroLine}x meciuri fără nicio contribuție</div><div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">${rusinicaPlayers.map(p=>`${escHtml(p.name)}: ${p.zeroLine}x`).join(' &nbsp;|&nbsp; ')}</div><div class="ai-mini" style="margin-top:6px">K/M: ${safeNum(topRusinica.kills/Math.max(topRusinica.matches,1),2)} | Dmg/M: ${safeNum(topRusinica.damage/Math.max(topRusinica.matches,1),2)}</div></div>` : '';
+    const aiHtml=`<div class="section-title">🤖 AI Analysis</div><div class="ai-grid">${withAI.map(p=>{const arch=p.ai.archetype;const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';return `<div class="ai-card ${isMvpCard?'mvp':''}"><div class="ai-name">${escHtml(p.name)}</div><div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div><div class="ai-msg">${escHtml(p.ai.msg)}</div><div class="ai-notes">${escHtml(p.ai.notes||' ')}</div><div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div></div>`;}).join('')}${rusinicaCard}</div>`;
 
     // Personal
     let personalHtml='';
