@@ -949,7 +949,7 @@ function safeNum(v, d=0) { const n=Number(v||0); return d>0?n.toFixed(d):String(
 function nameEq(a,b) { return String(a||'').toLowerCase()===String(b||'').toLowerCase(); }
 function escHtml(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function shortMapName(m) { const maps={Baltic_Main:'Erangel',Desert_Main:'Miramar',Savage_Main:'Sanhok',DihorOtok_Main:'Vikendi',Tiger_Main:'Taego',Summerland_Main:'Karakin',Chimera_Main:'Paramo',Heaven_Main:'Haven',Kiki_Main:'Deston',Neon_Main:'Rondo'}; return maps[m]||m||'-'; }
-function cleanWeaponName(raw) { if(!raw) return 'Unknown'; return raw.replace(/^Item_Weapon_/,'').replace(/^WeapID_/,'').replace(/^Weap_/,'').replace(/_C$/,'').replace(/_MainWeapon$/,'').replace(/BP_/,'').replace(/_/g,' ').trim(); }
+function cleanWeaponName(raw) { if(!raw) return 'Unknown'; return raw.replace(/^WeapID_/,'').replace(/^Weap_/,'').replace(/_C$/,'').replace(/_MainWeapon$/,'').replace(/BP_/,'').replace(/_/g,' ').trim(); }
 function formatRoTime(d) { return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',hour:'2-digit',minute:'2-digit',hour12:false}).format(d); }
 function formatRoDate(d) { return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric'}).format(d); }
 function formatRoDateTime(d) { return new Intl.DateTimeFormat('ro-RO',{timeZone:'Europe/Bucharest',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(d); }
@@ -1709,22 +1709,10 @@ function buildWeaponSummaryHtml(data) {
 // ===================== COMBAT ANALYSIS =====================
 function buildCombatAnalysis(telemetry, teamNamesLower, circlePhases) {
   const analysis={};
-  for(const n of teamNamesLower){analysis[n]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{},weaponAttachments:{},lootPct:0,lootTime:0};}
+  for(const n of teamNamesLower){analysis[n]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{},lootPct:0,lootTime:0};}
   for(const ev of telemetry){
     if(ev?._T==='LogPlayerMakeGroggy'){const vn=(ev?.victim?.name||'').toLowerCase();const an=(ev?.attacker?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const phase=getCirclePhase(evTime,circlePhases);const dist=Math.round(safeInt(ev?.distance)/100);const weapon=cleanWeaponName(ev?.damageCauserName||ev?.attackerWeapon||'');if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'knocked',time:evTime,phase,by:ev?.attacker?.name||'unknown',dist,isEarly});}if(analysis[an]){analysis[an].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[an].weaponKnocked[weapon]=(analysis[an].weaponKnocked[weapon]||0)+1;}}
     if(ev?._T==='LogPlayerKill'){const kn=(ev?.killer?.name||'').toLowerCase();const vn=(ev?.victim?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const phase=getCirclePhase(evTime,circlePhases);const dist=Math.round(safeInt(ev?.distance)/100);const weapon=cleanWeaponName(ev?.damageCauserName||ev?.killerWeapon||'');if(analysis[kn]){analysis[kn].events.push({type:'kill',time:evTime,phase,victim:ev?.victim?.name||'unknown',dist,weapon});analysis[kn].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[kn].weaponKills[weapon]=(analysis[kn].weaponKills[weapon]||0)+1;}if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'died',time:evTime,phase,by:ev?.killer?.name||'unknown',dist,isEarly});}}
-    if(ev?._T==='LogItemAttach'||ev?._T==='LogItemDetach') {
-      const cn=(ev?.character?.name||ev?.character?.Name||'').toLowerCase();
-      if(analysis[cn] && ev?._T==='LogItemAttach') {
-        const weaponId=cleanWeaponName(ev?.parentItem?.itemId||'');
-        const attachId=ev?.childItem?.itemId||'';
-        const attachInfo=WM_ATTACH&&WM_ATTACH[attachId]?WM_ATTACH[attachId].name:cleanWeaponName(attachId);
-        if(weaponId&&weaponId!=='Unknown'&&attachInfo&&attachInfo!=='Unknown') {
-          if(!analysis[cn].weaponAttachments[weaponId]) analysis[cn].weaponAttachments[weaponId]={};
-          analysis[cn].weaponAttachments[weaponId][attachInfo]=(analysis[cn].weaponAttachments[weaponId][attachInfo]||0)+1;
-        }
-      }
-    }
     if(ev?._T==='LogPlayerTakeDamage'){const vn=(ev?.victim?.name||'').toLowerCase();const an=(ev?.attacker?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const dmg=safeInt(ev?.damage);const weapon=cleanWeaponName(ev?.damageCauserName||'');if(analysis[vn]&&String(ev?.damageTypeCategory||'').toLowerCase().includes('zone')){analysis[vn].zoneIssues++;analysis[vn].events.push({type:'zone_damage',time:evTime,phase:getCirclePhase(evTime,circlePhases)});}if(analysis[an]&&weapon&&weapon!=='Unknown'&&dmg>0)analysis[an].weaponDamage[weapon]=(analysis[an].weaponDamage[weapon]||0)+dmg;}
   }
   for(const n of teamNamesLower){const d=analysis[n].distances;analysis[n].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;}
@@ -2082,19 +2070,7 @@ async function runReport() {
               const circlePhases = extractCirclePhases(telemetry);
               for(const ev of telemetry) {
                 if(ev?._T==='LogPlayerMakeGroggy'){const vn=(ev?.victim?.name||'').toLowerCase();const idx=teamNamesLower.indexOf(vn);if(idx>=0)teamStats[idx].knocksTaken+=1;}
-                if(ev?._T==='LogItemAttach'||ev?._T==='LogItemDetach') {
-      const cn=(ev?.character?.name||ev?.character?.Name||'').toLowerCase();
-      if(analysis[cn] && ev?._T==='LogItemAttach') {
-        const weaponId=cleanWeaponName(ev?.parentItem?.itemId||'');
-        const attachId=ev?.childItem?.itemId||'';
-        const attachInfo=WM_ATTACH&&WM_ATTACH[attachId]?WM_ATTACH[attachId].name:cleanWeaponName(attachId);
-        if(weaponId&&weaponId!=='Unknown'&&attachInfo&&attachInfo!=='Unknown') {
-          if(!analysis[cn].weaponAttachments[weaponId]) analysis[cn].weaponAttachments[weaponId]={};
-          analysis[cn].weaponAttachments[weaponId][attachInfo]=(analysis[cn].weaponAttachments[weaponId][attachInfo]||0)+1;
-        }
-      }
-    }
-    if(ev?._T==='LogPlayerTakeDamage'){const an=(ev?.attacker?.name||'').toLowerCase();const idx=teamNamesLower.indexOf(an);if(idx>=0){const z=classifyDamageReason(ev?.damageReason);if(z==='head')teamStats[idx].head++;else if(z==='body')teamStats[idx].body++;else if(z==='legs')teamStats[idx].legs++;else teamStats[idx].unknown++;}}
+                if(ev?._T==='LogPlayerTakeDamage'){const an=(ev?.attacker?.name||'').toLowerCase();const idx=teamNamesLower.indexOf(an);if(idx>=0){const z=classifyDamageReason(ev?.damageReason);if(z==='head')teamStats[idx].head++;else if(z==='body')teamStats[idx].body++;else if(z==='legs')teamStats[idx].legs++;else teamStats[idx].unknown++;}}
                 if(ev?._T==='LogPlayerKill'&&globalLeaderboard.length){const kn=ev?.killer?.name||'';const vn=ev?.victim?.name||'';const isTeamKill=teamStats.some(x=>nameEq(x.name,kn));if(isTeamKill){const gIdx=globalLeaderboard.findIndex(x=>nameEq(x.name,vn));if(gIdx!==-1){surprizes.push({killerName:kn,victimName:vn,globalRank:gIdx+1,kills:globalLeaderboard[gIdx].kills,mapName:shortMapName(matchRes.data?.attributes?.mapName),time:formatRoTime(createdAt)});logMsg(`  ⭐ SURPRIZE: Top ${gIdx+1} eliminated!`,'ok');}}}
               }
               matchCombatData = buildCombatAnalysis(telemetry, teamNamesLower, circlePhases);
@@ -2187,11 +2163,6 @@ async function runReport() {
           for(const[w,v] of Object.entries(src.weaponKills||{})) aggregatedCombat[key].weaponKills[w]=(aggregatedCombat[key].weaponKills[w]||0)+v;
           for(const[w,v] of Object.entries(src.weaponDamage||{})) aggregatedCombat[key].weaponDamage[w]=(aggregatedCombat[key].weaponDamage[w]||0)+v;
           for(const[w,v] of Object.entries(src.weaponKnocked||{})) aggregatedCombat[key].weaponKnocked[w]=(aggregatedCombat[key].weaponKnocked[w]||0)+v;
-          if(!aggregatedCombat[key].weaponAttachments) aggregatedCombat[key].weaponAttachments={};
-          for(const[wn,attMap] of Object.entries(src.weaponAttachments||{})) {
-            if(!aggregatedCombat[key].weaponAttachments[wn]) aggregatedCombat[key].weaponAttachments[wn]={};
-            for(const[an,av] of Object.entries(attMap)) aggregatedCombat[key].weaponAttachments[wn][an]=(aggregatedCombat[key].weaponAttachments[wn][an]||0)+av;
-          }
         }
       }
       if(match.extData) {
@@ -2252,13 +2223,6 @@ async function runReport() {
       vsTotals._ext=vsAggExt;
     }
 
-    // Build player ID map from all matches
-    const playerIdMap = {};
-    playerIdMap[playerName.toLowerCase()] = playerId;
-    for(const match of matchesFiltered) {
-      const included = match._included || [];
-      // included is not stored - use what we have from API fetches
-    }
     const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.1+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
     const top3=leaderboard.slice(0,3);
     const mvp=leaderboard[0]||emptyPlayerStat(playerName);
@@ -2450,8 +2414,6 @@ async function runReport() {
     _wmState.playerId = playerId;
     _wmState.vsPlayerId = vsPlayerId || '';
     _wmState.leaderboard = leaderboard.map(function(p){ return {name:p.name, id:p._id||''}; }); _wmState.vsPlayerId = vsPlayerId || '';
-    _wmState.aggregatedCombat = aggregatedCombat;
-    _wmState.aggregatedExt = aggregatedExt;
 
   } catch(e) {
     setProgress(100);
@@ -2628,28 +2590,28 @@ var WM_ATTACH = {
 
 var CAT_COLORS = {scope:'var(--blue)',muzzle:'var(--orange)',grip:'var(--green)',mag:'var(--purple)',stock:'var(--text2)'};
 
-var WM_PRO = [];
+var WM_PRO = [
+  {tier:'s',name:'ACE32', usage:84, attach:['COMPENSATOR','3X SCOPE','ANGLED GRIP','EXT. QD MAG'],
+   note:'Setup standard pro — Compensator+Angled Grip pentru recoil control si ADS speed.',
+   players:['KR Pio','KR Inonix','DE Bajan']},
+  {tier:'s',name:'M416',  usage:71, attach:['SUPPRESSOR','3X SCOPE','VERTICAL GRIP','TACT. STOCK'],
+   note:'Cel mai versatil AR. Suppressor e prioritate absoluta pentru sound advantage.',
+   players:['CN Paraboy','TR Lk_Veysel']},
+  {tier:'a',name:'AWM',   usage:62, attach:['SUPPRESSOR','8X SCOPE','CHEEK PAD'],
+   note:'One-shot helmet lvl3 — indispensabil in late circle.',
+   players:['KR Shinchul','BR ExoticBoy']},
+  {tier:'a',name:'Kar98k',usage:55, attach:['MUZZLE BRAKE','8X SCOPE','CHEEK PAD'],
+   note:'Alternativa la AWM, mai accesibil. Preferat pe Erangel si Miramar.',
+   players:['KR Pio','DE Bajan','TH AiiceeZ']},
+];
 
 function wmAttachTag(attachId, cnt) {
   var a = WM_ATTACH[attachId];
-  var displayName, cat;
-  if(a) {
-    displayName = a.name;
-    cat = a.cat;
-  } else {
-    // attachId might already be a clean name (from sessionAttachments)
-    displayName = attachId.toUpperCase();
-    cat = 'stock';
-    if(displayName.includes('SCOPE')||displayName.includes('DOT')||displayName.includes('HOLO')) cat='scope';
-    else if(displayName.includes('SUPPRESSOR')||displayName.includes('COMPENSATOR')||displayName.includes('MUZZLE')||displayName.includes('BRAKE')||displayName.includes('FLASH')) cat='muzzle';
-    else if(displayName.includes('GRIP')) cat='grip';
-    else if(displayName.includes('MAG')) cat='mag';
-    else if(displayName.includes('STOCK')||displayName.includes('PAD')) cat='stock';
-  }
-  var color = CAT_COLORS[cat] || 'var(--text2)';
-  return '<div class="wm-attach-tag '+cat+'">'
-    + '<div class="wm-attach-name" style="color:'+color+'">'+displayName+'</div>'
-    + (cnt ? '<div class="wm-attach-cnt">'+cnt+'</div>' : '')
+  if(!a) { a = {name: cleanWeaponName(attachId), cat:'stock'}; }
+  var color = CAT_COLORS[a.cat] || 'var(--text2)';
+  return '<div class="wm-attach-tag '+a.cat+'">'
+    + '<div class="wm-attach-name" style="color:'+color+'">'+a.name+'</div>'
+    + (cnt ? '<div class="wm-attach-cnt">'+cnt+'x</div>' : '')
     + '</div>';
 }
 
@@ -2679,7 +2641,6 @@ function parseWMData(wmData, playerNameStr) {
   var weapons = [];
   for(var weaponId in summaries) {
     var ws = summaries[weaponId];
-    var wClean = cleanWeaponName(weaponId);
     var stats = ws.CompetitiveStatsTotal || ws.StatsTotal || {};
     var kills = safeInt(stats.Kills);
     var dmg   = safeInt(stats.DamagePlayer);
@@ -2698,7 +2659,7 @@ function parseWMData(wmData, playerNameStr) {
       topAttach = Object.entries(attachCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
     }
     weapons.push({
-      name: wClean,
+      name: cleanWeaponName(weaponId),
       kills: kills, dmg: dmg, hs: hs,
       hsPct: kills > 0 ? Math.round((hs/Math.max(kills,1))*100*10)/10 : 0,
       longest: longest,
@@ -2713,14 +2674,9 @@ function renderWMWeaponCard(w, rank, maxKills) {
   var cls = rank===1?'r1':rank===2?'r2':rank===3?'r3':'';
   var rc = rank===1?'var(--gold)':rank===2?'#aaa':rank===3?'#cd7f32':'var(--text3)';
   var pK = Math.round((w.kills/Math.max(maxKills,1))*100);
-  var attHtml = '';
-  if(w.sessionAttachments && w.sessionAttachments.length) {
-    attHtml = w.sessionAttachments.slice(0,7).map(function(a){return wmAttachTag(a, null);}).join('');
-  } else if(w.attachments && w.attachments.length) {
-    attHtml = w.attachments.map(function(a){return wmAttachTag(a[0], a[1].toLocaleString());}).join('');
-  } else {
-    attHtml = '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Joaca Detailed pentru attachments</div>';
-  }
+  var attHtml = w.attachments.length
+    ? w.attachments.map(function(a){return wmAttachTag(a[0], a[1].toLocaleString());}).join('')
+    : '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Date indisponibile</div>';
   return '<div class="wm-weapon-card '+cls+'">'
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
     +'<div style="font-family:var(--font-mono);font-size:18px;font-weight:700;min-width:24px;color:'+rc+'">'+rank+'</div>'
@@ -2736,29 +2692,48 @@ function renderWMWeaponCard(w, rank, maxKills) {
 }
 
 function renderWMTeamRow(w) {
-  // Get attachments from telemetry (current session) if available
-  var attHtml = '';
-  if(w.sessionAttachments && w.sessionAttachments.length) {
-    attHtml = w.sessionAttachments.slice(0,5).map(function(a){return wmSmallTag(a);}).join('');
-  } else if(w.attachments && w.attachments.length) {
-    attHtml = w.attachments.slice(0,4).map(function(a){return wmSmallTag(a[0]);}).join('');
-  }
+  var attHtml = w.attachments.slice(0,4).map(function(a){return wmSmallTag(a[0]);}).join('');
   return '<div style="padding:6px 0;border-bottom:1px solid rgba(35,42,56,0.5)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center">'
     +'<span style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">'+escHtml(w.name)+'</span>'
     +'<div style="text-align:right"><div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--red)">'+w.kills.toLocaleString()+'</div>'
     +'<div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">'+Math.round(w.dmg).toLocaleString()+' dmg</div></div></div>'
-    +(attHtml ? '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">'+attHtml+'</div>' : '')
-    +'</div>';
+    +'<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">'+attHtml+'</div></div>';
 }
 
+function renderWMCompare(playerName, weapons) {
+  var proNames = WM_PRO.map(function(p){return p.name.toUpperCase();});
+  var rows = weapons.slice(0,5).map(function(w){
+    var wUp = w.name.toUpperCase();
+    if(proNames.indexOf(wUp)!==-1) {
+      return '&#x2705; <b style="color:var(--green)">'+escHtml(w.name)+'</b> — in meta pro';
+    }
+    return '&#x26A0;&#xFE0F; <b style="color:var(--orange)">'+escHtml(w.name)+'</b> — nu e in top meta pro';
+  }).join('<br>');
+  return '<div class="wm-cmp-box"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--purple);margin-bottom:8px">&#x1F3AF; '+escHtml(playerName)+' vs Pro Meta</div>'
+    +'<div style="font-size:12px;color:var(--text2);line-height:2.1">'+rows+'</div></div>';
+}
 
-
-
-
-
-
-
+function renderWMProMeta() {
+  var cards = WM_PRO.map(function(p){
+    var att = p.attach.map(wmProAttachTag).join('');
+    var pl = p.players.map(function(n){return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text2)">'+n+'</div>';}).join('');
+    var tc = p.tier==='s'?'rgba(240,192,64,0.5)':'rgba(126,216,91,0.4)';
+    var tColor = p.tier==='s'?'var(--gold)':'var(--green)';
+    return '<div class="wm-pro-card '+p.tier+'" style="border-color:'+tc+'">'
+      +'<div style="position:absolute;top:10px;right:10px;font-family:var(--font-head);font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(240,192,64,0.15);color:'+tColor+';border:1px solid '+tColor+'">'+p.tier.toUpperCase()+' TIER</div>'
+      +'<div style="font-family:var(--font-head);font-size:19px;font-weight:700;margin-bottom:2px">'+p.name+'</div>'
+      +'<div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:10px">Folosit in <b style="color:var(--orange)">'+p.usage+'%</b> din meciuri pro</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+att+'</div>'
+      +'<div style="font-size:11px;color:var(--text2);line-height:1.5;padding:8px 10px;background:var(--bg2);border-radius:6px;border-left:2px solid var(--gold);margin-bottom:8px">'+p.note+'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+pl+'</div></div>';
+  }).join('');
+  return '<div class="wm-pro-banner"><div style="font-size:32px">&#x1F30D;</div>'
+    +'<div><div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--gold)">PUBG Pro Circuit 2025 — Meta Curenta</div>'
+    +'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:2px">Date din ultimele turnee oficiale · Actualizat saptamanal · Sursa: Liquipedia</div></div></div>'
+    +'<div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--orange);letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px">Top Arme Pro<div style="flex:1;height:1px;background:var(--border)"></div></div>'
+    +'<div class="wm-pro-grid">'+cards+'</div>';
+}
 
 async function openWeaponMastery() {
   var modal = document.getElementById('wmModal');
@@ -2775,50 +2750,21 @@ async function openWeaponMastery() {
 
   try {
     if(rType === 'personal') {
-      title.textContent = '🔫 Weapon Mastery — ' + _wmState.playerName;
+      title.textContent = '&#x1F52B; Weapon Mastery — ' + _wmState.playerName;
       var wmData = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+_wmState.playerId+'/weapon_mastery', apiKey);
       var weapons = parseWMData(wmData, _wmState.playerName);
-      // Enrich with session attachments from telemetry
-      var pCombatData = (_wmState.aggregatedCombat||{})[_wmState.playerName.toLowerCase()] || {};
-      var pAttachMap = pCombatData.weaponAttachments || {};
-      weapons = weapons.map(function(w){
-        var wUp = w.name.toUpperCase();
-        var attKey = Object.keys(pAttachMap).find(function(ak){return ak.toUpperCase()===wUp||ak.toUpperCase().includes(wUp)||wUp.includes(ak.toUpperCase());});
-        var sessionAtt = attKey ? Object.keys(pAttachMap[attKey]).sort(function(a,b){return pAttachMap[attKey][b]-pAttachMap[attKey][a];}) : [];
-        return Object.assign({}, w, {sessionAttachments: sessionAtt});
-      });
       var maxK = weapons.length ? weapons[0].kills : 1;
-      buildWMTabs(['Armele Mele'],[
-        '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">'+escHtml(_wmState.playerName)+' · Toata cariera · Attachments din sesiunea curenta</div>'
-        + weapons.map(function(w,i){return renderWMWeaponCard(w,i+1,maxK);}).join('')
-      ]);
+      var tabDefs = ['Armele Mele','Tu vs Pro Meta'];
+      var tabContents = [
+        '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">'+escHtml(_wmState.playerName)+' · Toata cariera</div>'
+        + weapons.map(function(w,i){return renderWMWeaponCard(w,i+1,maxK);}).join(''),
+        renderWMProMeta() + renderWMCompare(_wmState.playerName, weapons)
+      ];
+      buildWMTabs(tabDefs, tabContents);
 
     } else if(rType === 'team') {
-      title.textContent = '🔫 Weapon Mastery — Echipa';
-      // Fetch IDs for all team members who don't have one yet
-      var allTeamNames = _wmState.leaderboard.map(function(p){return p.name;});
-      var playerIds = [];
-      for(var ti=0; ti<allTeamNames.length; ti++) {
-        var tName = allTeamNames[ti];
-        var tId = '';
-        // Check if we already have the ID
-        var existing = _wmState.leaderboard.find(function(p){return p.name===tName;});
-        if(existing && existing.id) {
-          tId = existing.id;
-        } else {
-          // Fetch player ID
-          try {
-            var plats = ['steam','psn','xbox'];
-            for(var pli=0; pli<plats.length; pli++) {
-              try {
-                var pRes = await apiGet('https://api.pubg.com/shards/'+plats[pli]+'/players?filter[playerNames]='+encodeURIComponent(tName), apiKey);
-                if(pRes.data && pRes.data.length) { tId = pRes.data[0].id; break; }
-              } catch(e) {}
-            }
-          } catch(e) {}
-        }
-        if(tId) playerIds.push({name:tName, id:tId});
-      }
+      title.textContent = '&#x1F52B; Weapon Mastery — Echipa';
+      var playerIds = _wmState.leaderboard.map(function(p){return {name:p.name, id:p.id};}).filter(function(p){return p.id;});
       var teamWeapons = {};
       for(var pi=0; pi<playerIds.length; pi++) {
         try {
@@ -2826,53 +2772,19 @@ async function openWeaponMastery() {
           teamWeapons[playerIds[pi].name] = parseWMData(wmD, playerIds[pi].name);
         } catch(e) { teamWeapons[playerIds[pi].name] = []; }
       }
-      // Build attachment map from telemetry (current session)
-      var sessionAttachMap = {};
-      var combatData = _wmState.aggregatedCombat || {};
-      for(var cKey in combatData) {
-        var cd = combatData[cKey];
-        // weaponKnocked has attachment usage per weapon name
-        var weapAttach = {};
-        if(cd.weaponKnocked) {
-          for(var wk in cd.weaponKnocked) {
-            // wk is weapon name - check if it's an attachment
-            var wkA = WM_ATTACH[wk];
-            if(wkA) {
-              // it's an attachment - skip, these are weapon IDs
-            }
-          }
-        }
-        sessionAttachMap[cKey] = weapAttach;
-      }
-
       var teamCardsHtml = '<div class="wm-team-grid">' + playerIds.map(function(p){
         var wList = (teamWeapons[p.name]||[]).slice(0,5);
-        // Get session data for this player
-        var pCombat = (combatData[p.name.toLowerCase()] || combatData[Object.keys(combatData).find(function(k){return k===p.name.toLowerCase();})] || null);
-        // Get top weapons from telemetry with their kills/damage
-        var telWeapons = {};
-        if(pCombat) {
-          for(var tw in (pCombat.weaponKills||{})) { if(!telWeapons[tw]) telWeapons[tw]={kills:0,dmg:0,attach:[]}; telWeapons[tw].kills=(pCombat.weaponKills[tw]||0); }
-          for(var td in (pCombat.weaponDamage||{})) { if(!telWeapons[td]) telWeapons[td]={kills:0,dmg:0,attach:[]}; telWeapons[td].dmg=Math.round(pCombat.weaponDamage[td]||0); }
-        }
-        // Enrich wm weapons with session attachments
-        var enriched = wList.map(function(w){
-          var wUp = w.name.toUpperCase();
-          // Find matching telemetry weapon
-          var telKey = Object.keys(telWeapons).find(function(tk){return tk.toUpperCase()===wUp||tk.toUpperCase().includes(wUp)||wUp.includes(tk.toUpperCase());});
-          var sessionAtt = telKey ? (telWeapons[telKey].attach||[]) : [];
-          return Object.assign({}, w, {sessionAttachments: sessionAtt});
-        });
-        var rows = enriched.map(renderWMTeamRow).join('');
-        var isMainPlayer = p.name.toLowerCase() === _wmState.playerName.toLowerCase();
-        return '<div class="wm-team-card" style="'+(isMainPlayer?'border-color:var(--gold)':'')+'"><div style="font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);color:'+(isMainPlayer?'var(--gold)':'var(--text)')+'">'+escHtml(p.name)+'</div>'+rows+'</div>';
+        var rows = wList.map(renderWMTeamRow).join('');
+        return '<div class="wm-team-card"><div style="font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">'+escHtml(p.name)+'</div>'+rows+'</div>';
       }).join('') + '</div>';
-      buildWMTabs(['Per Jucator'],[
-        '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">Toata echipa · Top 5 arme + attachments din sesiunea curenta</div>'+teamCardsHtml
+      var cmpAll = playerIds.map(function(p){return renderWMCompare(p.name, teamWeapons[p.name]||[]);}).join('');
+      buildWMTabs(['Per Jucator','Echipa vs Pro Meta'],[
+        '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">Toata echipa · Top 5 arme + attachments</div>'+teamCardsHtml,
+        renderWMProMeta()+cmpAll
       ]);
 
     } else if(rType === 'vs') {
-      title.textContent = '🔫 Weapon Mastery — 1VS1';
+      title.textContent = '&#x1F52B; Weapon Mastery — 1VS1';
       var wm1 = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+_wmState.playerId+'/weapon_mastery', apiKey);
       var weapons1 = parseWMData(wm1, _wmState.playerName);
       var weapons2 = [];
@@ -2882,21 +2794,17 @@ async function openWeaponMastery() {
           weapons2 = parseWMData(wm2, _wmState.vsPlayerName);
         } catch(e) {}
       }
-      // Enrich 1VS1 weapons with session attachments
-      var p1AttMap = ((_wmState.aggregatedCombat||{})[_wmState.playerName.toLowerCase()]||{}).weaponAttachments || {};
-      weapons1 = weapons1.map(function(w){
-        var wUp = w.name.toUpperCase();
-        var attKey = Object.keys(p1AttMap).find(function(ak){return ak.toUpperCase()===wUp||ak.toUpperCase().includes(wUp)||wUp.includes(ak.toUpperCase());});
-        var sessionAtt = attKey ? Object.keys(p1AttMap[attKey]).sort(function(a,b){return p1AttMap[attKey][b]-p1AttMap[attKey][a];}) : [];
-        return Object.assign({}, w, {sessionAttachments: sessionAtt});
-      });
-      var vsHtml = '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">Toata cariera · Top 5 arme + attachments din sesiune</div>'
+      var vsHtml = '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">Toata cariera · Top 5 arme + attachments</div>'
         +'<div class="wm-vs-grid">'
         +'<div class="wm-vs-card p1"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--gold);margin-bottom:10px">'+escHtml(_wmState.playerName)+'</div>'
         +weapons1.slice(0,5).map(renderWMTeamRow).join('')+'</div>'
         +'<div class="wm-vs-card p2"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--red);margin-bottom:10px">'+escHtml(_wmState.vsPlayerName)+'</div>'
         +weapons2.slice(0,5).map(renderWMTeamRow).join('')+'</div></div>';
-      buildWMTabs([escHtml(_wmState.playerName)+' vs '+escHtml(_wmState.vsPlayerName)],[vsHtml]);
+      var proTab = renderWMProMeta()
+        +'<div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--purple);letter-spacing:1.5px;text-transform:uppercase;margin:16px 0 8px;display:flex;align-items:center;gap:8px">Analiza Pro Meta<div style="flex:1;height:1px;background:var(--border)"></div></div>'
+        +renderWMCompare(_wmState.playerName, weapons1)
+        +renderWMCompare(_wmState.vsPlayerName, weapons2);
+      buildWMTabs([escHtml(_wmState.playerName)+' vs '+escHtml(_wmState.vsPlayerName),'Pro Meta'],[vsHtml, proTab]);
     }
   } catch(e) {
     body.innerHTML = '<div style="color:var(--red);font-family:var(--font-mono);padding:20px">Eroare: '+escHtml(e.message)+'</div>';
