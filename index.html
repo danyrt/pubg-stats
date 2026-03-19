@@ -1731,6 +1731,7 @@ function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
       sbsCard(p1.name, survivalPatternHtml(p1Ext, m1), p1Wins>=p2Wins),
       sbsCard(p2.name, survivalPatternHtml(p2Ext, m2), p2Wins>p1Wins)
     )}`;
+  } // end if(p1Ext && p2Ext)
   return `
   <div class="vs-wrap">
     <div class="section-title">⚔️ 1VS1 Comparison</div>
