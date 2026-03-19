@@ -251,7 +251,7 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 .player-bar-name { font-size: 12px; min-width: 90px; color: var(--text2); font-family: var(--font-mono); }
 .player-bar-track { flex: 1; height: 20px; background: var(--bg); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border); }
 .player-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-family: var(--font-mono); font-weight: 700; color: #000; }
-.player-bar-val { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 10px; font-family: var(--font-mono); color: var(--text2); }
+.player-bar-val { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 10px; font-family: var(--font-mono); color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; font-weight: 700; }
 .team-impact-line { font-size: 12px; color: var(--text2); line-height: 1.6; margin-top: 10px; padding: 8px 10px; background: var(--bg); border-radius: 6px; border-left: 2px solid var(--orange); }
 .team-verdict-box { background: var(--bg3); border: 1px solid var(--gold); border-radius: 10px; padding: 16px; }
 .team-verdict-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
@@ -451,6 +451,7 @@ textarea.modal-input { resize: vertical; min-height: 100px; }
       <div class="field full" id="vsPlayerWrap" style="display:none">
         <label>Player 2 (pentru 1VS1)</label>
         <div class="input-wrap"><input type="text" id="vsPlayerName" placeholder="ex: Adversar_PUBG"></div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:6px">🌐 Cautarea se face automat pe <b style="color:var(--green)">toate platformele</b> (Steam, PS, Xbox)</div>
       </div>
 
     </div>
@@ -663,6 +664,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if(group === 'reportType') {
         document.getElementById('extraPlayersWrap').style.display = btn.dataset.val === 'team' ? 'block' : 'none';
         document.getElementById('vsPlayerWrap').style.display = btn.dataset.val === 'vs' ? 'block' : 'none';
+        // Hide platform selector for 1VS1 (searches all platforms automatically)
+        const platformField = document.querySelector('[data-group="platform"]')?.closest('.field');
+        if(platformField) platformField.style.display = btn.dataset.val === 'vs' ? 'none' : '';
       }
     });
   });
@@ -738,20 +742,30 @@ async function downloadTablePNG() {
   btn.textContent = '⏳...';
   try {
     const tfsBody = document.getElementById('tfsBody');
-    const fullW = tfsBody.scrollWidth;
-    const fullH = tfsBody.scrollHeight;
-    const canvas = await html2canvas(tfsBody, {
+    const table = tfsBody.querySelector('table');
+    if(!table) { alert('No table found'); btn.disabled=false; btn.textContent='⬇ Download PNG'; return; }
+    // Clone table into temp invisible div with no size constraints
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = 'position:fixed;top:-99999px;left:0;background:#090b0f;padding:16px;width:auto;height:auto;overflow:visible;';
+    const tableClone = table.cloneNode(true);
+    tableClone.style.cssText = 'width:auto;min-width:auto;border-collapse:collapse;';
+    tempDiv.appendChild(tableClone);
+    document.body.appendChild(tempDiv);
+    // Wait for render
+    await new Promise(r => setTimeout(r, 100));
+    const canvas = await html2canvas(tempDiv, {
       scale: 3,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#090b0f',
       scrollX: 0,
       scrollY: 0,
-      windowWidth: fullW + 40,
-      width: fullW,
-      height: fullH,
+      width: tempDiv.scrollWidth,
+      height: tempDiv.scrollHeight,
+      windowWidth: tempDiv.scrollWidth + 40,
       logging: false,
     });
+    document.body.removeChild(tempDiv);
     const a = document.createElement('a');
     a.download = window._reportTitle?.replace('.html','_table.png') || 'pubg_table.png';
     a.href = canvas.toDataURL('image/png');
@@ -1776,9 +1790,24 @@ async function runReport() {
 
     // Fetch main player
     let playerRes;
-    try { playerRes = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${encodeURIComponent(playerName)}`, apiKey); }
-    catch(e) { throw new Error(i('corsError')); }
-    if(!playerRes.data?.length) throw new Error(i('playerNotFound'));
+    let platform = state.platform;
+    try {
+      if(reportType === 'vs') {
+        // For 1VS1, search all platforms
+        const platforms = ['steam','psn','xbox'];
+        let found = false;
+        for(const plat of platforms) {
+          try {
+            const res = await apiGet(`https://api.pubg.com/shards/${plat}/players?filter[playerNames]=${encodeURIComponent(playerName)}`, apiKey);
+            if(res.data?.length) { playerRes = res; platform = plat; found = true; break; }
+          } catch(e) {}
+        }
+        if(!found) throw new Error(i('playerNotFound'));
+      } else {
+        playerRes = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${encodeURIComponent(playerName)}`, apiKey);
+      }
+    } catch(e) { if(e.message===i('playerNotFound')) throw e; throw new Error(i('corsError')); }
+    if(!playerRes?.data?.length) throw new Error(i('playerNotFound'));
     const player = playerRes.data[0];
     const playerId = player.id;
     const matchRefs = player.relationships?.matches?.data || [];
@@ -1790,8 +1819,19 @@ async function runReport() {
     if(reportType === 'vs') {
       logMsg(`Cautare Player 2: ${vsPlayerName}...`);
       try {
-        const vsRes = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${encodeURIComponent(vsPlayerName)}`, apiKey);
-        if(vsRes.data?.length) { vsPlayer = vsRes.data[0]; vsPlayerId = vsPlayer.id; vsMatchRefs = vsPlayer.relationships?.matches?.data || []; logMsg(`Player 2 gasit: ${vsPlayerName}`, 'ok'); }
+        const vsPlats = ['steam','psn','xbox'];
+        for(const vPlat of vsPlats) {
+          try {
+            const vsRes = await apiGet(`https://api.pubg.com/shards/${vPlat}/players?filter[playerNames]=${encodeURIComponent(vsPlayerName)}`, apiKey);
+            if(vsRes.data?.length) {
+              vsPlayer = vsRes.data[0]; vsPlayerId = vsPlayer.id;
+              vsMatchRefs = vsPlayer.relationships?.matches?.data || [];
+              logMsg(`Player 2 gasit: ${vsPlayerName} (${vPlat})`, 'ok');
+              break;
+            }
+          } catch(e) {}
+        }
+        if(!vsMatchRefs.length) logMsg('Player 2 negasit pe nicio platforma', 'warn');
       } catch(e) { logMsg('Player 2 nu a fost gasit', 'warn'); }
     }
 
