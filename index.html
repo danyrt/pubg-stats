@@ -703,22 +703,26 @@ async function sendFeedback() {
 }
 
 // ===================== COLLAPSIBLE =====================
-function openTableFullscreen() {
-  const tw = document.querySelector('.table-wrap');
+function openTableFullscreen(btn) {
+  // Find the nearest .table-wrap from the button
+  const tw = btn ? btn.closest('.section-title').nextElementSibling : document.querySelector('.table-wrap');
   if(!tw) return;
   const tfsBody = document.getElementById('tfsBody');
-  // Clone table into fullscreen
   tfsBody.innerHTML = '';
   const clone = tw.querySelector('table').cloneNode(true);
+  // Remove inline styles that limit width
+  clone.style.width = 'auto';
+  clone.style.minWidth = '100%';
   tfsBody.appendChild(clone);
   document.getElementById('tableFullscreen').classList.add('show');
   document.body.style.overflow = 'hidden';
-  // Fix sticky in fullscreen
+  // Fix sticky headers in fullscreen
   setTimeout(() => {
     const rows = tfsBody.querySelectorAll('thead tr');
     if(rows.length >= 2) {
+      rows[0].querySelectorAll('th').forEach(th => { th.style.position='sticky'; th.style.top='0'; th.style.zIndex='11'; th.style.background='var(--bg2)'; });
       const h = rows[0].offsetHeight || 34;
-      rows[1].querySelectorAll('th').forEach(th => th.style.top = h+'px');
+      rows[1].querySelectorAll('th').forEach(th => { th.style.position='sticky'; th.style.top=h+'px'; th.style.zIndex='10'; th.style.background='var(--bg2)'; });
     }
   }, 50);
 }
@@ -734,13 +738,19 @@ async function downloadTablePNG() {
   btn.textContent = '⏳...';
   try {
     const tfsBody = document.getElementById('tfsBody');
+    const fullW = tfsBody.scrollWidth;
+    const fullH = tfsBody.scrollHeight;
     const canvas = await html2canvas(tfsBody, {
-      scale: 2, useCORS: true, allowTaint: true,
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
       backgroundColor: '#090b0f',
-      scrollX: 0, scrollY: 0,
-      windowWidth: tfsBody.scrollWidth + 40,
-      width: tfsBody.scrollWidth + 40,
-      height: tfsBody.scrollHeight + 40,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: fullW + 40,
+      width: fullW,
+      height: fullH,
+      logging: false,
     });
     const a = document.createElement('a');
     a.download = window._reportTitle?.replace('.html','_table.png') || 'pubg_table.png';
@@ -754,9 +764,12 @@ async function downloadTablePNG() {
 function fixStickyHeaders() {
   document.querySelectorAll('.table-wrap').forEach(wrap => {
     const rows = wrap.querySelectorAll('thead tr');
+    if(rows.length >= 1) {
+      rows[0].querySelectorAll('th').forEach(th => { th.style.position='sticky'; th.style.top='0'; th.style.zIndex='11'; th.style.background='var(--bg2)'; });
+    }
     if(rows.length >= 2) {
-      const row1H = rows[0].getBoundingClientRect().height || rows[0].offsetHeight || 34;
-      rows[1].querySelectorAll('th').forEach(th => { th.style.top = row1H + 'px'; });
+      const row1H = rows[0].offsetHeight || 34;
+      rows[1].querySelectorAll('th').forEach(th => { th.style.position='sticky'; th.style.top=row1H+'px'; th.style.zIndex='10'; th.style.background='var(--bg2)'; th.style.boxShadow='0 2px 0 var(--border)'; });
     }
   });
 }
@@ -2027,7 +2040,7 @@ async function runReport() {
       let rows=matchesFiltered.map((match,idx)=>{const isWinner=match.rank===1;return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td></tr>`;}).join('');
       let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr><td><b>Zero</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
       displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
-      const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Match Table <button onclick="openTableFullscreen()" style="font-family:var(--font-mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer">⛶ Fullscreen</button></div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
+      const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Match Table <button onclick="openTableFullscreen(this)" style="font-family:var(--font-mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer">⛶ Fullscreen</button></div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
     }
 
     // AI
