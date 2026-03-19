@@ -2223,6 +2223,13 @@ async function runReport() {
       vsTotals._ext=vsAggExt;
     }
 
+    // Build player ID map from all matches
+    const playerIdMap = {};
+    playerIdMap[playerName.toLowerCase()] = playerId;
+    for(const match of matchesFiltered) {
+      const included = match._included || [];
+      // included is not stored - use what we have from API fetches
+    }
     const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.1+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
     const top3=leaderboard.slice(0,3);
     const mvp=leaderboard[0]||emptyPlayerStat(playerName);
@@ -2641,6 +2648,7 @@ function parseWMData(wmData, playerNameStr) {
   var weapons = [];
   for(var weaponId in summaries) {
     var ws = summaries[weaponId];
+    var wClean = cleanWeaponName(weaponId);
     var stats = ws.CompetitiveStatsTotal || ws.StatsTotal || {};
     var kills = safeInt(stats.Kills);
     var dmg   = safeInt(stats.DamagePlayer);
@@ -2659,7 +2667,7 @@ function parseWMData(wmData, playerNameStr) {
       topAttach = Object.entries(attachCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
     }
     weapons.push({
-      name: cleanWeaponName(weaponId),
+      name: wClean,
       kills: kills, dmg: dmg, hs: hs,
       hsPct: kills > 0 ? Math.round((hs/Math.max(kills,1))*100*10)/10 : 0,
       longest: longest,
@@ -2704,13 +2712,13 @@ function renderWMTeamRow(w) {
 function renderWMCompare(playerName, weapons) {
   var proNames = WM_PRO.map(function(p){return p.name.toUpperCase();});
   var rows = weapons.slice(0,5).map(function(w){
-    var wUp = w.name.toUpperCase();
-    if(proNames.indexOf(wUp)!==-1) {
-      return '&#x2705; <b style="color:var(--green)">'+escHtml(w.name)+'</b> — in meta pro';
-    }
-    return '&#x26A0;&#xFE0F; <b style="color:var(--orange)">'+escHtml(w.name)+'</b> — nu e in top meta pro';
+    var wClean = cleanWeaponName(w.name).toUpperCase();
+    var inMeta = proNames.indexOf(wClean)!==-1 || proNames.some(function(p){return p===wClean||wClean.includes(p)||p.includes(wClean);});
+    var displayName = cleanWeaponName(w.name);
+    if(inMeta) return '✅ <b style="color:var(--green)">'+escHtml(displayName)+'</b> — in meta pro';
+    return '⚠️ <b style="color:var(--orange)">'+escHtml(displayName)+'</b> — nu e in top meta pro';
   }).join('<br>');
-  return '<div class="wm-cmp-box"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--purple);margin-bottom:8px">&#x1F3AF; '+escHtml(playerName)+' vs Pro Meta</div>'
+  return '<div class="wm-cmp-box"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--purple);margin-bottom:8px">🎯 '+escHtml(playerName)+' vs Pro Meta</div>'
     +'<div style="font-size:12px;color:var(--text2);line-height:2.1">'+rows+'</div></div>';
 }
 
@@ -2728,7 +2736,7 @@ function renderWMProMeta() {
       +'<div style="font-size:11px;color:var(--text2);line-height:1.5;padding:8px 10px;background:var(--bg2);border-radius:6px;border-left:2px solid var(--gold);margin-bottom:8px">'+p.note+'</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+pl+'</div></div>';
   }).join('');
-  return '<div class="wm-pro-banner"><div style="font-size:32px">&#x1F30D;</div>'
+  return '<div class="wm-pro-banner"><div style="font-size:32px">🌍</div>'
     +'<div><div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--gold)">PUBG Pro Circuit 2025 — Meta Curenta</div>'
     +'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:2px">Date din ultimele turnee oficiale · Actualizat saptamanal · Sursa: Liquipedia</div></div></div>'
     +'<div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--orange);letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px">Top Arme Pro<div style="flex:1;height:1px;background:var(--border)"></div></div>'
@@ -2750,7 +2758,7 @@ async function openWeaponMastery() {
 
   try {
     if(rType === 'personal') {
-      title.textContent = '&#x1F52B; Weapon Mastery — ' + _wmState.playerName;
+      title.textContent = '🔫 Weapon Mastery — ' + _wmState.playerName;
       var wmData = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+_wmState.playerId+'/weapon_mastery', apiKey);
       var weapons = parseWMData(wmData, _wmState.playerName);
       var maxK = weapons.length ? weapons[0].kills : 1;
@@ -2763,8 +2771,31 @@ async function openWeaponMastery() {
       buildWMTabs(tabDefs, tabContents);
 
     } else if(rType === 'team') {
-      title.textContent = '&#x1F52B; Weapon Mastery — Echipa';
-      var playerIds = _wmState.leaderboard.map(function(p){return {name:p.name, id:p.id};}).filter(function(p){return p.id;});
+      title.textContent = '🔫 Weapon Mastery — Echipa';
+      // Fetch IDs for all team members who don't have one yet
+      var allTeamNames = _wmState.leaderboard.map(function(p){return p.name;});
+      var playerIds = [];
+      for(var ti=0; ti<allTeamNames.length; ti++) {
+        var tName = allTeamNames[ti];
+        var tId = '';
+        // Check if we already have the ID
+        var existing = _wmState.leaderboard.find(function(p){return p.name===tName;});
+        if(existing && existing.id) {
+          tId = existing.id;
+        } else {
+          // Fetch player ID
+          try {
+            var plats = ['steam','psn','xbox'];
+            for(var pli=0; pli<plats.length; pli++) {
+              try {
+                var pRes = await apiGet('https://api.pubg.com/shards/'+plats[pli]+'/players?filter[playerNames]='+encodeURIComponent(tName), apiKey);
+                if(pRes.data && pRes.data.length) { tId = pRes.data[0].id; break; }
+              } catch(e) {}
+            }
+          } catch(e) {}
+        }
+        if(tId) playerIds.push({name:tName, id:tId});
+      }
       var teamWeapons = {};
       for(var pi=0; pi<playerIds.length; pi++) {
         try {
@@ -2784,7 +2815,7 @@ async function openWeaponMastery() {
       ]);
 
     } else if(rType === 'vs') {
-      title.textContent = '&#x1F52B; Weapon Mastery — 1VS1';
+      title.textContent = '🔫 Weapon Mastery — 1VS1';
       var wm1 = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+_wmState.playerId+'/weapon_mastery', apiKey);
       var weapons1 = parseWMData(wm1, _wmState.playerName);
       var weapons2 = [];
