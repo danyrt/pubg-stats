@@ -104,7 +104,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 
 /* TABLE */
 .table-wrap { overflow: auto; max-height: 600px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
-.table-wrap table thead th { position: sticky; top: 0; z-index: 10; background: var(--bg2); box-shadow: 0 2px 0 var(--border); }
+.table-wrap table thead tr:first-child th { position: sticky; top: 0; z-index: 11; background: var(--bg2); }
+.table-wrap table thead tr:nth-child(2) th { position: sticky; z-index: 10; background: var(--bg2); box-shadow: 0 2px 0 var(--border); }
 table { border-collapse: collapse; width: 100%; min-width: 500px; font-size: 13px; }
 td, th { border: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: center; }
 th { background: var(--bg3); font-family: var(--font-mono); font-size: 11px; color: var(--text2); text-transform: uppercase; }
@@ -270,6 +271,22 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 .surprize-box { background: rgba(240,192,64,0.04); border: 1px solid var(--gold); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
 .surprize-row { padding: 10px 0; border-bottom: 1px solid rgba(240,192,64,0.15); font-size: 13px; line-height: 1.6; display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
 .surprize-row:last-child { border-bottom: none; }
+
+/* TABLE FULLSCREEN */
+#tableFullscreen { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; }
+#tableFullscreen.show { display:flex; }
+.tfs-header { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
+.tfs-title { font-family:var(--font-head); font-size:16px; font-weight:700; color:var(--gold); letter-spacing:1px; }
+.tfs-btns { display:flex; gap:10px; }
+.tfs-close { background:var(--bg3); border:1px solid var(--border); color:var(--text); font-size:18px; width:36px; height:36px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.tfs-body { flex:1; overflow:auto; padding:16px; }
+.tfs-body table { width:auto; min-width:100%; border-collapse:collapse; }
+.tfs-body thead th { position:sticky; top:0; background:var(--bg2); z-index:5; white-space:nowrap; padding:8px 10px; font-family:var(--font-head); font-size:12px; }
+.tfs-body thead tr:nth-child(2) th { top:34px; }
+.tfs-body td, .tfs-body th { padding:6px 10px; border-bottom:1px solid var(--border); font-size:12px; text-align:center; white-space:nowrap; }
+.tfs-body tr.winner-row td { background:rgba(240,192,64,0.06); }
+.tfs-body tr.total-row td { background:var(--bg3); font-weight:700; color:var(--gold); }
+.tfs-body tr.avg-row td { color:var(--blue); font-size:11px; }
 
 /* 1VS1 */
 .vs-wrap { margin-bottom: 20px; }
@@ -686,6 +703,64 @@ async function sendFeedback() {
 }
 
 // ===================== COLLAPSIBLE =====================
+function openTableFullscreen() {
+  const tw = document.querySelector('.table-wrap');
+  if(!tw) return;
+  const tfsBody = document.getElementById('tfsBody');
+  // Clone table into fullscreen
+  tfsBody.innerHTML = '';
+  const clone = tw.querySelector('table').cloneNode(true);
+  tfsBody.appendChild(clone);
+  document.getElementById('tableFullscreen').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  // Fix sticky in fullscreen
+  setTimeout(() => {
+    const rows = tfsBody.querySelectorAll('thead tr');
+    if(rows.length >= 2) {
+      const h = rows[0].offsetHeight || 34;
+      rows[1].querySelectorAll('th').forEach(th => th.style.top = h+'px');
+    }
+  }, 50);
+}
+
+function closeTableFullscreen() {
+  document.getElementById('tableFullscreen').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+async function downloadTablePNG() {
+  const btn = document.getElementById('btnTablePng');
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+  try {
+    const tfsBody = document.getElementById('tfsBody');
+    const canvas = await html2canvas(tfsBody, {
+      scale: 2, useCORS: true, allowTaint: true,
+      backgroundColor: '#090b0f',
+      scrollX: 0, scrollY: 0,
+      windowWidth: tfsBody.scrollWidth + 40,
+      width: tfsBody.scrollWidth + 40,
+      height: tfsBody.scrollHeight + 40,
+    });
+    const a = document.createElement('a');
+    a.download = window._reportTitle?.replace('.html','_table.png') || 'pubg_table.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  } catch(e) { alert('Eroare: ' + e.message); }
+  btn.disabled = false;
+  btn.textContent = '⬇ Download PNG';
+}
+
+function fixStickyHeaders() {
+  document.querySelectorAll('.table-wrap').forEach(wrap => {
+    const rows = wrap.querySelectorAll('thead tr');
+    if(rows.length >= 2) {
+      const row1H = rows[0].getBoundingClientRect().height || rows[0].offsetHeight || 34;
+      rows[1].querySelectorAll('th').forEach(th => { th.style.top = row1H + 'px'; });
+    }
+  });
+}
+
 function toggleCollapsible(header) {
   const body = header.nextElementSibling;
   const arrow = header.querySelector('.collapsible-arrow');
@@ -1912,7 +1987,7 @@ async function runReport() {
     const maxMatches=Math.max(...leaderboard.map(p=>p.matches||0),1);
     const rankingStats={bestScore,avgScoreTeam,maxMatches};
     const streaks=detectStreaks(matchesFiltered,playerName);
-    const colors=['#5f4b66','#6a4e00','#2c4563','#4b5d2a','#613c3c','#54436b'];
+    const colors=['#7b5ea7','#8a6d00','#2c5a8a','#4a7a2a','#8a3c3c','#5a4a8a'];
 
     setProgress(95);
     logMsg('Generare raport...','ok');
@@ -1952,7 +2027,7 @@ async function runReport() {
       let rows=matchesFiltered.map((match,idx)=>{const isWinner=match.rank===1;return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td></tr>`;}).join('');
       let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr><td><b>Zero</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
       displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
-      const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title">📊 Match Table</div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
+      const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Match Table <button onclick="openTableFullscreen()" style="font-family:var(--font-mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer">⛶ Fullscreen</button></div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
     }
 
     // AI
@@ -2116,7 +2191,17 @@ async function downloadPDF() {
 
 function downloadReport() {
   if(!window._reportHtml) return;
-  const fullPage=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PUBG Stats V8</title><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"><style>${document.querySelector('style').textContent}</style></head><body style="padding:24px">${window._reportHtml}</body></html>`;
+  const fullPage=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PUBG Stats V8</title><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"><style>${document.querySelector('style').textContent}</style></head><body style="padding:24px">${window._reportHtml}<div id="tableFullscreen">
+  <div class="tfs-header">
+    <div class="tfs-title">📊 MATCH TABLE</div>
+    <div class="tfs-btns">
+      <button class="btn-secondary" onclick="downloadTablePNG()" id="btnTablePng" style="font-size:12px;padding:6px 14px">⬇ Download PNG</button>
+      <button class="tfs-close" onclick="closeTableFullscreen()">✕</button>
+    </div>
+  </div>
+  <div class="tfs-body" id="tfsBody"></div>
+</div>
+</body></html>`;
   const blob=new Blob([fullPage],{type:'text/html'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -2124,5 +2209,15 @@ function downloadReport() {
   a.click();
 }
 </script>
+<div id="tableFullscreen">
+  <div class="tfs-header">
+    <div class="tfs-title">📊 MATCH TABLE</div>
+    <div class="tfs-btns">
+      <button class="btn-secondary" onclick="downloadTablePNG()" id="btnTablePng" style="font-size:12px;padding:6px 14px">⬇ Download PNG</button>
+      <button class="tfs-close" onclick="closeTableFullscreen()">✕</button>
+    </div>
+  </div>
+  <div class="tfs-body" id="tfsBody"></div>
+</div>
 </body>
 </html>
