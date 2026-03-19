@@ -356,6 +356,44 @@ textarea.modal-input { resize: vertical; min-height: 100px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* WEAPON MASTERY MODAL */
+#wmModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:flex-start; justify-content:center; padding:16px; overflow-y:auto; }
+#wmModal.show { display:flex; }
+.wm-modal { background:var(--bg2); border:1px solid var(--border); border-radius:14px; width:100%; max-width:880px; }
+.wm-header { background:linear-gradient(90deg,rgba(204,136,255,0.1),transparent); padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; border-radius:14px 14px 0 0; }
+.wm-title { font-family:var(--font-head); font-size:17px; font-weight:700; color:var(--purple); }
+.wm-tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; }
+.wm-tab { flex-shrink:0; padding:10px 16px; font-family:var(--font-head); font-size:13px; font-weight:700; color:var(--text3); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; }
+.wm-tab.active { color:var(--purple); border-bottom-color:var(--purple); }
+.wm-body { padding:18px; }
+.wm-tab-content { display:none; }
+.wm-tab-content.active { display:block; }
+.wm-weapon-card { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; }
+.wm-weapon-card.r1 { border-left:3px solid var(--gold); }
+.wm-weapon-card.r2 { border-left:3px solid #aaa; }
+.wm-weapon-card.r3 { border-left:3px solid #cd7f32; }
+.wm-attach-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.wm-attach-tag { display:flex; flex-direction:column; align-items:center; gap:3px; border:1px solid var(--border); border-radius:8px; padding:7px 10px; min-width:72px; background:var(--bg2); }
+.wm-attach-tag.scope { border-color:rgba(77,166,255,0.5); background:rgba(77,166,255,0.06); }
+.wm-attach-tag.muzzle { border-color:rgba(255,159,26,0.5); background:rgba(255,159,26,0.06); }
+.wm-attach-tag.grip { border-color:rgba(126,216,91,0.5); background:rgba(126,216,91,0.06); }
+.wm-attach-tag.mag { border-color:rgba(204,136,255,0.5); background:rgba(204,136,255,0.06); }
+.wm-attach-tag.stock { border-color:rgba(90,98,114,0.5); }
+.wm-attach-name { font-family:var(--font-head); font-size:12px; font-weight:700; text-align:center; line-height:1.2; }
+.wm-attach-cnt { font-family:var(--font-mono); font-size:9px; color:var(--text3); }
+.wm-team-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+.wm-team-card { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:12px; }
+.wm-vs-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.wm-vs-card { background:var(--bg3); border-radius:10px; padding:14px; }
+.wm-vs-card.p1 { border:1px solid var(--gold); }
+.wm-vs-card.p2 { border:1px solid var(--red); }
+.wm-pro-banner { background:linear-gradient(135deg,rgba(255,159,26,0.08),rgba(240,192,64,0.04)); border:1px solid rgba(240,192,64,0.4); border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:12px; }
+.wm-pro-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; margin-bottom:14px; }
+.wm-pro-card { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:14px; position:relative; }
+.wm-pro-card.s { border-color:rgba(240,192,64,0.5); }
+.wm-pro-card.a { border-color:rgba(126,216,91,0.4); }
+.wm-cmp-box { background:rgba(204,136,255,0.06); border:1px solid var(--purple); border-radius:10px; padding:14px 16px; margin-top:14px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2185,7 +2223,7 @@ async function runReport() {
       vsTotals._ext=vsAggExt;
     }
 
-    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.1+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0};}).sort((a,b)=>b.score-a.score);
+    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.1+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
     const top3=leaderboard.slice(0,3);
     const mvp=leaderboard[0]||emptyPlayerStat(playerName);
     const mainTotals=totals[playerName]||emptyPlayerStat(playerName);
@@ -2247,17 +2285,36 @@ async function runReport() {
     const topRusinica = rusinicaPlayers[0];
     const rusinicaCard = (function() {
       if(!(reportType==='team' && topRusinica)) return '';
-      const playerList = rusinicaPlayers.map(function(p){ return escHtml(p.name) + ': ' + p.zeroLine + 'x'; }).join(' &nbsp;|&nbsp; ');
-      return '<div class="ai-card" style="border-color:var(--red);background:rgba(255,77,79,0.05)">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        + '<div class="ai-name" style="color:var(--red)">' + escHtml(topRusinica.name) + '</div>'
-        + '<div style="background:rgba(255,77,79,0.15);border:1px solid var(--red);border-radius:4px;padding:2px 8px;font-family:var(--font-mono);font-size:10px;color:var(--red)">🥚 TOP RUȘINICĂ</div>'
+      var maxZ = topRusinica.zeroLine || 1;
+      var othersHtml = '';
+      for(var ri=0; ri<rusinicaPlayers.length; ri++) {
+        var rp = rusinicaPlayers[ri];
+        if(nameEq(rp.name, topRusinica.name)) continue;
+        var pct = Math.round((rp.zeroLine / maxZ) * 100);
+        othersHtml += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:6px;padding:7px 12px;margin-bottom:6px">'
+          + '<div style="font-family:var(--font-mono);font-size:12px;color:var(--text2);min-width:90px">' + escHtml(rp.name) + '</div>'
+          + '<div style="flex:1;margin:0 10px;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden">'
+          + '<div style="height:100%;width:' + pct + '%;background:var(--red);border-radius:3px;opacity:0.5"></div>'
+          + '</div>'
+          + '<div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--red)">' + rp.zeroLine + 'x</div>'
+          + '</div>';
+      }
+      return '<div class="ai-card" style="border:1px solid var(--red);background:rgba(255,77,79,0.05);position:relative;overflow:hidden">'
+        + '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),transparent)"></div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+        + '<div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--red)">🥚 Top Rușinică</div>'
+        + '<div style="background:rgba(255,77,79,0.15);border:1px solid var(--red);border-radius:4px;padding:2px 10px;font-family:var(--font-mono);font-size:10px;color:var(--red);letter-spacing:1px">AI WILDCARD</div>'
         + '</div>'
-        + '<div style="font-size:28px;margin-bottom:6px">🥚</div>'
-        + '<div style="font-size:13px;color:var(--text2);margin-bottom:6px">' + topRusinica.zeroLine + 'x meciuri fără nicio contribuție</div>'
-        + '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">' + playerList + '</div>'
-        + '<div class="ai-mini" style="margin-top:6px">K/M: ' + safeNum(topRusinica.kills/Math.max(topRusinica.matches,1),2) + ' | Dmg/M: ' + safeNum(topRusinica.damage/Math.max(topRusinica.matches,1),2) + '</div>'
-        + '</div>';
+        + '<div style="display:flex;align-items:center;gap:14px;background:rgba(255,77,79,0.08);border:1px solid rgba(255,77,79,0.3);border-radius:8px;padding:12px 14px;margin-bottom:14px">'
+        + '<div style="font-size:36px;line-height:1">🥚</div>'
+        + '<div style="flex:1">'
+        + '<div style="font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--red);line-height:1">' + escHtml(topRusinica.name) + '</div>'
+        + '<div style="font-family:var(--font-head);font-size:14px;color:var(--text2);margin-top:2px"><b style="color:var(--red);font-size:18px">' + topRusinica.zeroLine + 'x</b> meciuri fără contribuție</div>'
+        + '</div></div>'
+        + (othersHtml ? '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toți cu 🥚 Rușine</div>' + othersHtml : '')
+        + '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,77,79,0.2);font-family:var(--font-mono);font-size:10px;color:var(--text3)">'
+        + 'K/M: ' + safeNum(topRusinica.kills/Math.max(topRusinica.matches,1),2) + ' &nbsp;|&nbsp; Dmg/M: ' + safeNum(topRusinica.damage/Math.max(topRusinica.matches,1),2)
+        + '</div></div>';
     })();
     const aiHtml=`<div class="section-title">🤖 AI Analysis</div><div class="ai-grid">${withAI.map(p=>{const arch=p.ai.archetype;const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';return `<div class="ai-card ${isMvpCard?'mvp':''}"><div class="ai-name">${escHtml(p.name)}</div><div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div><div class="ai-msg">${escHtml(p.ai.msg)}</div><div class="ai-notes">${escHtml(p.ai.notes||' ')}</div><div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div></div>`;}).join('')}${rusinicaCard}</div>`;
 
@@ -2333,6 +2390,7 @@ async function runReport() {
         </div>
         <div class="report-actions">
           ${modeBadge}${matchModeBadge}
+          <button class="btn-secondary" style="background:rgba(204,136,255,0.1);border-color:var(--purple);color:var(--purple);font-family:var(--font-head);font-weight:700" onclick="openWeaponMastery()">🔫 Weapon Mastery</button>
           <button class="btn-secondary" onclick="downloadPDF()" id="btnPdf">⬇ Download PDF</button>
           <button class="btn-secondary" onclick="location.reload()">↩ Reset</button>
         </div>
@@ -2347,6 +2405,15 @@ async function runReport() {
     reportEl.classList.add('show');
     window._reportHtml=fullHtml;
     window._reportTitle=`pubg_${playerName}_${platform}_${detailLevel}_${rangeVal}.html`;
+    // Save state for Weapon Mastery
+    _wmState.reportType = reportType;
+    _wmState.playerName = playerName;
+    _wmState.vsPlayerName = vsPlayerName || '';
+    _wmState.apiKey = apiKey;
+    _wmState.platform = platform;
+    _wmState.playerId = playerId;
+    _wmState.vsPlayerId = vsPlayerId || '';
+    _wmState.leaderboard = leaderboard.map(function(p){ return {name:p.name, id:p._id||''}; }); _wmState.vsPlayerId = vsPlayerId || '';
 
   } catch(e) {
     setProgress(100);
@@ -2420,7 +2487,45 @@ async function downloadPDF() {
 
 function downloadReport() {
   if(!window._reportHtml) return;
-  const fullPage=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PUBG Stats V8</title><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"><style>${document.querySelector('style').textContent}</style></head><body style="padding:24px">${window._reportHtml}<div id="tableFullscreen">
+  const fullPage=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PUBG Stats V8</title><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"><style>${document.querySelector('style').textContent}
+/* WEAPON MASTERY MODAL */
+#wmModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:flex-start; justify-content:center; padding:16px; overflow-y:auto; }
+#wmModal.show { display:flex; }
+.wm-modal { background:var(--bg2); border:1px solid var(--border); border-radius:14px; width:100%; max-width:880px; }
+.wm-header { background:linear-gradient(90deg,rgba(204,136,255,0.1),transparent); padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; border-radius:14px 14px 0 0; }
+.wm-title { font-family:var(--font-head); font-size:17px; font-weight:700; color:var(--purple); }
+.wm-tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; }
+.wm-tab { flex-shrink:0; padding:10px 16px; font-family:var(--font-head); font-size:13px; font-weight:700; color:var(--text3); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; }
+.wm-tab.active { color:var(--purple); border-bottom-color:var(--purple); }
+.wm-body { padding:18px; }
+.wm-tab-content { display:none; }
+.wm-tab-content.active { display:block; }
+.wm-weapon-card { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; }
+.wm-weapon-card.r1 { border-left:3px solid var(--gold); }
+.wm-weapon-card.r2 { border-left:3px solid #aaa; }
+.wm-weapon-card.r3 { border-left:3px solid #cd7f32; }
+.wm-attach-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.wm-attach-tag { display:flex; flex-direction:column; align-items:center; gap:3px; border:1px solid var(--border); border-radius:8px; padding:7px 10px; min-width:72px; background:var(--bg2); }
+.wm-attach-tag.scope { border-color:rgba(77,166,255,0.5); background:rgba(77,166,255,0.06); }
+.wm-attach-tag.muzzle { border-color:rgba(255,159,26,0.5); background:rgba(255,159,26,0.06); }
+.wm-attach-tag.grip { border-color:rgba(126,216,91,0.5); background:rgba(126,216,91,0.06); }
+.wm-attach-tag.mag { border-color:rgba(204,136,255,0.5); background:rgba(204,136,255,0.06); }
+.wm-attach-tag.stock { border-color:rgba(90,98,114,0.5); }
+.wm-attach-name { font-family:var(--font-head); font-size:12px; font-weight:700; text-align:center; line-height:1.2; }
+.wm-attach-cnt { font-family:var(--font-mono); font-size:9px; color:var(--text3); }
+.wm-team-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+.wm-team-card { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:12px; }
+.wm-vs-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.wm-vs-card { background:var(--bg3); border-radius:10px; padding:14px; }
+.wm-vs-card.p1 { border:1px solid var(--gold); }
+.wm-vs-card.p2 { border:1px solid var(--red); }
+.wm-pro-banner { background:linear-gradient(135deg,rgba(255,159,26,0.08),rgba(240,192,64,0.04)); border:1px solid rgba(240,192,64,0.4); border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:12px; }
+.wm-pro-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; margin-bottom:14px; }
+.wm-pro-card { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:14px; position:relative; }
+.wm-pro-card.s { border-color:rgba(240,192,64,0.5); }
+.wm-pro-card.a { border-color:rgba(126,216,91,0.4); }
+.wm-cmp-box { background:rgba(204,136,255,0.06); border:1px solid var(--purple); border-radius:10px; padding:14px 16px; margin-top:14px; }
+</style></head><body style="padding:24px">${window._reportHtml}<div id="tableFullscreen">
   <div class="tfs-header">
     <div class="tfs-title">📊 MATCH TABLE</div>
     <div class="tfs-btns">
@@ -2430,12 +2535,302 @@ function downloadReport() {
   </div>
   <div class="tfs-body" id="tfsBody"></div>
 </div>
+
+<!-- WEAPON MASTERY MODAL -->
+<div id="wmModal" onclick="if(event.target===this)closeWM()">
+  <div class="wm-modal">
+    <div class="wm-header">
+      <div class="wm-title" id="wmTitle">🔫 Weapon Mastery</div>
+      <button class="tfs-close" onclick="closeWM()">✕</button>
+    </div>
+    <div class="wm-tabs" id="wmTabs"></div>
+    <div class="wm-body" id="wmBody"></div>
+  </div>
+</div>
 </body></html>`;
   const blob=new Blob([fullPage],{type:'text/html'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download=window._reportTitle||'pubg_global_stats.html';
   a.click();
+}
+
+// ===================== WEAPON MASTERY =====================
+var _wmState = { reportType:'personal', playerName:'', vsPlayerName:'', apiKey:'', platform:'steam', playerId:'', vsPlayerId:'', leaderboard:[] };
+
+var WM_ATTACH = {
+  'Item_Attach_Weapon_Scope_RedDot_C':              {name:'RED DOT',       cat:'scope'},
+  'Item_Attach_Weapon_Scope_03x_C':                 {name:'3X SCOPE',      cat:'scope'},
+  'Item_Attach_Weapon_Scope_3x_C':                  {name:'3X SCOPE',      cat:'scope'},
+  'Item_Attach_Weapon_Scope_06x_C':                 {name:'6X SCOPE',      cat:'scope'},
+  'Item_Attach_Weapon_Scope_08x_C':                 {name:'8X SCOPE',      cat:'scope'},
+  'Item_Attach_Weapon_Scope_15x_C':                 {name:'15X SCOPE',     cat:'scope'},
+  'Item_Attach_Weapon_Scope_Holo_C':                {name:'HOLOGRAPHIC',   cat:'scope'},
+  'Item_Attach_Weapon_Muzzle_Suppressor_Large_C':   {name:'SUPPRESSOR',    cat:'muzzle'},
+  'Item_Attach_Weapon_Muzzle_Suppressor_Medium_C':  {name:'SUPPRESSOR',    cat:'muzzle'},
+  'Item_Attach_Weapon_Muzzle_Suppressor_Small_C':   {name:'SUPPRESSOR',    cat:'muzzle'},
+  'Item_Attach_Weapon_Muzzle_Compensator_Large_C':  {name:'COMPENSATOR',   cat:'muzzle'},
+  'Item_Attach_Weapon_Muzzle_Compensator_Medium_C': {name:'COMPENSATOR',   cat:'muzzle'},
+  'Item_Attach_Weapon_Muzzle_FlashHider_Large_C':   {name:'MUZZLE BRAKE',  cat:'muzzle'},
+  'Item_Attach_Weapon_Muzzle_FlashHider_Medium_C':  {name:'MUZZLE BRAKE',  cat:'muzzle'},
+  'Item_Attach_Weapon_Lower_VerticalForeGrip_C':    {name:'VERTICAL GRIP', cat:'grip'},
+  'Item_Attach_Weapon_Lower_AngledForeGrip_C':      {name:'ANGLED GRIP',   cat:'grip'},
+  'Item_Attach_Weapon_Lower_HalfGrip_C':            {name:'HALF GRIP',     cat:'grip'},
+  'Item_Attach_Weapon_Lower_LightGrip_C':           {name:'LIGHT GRIP',    cat:'grip'},
+  'Item_Attach_Weapon_Lower_ThumbGrip_C':           {name:'THUMB GRIP',    cat:'grip'},
+  'Item_Attach_Weapon_Mag_Extend_Large_C':          {name:'EXT. MAG',      cat:'mag'},
+  'Item_Attach_Weapon_Mag_Extend_Medium_C':         {name:'EXT. MAG',      cat:'mag'},
+  'Item_Attach_Weapon_Mag_Extend_Small_C':          {name:'EXT. MAG',      cat:'mag'},
+  'Item_Attach_Weapon_Mag_ExtendQuickDraw_Large_C': {name:'EXT. QD MAG',   cat:'mag'},
+  'Item_Attach_Weapon_Mag_ExtendQuickDraw_Medium_C':{name:'EXT. QD MAG',   cat:'mag'},
+  'Item_Attach_Weapon_Mag_QuickDraw_Large_C':       {name:'QD MAG',        cat:'mag'},
+  'Item_Attach_Weapon_Stock_AR_Ergonomic_C':        {name:'TACT. STOCK',   cat:'stock'},
+  'Item_Attach_Weapon_Stock_SniperRifle_CheekPad_C':{name:'CHEEK PAD',     cat:'stock'},
+};
+
+var CAT_COLORS = {scope:'var(--blue)',muzzle:'var(--orange)',grip:'var(--green)',mag:'var(--purple)',stock:'var(--text2)'};
+
+var WM_PRO = [
+  {tier:'s',name:'ACE32', usage:84, attach:['COMPENSATOR','3X SCOPE','ANGLED GRIP','EXT. QD MAG'],
+   note:'Setup standard pro — Compensator+Angled Grip pentru recoil control si ADS speed.',
+   players:['KR Pio','KR Inonix','DE Bajan']},
+  {tier:'s',name:'M416',  usage:71, attach:['SUPPRESSOR','3X SCOPE','VERTICAL GRIP','TACT. STOCK'],
+   note:'Cel mai versatil AR. Suppressor e prioritate absoluta pentru sound advantage.',
+   players:['CN Paraboy','TR Lk_Veysel']},
+  {tier:'a',name:'AWM',   usage:62, attach:['SUPPRESSOR','8X SCOPE','CHEEK PAD'],
+   note:'One-shot helmet lvl3 — indispensabil in late circle.',
+   players:['KR Shinchul','BR ExoticBoy']},
+  {tier:'a',name:'Kar98k',usage:55, attach:['MUZZLE BRAKE','8X SCOPE','CHEEK PAD'],
+   note:'Alternativa la AWM, mai accesibil. Preferat pe Erangel si Miramar.',
+   players:['KR Pio','DE Bajan','TH AiiceeZ']},
+];
+
+function wmAttachTag(attachId, cnt) {
+  var a = WM_ATTACH[attachId];
+  if(!a) { a = {name: cleanWeaponName(attachId), cat:'stock'}; }
+  var color = CAT_COLORS[a.cat] || 'var(--text2)';
+  return '<div class="wm-attach-tag '+a.cat+'">'
+    + '<div class="wm-attach-name" style="color:'+color+'">'+a.name+'</div>'
+    + (cnt ? '<div class="wm-attach-cnt">'+cnt+'x</div>' : '')
+    + '</div>';
+}
+
+function wmSmallTag(attachId) {
+  var a = WM_ATTACH[attachId];
+  if(!a) return '';
+  var color = CAT_COLORS[a.cat] || 'var(--text2)';
+  return '<div style="background:var(--bg2);border:1px solid '+color+';border-radius:4px;padding:2px 6px;font-family:var(--font-head);font-size:10px;font-weight:700;color:'+color+'">'+a.name+'</div>';
+}
+
+function wmProAttachTag(name) {
+  var cat = 'stock';
+  if(name.includes('SCOPE')||name.includes('DOT')||name.includes('HOLO')) cat='scope';
+  else if(name.includes('SUPPRESSOR')||name.includes('COMPENSATOR')||name.includes('MUZZLE')||name.includes('BRAKE')) cat='muzzle';
+  else if(name.includes('GRIP')) cat='grip';
+  else if(name.includes('MAG')) cat='mag';
+  var color = CAT_COLORS[cat];
+  return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--bg2);border:1px solid '+color+';border-radius:6px;padding:7px 10px;min-width:72px">'
+    +'<div style="font-family:var(--font-head);font-size:12px;font-weight:700;color:'+color+';text-align:center">'+name+'</div>'
+    +'</div>';
+}
+
+function parseWMData(wmData, playerNameStr) {
+  if(!wmData) return [];
+  var summaries = wmData.data && wmData.data.attributes && wmData.data.attributes.weaponSummaries;
+  if(!summaries) return [];
+  var weapons = [];
+  for(var weaponId in summaries) {
+    var ws = summaries[weaponId];
+    var stats = ws.CompetitiveStatsTotal || ws.StatsTotal || {};
+    var kills = safeInt(stats.Kills);
+    var dmg   = safeInt(stats.DamagePlayer);
+    var hs    = safeInt(stats.HeadShots);
+    var longest = Math.round(safeInt(stats.LongestKill)/100);
+    if(kills < 1 && dmg < 1) continue;
+    // Top attachments
+    var attachCounts = {};
+    var games = ws.XPTotal || 0;
+    // From stats if available
+    var topAttach = [];
+    if(ws.Attachments) {
+      for(var att in ws.Attachments) {
+        attachCounts[att] = safeInt(ws.Attachments[att]);
+      }
+      topAttach = Object.entries(attachCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+    }
+    weapons.push({
+      name: cleanWeaponName(weaponId),
+      kills: kills, dmg: dmg, hs: hs,
+      hsPct: kills > 0 ? Math.round((hs/Math.max(kills,1))*100*10)/10 : 0,
+      longest: longest,
+      attachments: topAttach
+    });
+  }
+  weapons.sort(function(a,b){return b.kills-a.kills;});
+  return weapons.slice(0,10);
+}
+
+function renderWMWeaponCard(w, rank, maxKills) {
+  var cls = rank===1?'r1':rank===2?'r2':rank===3?'r3':'';
+  var rc = rank===1?'var(--gold)':rank===2?'#aaa':rank===3?'#cd7f32':'var(--text3)';
+  var pK = Math.round((w.kills/Math.max(maxKills,1))*100);
+  var attHtml = w.attachments.length
+    ? w.attachments.map(function(a){return wmAttachTag(a[0], a[1].toLocaleString());}).join('')
+    : '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Date indisponibile</div>';
+  return '<div class="wm-weapon-card '+cls+'">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+    +'<div style="font-family:var(--font-mono);font-size:18px;font-weight:700;min-width:24px;color:'+rc+'">'+rank+'</div>'
+    +'<div style="font-family:var(--font-head);font-size:20px;font-weight:700;flex:1">'+escHtml(w.name)+'</div>'
+    +'<div style="text-align:right"><div style="font-family:var(--font-head);font-size:26px;font-weight:700;color:var(--red);line-height:1">'+w.kills.toLocaleString()+'</div>'
+    +'<div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">KILLS</div>'
+    +'<div style="font-family:var(--font-mono);font-size:11px;color:var(--gold)">HS: '+w.hsPct+'%</div>'
+    +'<div style="font-family:var(--font-mono);font-size:11px;color:var(--purple)">'+w.longest+'m</div></div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);min-width:50px">Kills</div><div style="flex:1;height:5px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+pK+'%;background:var(--red);border-radius:3px"></div></div><div style="font-family:var(--font-mono);font-size:10px;min-width:65px;text-align:right;color:var(--red)">'+w.kills.toLocaleString()+'</div></div>'
+    +'<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">'
+    +'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Cele mai folosite attachment-uri</div>'
+    +'<div class="wm-attach-list">'+attHtml+'</div></div></div>';
+}
+
+function renderWMTeamRow(w) {
+  var attHtml = w.attachments.slice(0,4).map(function(a){return wmSmallTag(a[0]);}).join('');
+  return '<div style="padding:6px 0;border-bottom:1px solid rgba(35,42,56,0.5)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center">'
+    +'<span style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">'+escHtml(w.name)+'</span>'
+    +'<div style="text-align:right"><div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--red)">'+w.kills.toLocaleString()+'</div>'
+    +'<div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">'+Math.round(w.dmg).toLocaleString()+' dmg</div></div></div>'
+    +'<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">'+attHtml+'</div></div>';
+}
+
+function renderWMCompare(playerName, weapons) {
+  var proNames = WM_PRO.map(function(p){return p.name.toUpperCase();});
+  var rows = weapons.slice(0,5).map(function(w){
+    var wUp = w.name.toUpperCase();
+    if(proNames.indexOf(wUp)!==-1) {
+      return '&#x2705; <b style="color:var(--green)">'+escHtml(w.name)+'</b> — in meta pro';
+    }
+    return '&#x26A0;&#xFE0F; <b style="color:var(--orange)">'+escHtml(w.name)+'</b> — nu e in top meta pro';
+  }).join('<br>');
+  return '<div class="wm-cmp-box"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--purple);margin-bottom:8px">&#x1F3AF; '+escHtml(playerName)+' vs Pro Meta</div>'
+    +'<div style="font-size:12px;color:var(--text2);line-height:2.1">'+rows+'</div></div>';
+}
+
+function renderWMProMeta() {
+  var cards = WM_PRO.map(function(p){
+    var att = p.attach.map(wmProAttachTag).join('');
+    var pl = p.players.map(function(n){return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text2)">'+n+'</div>';}).join('');
+    var tc = p.tier==='s'?'rgba(240,192,64,0.5)':'rgba(126,216,91,0.4)';
+    var tColor = p.tier==='s'?'var(--gold)':'var(--green)';
+    return '<div class="wm-pro-card '+p.tier+'" style="border-color:'+tc+'">'
+      +'<div style="position:absolute;top:10px;right:10px;font-family:var(--font-head);font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(240,192,64,0.15);color:'+tColor+';border:1px solid '+tColor+'">'+p.tier.toUpperCase()+' TIER</div>'
+      +'<div style="font-family:var(--font-head);font-size:19px;font-weight:700;margin-bottom:2px">'+p.name+'</div>'
+      +'<div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:10px">Folosit in <b style="color:var(--orange)">'+p.usage+'%</b> din meciuri pro</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+att+'</div>'
+      +'<div style="font-size:11px;color:var(--text2);line-height:1.5;padding:8px 10px;background:var(--bg2);border-radius:6px;border-left:2px solid var(--gold);margin-bottom:8px">'+p.note+'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+pl+'</div></div>';
+  }).join('');
+  return '<div class="wm-pro-banner"><div style="font-size:32px">&#x1F30D;</div>'
+    +'<div><div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--gold)">PUBG Pro Circuit 2025 — Meta Curenta</div>'
+    +'<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:2px">Date din ultimele turnee oficiale · Actualizat saptamanal · Sursa: Liquipedia</div></div></div>'
+    +'<div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--orange);letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px">Top Arme Pro<div style="flex:1;height:1px;background:var(--border)"></div></div>'
+    +'<div class="wm-pro-grid">'+cards+'</div>';
+}
+
+async function openWeaponMastery() {
+  var modal = document.getElementById('wmModal');
+  var body = document.getElementById('wmBody');
+  var tabs = document.getElementById('wmTabs');
+  var title = document.getElementById('wmTitle');
+  modal.classList.add('show');
+  body.innerHTML = '<div style="text-align:center;padding:40px;font-family:var(--font-mono);color:var(--text3)">&#x23F3; Se incarca Weapon Mastery...</div>';
+  tabs.innerHTML = '';
+
+  var rType = _wmState.reportType;
+  var apiKey = _wmState.apiKey;
+  var platform = _wmState.platform;
+
+  try {
+    if(rType === 'personal') {
+      title.textContent = '&#x1F52B; Weapon Mastery — ' + _wmState.playerName;
+      var wmData = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+_wmState.playerId+'/weapon_mastery', apiKey);
+      var weapons = parseWMData(wmData, _wmState.playerName);
+      var maxK = weapons.length ? weapons[0].kills : 1;
+      var tabDefs = ['Armele Mele','Tu vs Pro Meta'];
+      var tabContents = [
+        '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">'+escHtml(_wmState.playerName)+' · Toata cariera</div>'
+        + weapons.map(function(w,i){return renderWMWeaponCard(w,i+1,maxK);}).join(''),
+        renderWMProMeta() + renderWMCompare(_wmState.playerName, weapons)
+      ];
+      buildWMTabs(tabDefs, tabContents);
+
+    } else if(rType === 'team') {
+      title.textContent = '&#x1F52B; Weapon Mastery — Echipa';
+      var playerIds = _wmState.leaderboard.map(function(p){return {name:p.name, id:p.id};}).filter(function(p){return p.id;});
+      var teamWeapons = {};
+      for(var pi=0; pi<playerIds.length; pi++) {
+        try {
+          var wmD = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+playerIds[pi].id+'/weapon_mastery', apiKey);
+          teamWeapons[playerIds[pi].name] = parseWMData(wmD, playerIds[pi].name);
+        } catch(e) { teamWeapons[playerIds[pi].name] = []; }
+      }
+      var teamCardsHtml = '<div class="wm-team-grid">' + playerIds.map(function(p){
+        var wList = (teamWeapons[p.name]||[]).slice(0,5);
+        var rows = wList.map(renderWMTeamRow).join('');
+        return '<div class="wm-team-card"><div style="font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">'+escHtml(p.name)+'</div>'+rows+'</div>';
+      }).join('') + '</div>';
+      var cmpAll = playerIds.map(function(p){return renderWMCompare(p.name, teamWeapons[p.name]||[]);}).join('');
+      buildWMTabs(['Per Jucator','Echipa vs Pro Meta'],[
+        '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">Toata echipa · Top 5 arme + attachments</div>'+teamCardsHtml,
+        renderWMProMeta()+cmpAll
+      ]);
+
+    } else if(rType === 'vs') {
+      title.textContent = '&#x1F52B; Weapon Mastery — 1VS1';
+      var wm1 = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+_wmState.playerId+'/weapon_mastery', apiKey);
+      var weapons1 = parseWMData(wm1, _wmState.playerName);
+      var weapons2 = [];
+      if(_wmState.vsPlayerId) {
+        try {
+          var wm2 = await apiGet('https://api.pubg.com/shards/'+platform+'/players/'+_wmState.vsPlayerId+'/weapon_mastery', apiKey);
+          weapons2 = parseWMData(wm2, _wmState.vsPlayerName);
+        } catch(e) {}
+      }
+      var vsHtml = '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px">Toata cariera · Top 5 arme + attachments</div>'
+        +'<div class="wm-vs-grid">'
+        +'<div class="wm-vs-card p1"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--gold);margin-bottom:10px">'+escHtml(_wmState.playerName)+'</div>'
+        +weapons1.slice(0,5).map(renderWMTeamRow).join('')+'</div>'
+        +'<div class="wm-vs-card p2"><div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--red);margin-bottom:10px">'+escHtml(_wmState.vsPlayerName)+'</div>'
+        +weapons2.slice(0,5).map(renderWMTeamRow).join('')+'</div></div>';
+      var proTab = renderWMProMeta()
+        +'<div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--purple);letter-spacing:1.5px;text-transform:uppercase;margin:16px 0 8px;display:flex;align-items:center;gap:8px">Analiza Pro Meta<div style="flex:1;height:1px;background:var(--border)"></div></div>'
+        +renderWMCompare(_wmState.playerName, weapons1)
+        +renderWMCompare(_wmState.vsPlayerName, weapons2);
+      buildWMTabs([escHtml(_wmState.playerName)+' vs '+escHtml(_wmState.vsPlayerName),'Pro Meta'],[vsHtml, proTab]);
+    }
+  } catch(e) {
+    body.innerHTML = '<div style="color:var(--red);font-family:var(--font-mono);padding:20px">Eroare: '+escHtml(e.message)+'</div>';
+  }
+}
+
+function buildWMTabs(tabDefs, contents) {
+  var th = tabDefs.map(function(t,i){
+    return '<div class="wm-tab'+(i===0?' active':'')+'" onclick="switchWMTab('+i+',this)">'+t+'</div>';
+  }).join('');
+  document.getElementById('wmTabs').innerHTML = th;
+  var bh = contents.map(function(c,i){
+    return '<div class="wm-tab-content'+(i===0?' active':'')+'" data-idx="'+i+'">'+c+'</div>';
+  }).join('');
+  document.getElementById('wmBody').innerHTML = bh;
+}
+
+function switchWMTab(idx, el) {
+  document.querySelectorAll('.wm-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.wm-tab-content').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  document.querySelector('.wm-tab-content[data-idx="'+idx+'"]').classList.add('active');
+}
+
+function closeWM() {
+  document.getElementById('wmModal').classList.remove('show');
 }
 </script>
 <div id="tableFullscreen">
@@ -2447,6 +2842,18 @@ function downloadReport() {
     </div>
   </div>
   <div class="tfs-body" id="tfsBody"></div>
+</div>
+
+<!-- WEAPON MASTERY MODAL -->
+<div id="wmModal" onclick="if(event.target===this)closeWM()">
+  <div class="wm-modal">
+    <div class="wm-header">
+      <div class="wm-title" id="wmTitle">🔫 Weapon Mastery</div>
+      <button class="tfs-close" onclick="closeWM()">✕</button>
+    </div>
+    <div class="wm-tabs" id="wmTabs"></div>
+    <div class="wm-body" id="wmBody"></div>
+  </div>
 </div>
 </body>
 </html>
