@@ -1462,7 +1462,6 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
     if(earlyDeaths>=3) weaknesses.push(`Moare devreme în ~${earlyDeaths}/${m} meciuri — lasă echipa 1v4`);
     if(finishRate<0.3&&p.downs>=3) weaknesses.push(`${Math.round(finishRate*100)}% finish rate — nu finalizează avantajele`);
     if(lootMin>8) weaknesses.push(`~${lootMin.toFixed(1)} min/meci lootând — prea mult timp inactiv`);
-    if(zoneIssues>=3) weaknesses.push(`${zoneIssues} situații de zone damage — rotație tardivă`);
 
     // ── TIPS personalizate ──
     const tips=[];
@@ -1471,7 +1470,6 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
     if(earlyDeaths>=3) tips.push('Evită engagement-urile în primele 3-4 minute. Lotuiește și lasă echipa să confirme poziția adversarilor.');
     if(lootMin>8) tips.push('Limitează lootarea la maxim 4-5 minute după aterizare. Prioritizează arma principală și rotează.');
     if(finishRate<0.3&&p.downs>=3) tips.push('Când dai knock, nu te retrage — menține presiunea și închide fight-ul coordonat cu echipa.');
-    if(zoneIssues>=3) tips.push('Urmărește minimap-ul constant și mișcă-te cu 30 secunde înainte de zona activă.');
     if(avgAssists<0.5&&avgRevives<0.3&&avgKills<1) tips.push('Contribuie mai mult la echipă prin comunicare, smoke-uri și revive-uri — nu doar kills.');
     if(!tips.length) tips.push('Menține consistența și lucrează la comunicarea cu echipa în fight-uri.');
 
@@ -1749,8 +1747,6 @@ function buildTacticalProfile(combatData, totalMatches) {
   if(avgDist>200){style='🔭 Sniper / Jucator pasiv de distanta';styleColor='#4da6ff';tips.push('Distanta medie mare — te pozitionezi departe de fight-uri.');if(earlyDeaths>=2) tips.push('Totusi intri in contact devreme si mori — inconsistenta de pozitionare.');tips.push('Incearca sa reduci distanta in fight-urile unde ai avantaj de info.');}
   else if(avgDist>80){style='🎯 Mid-range / Echilibrat';styleColor='#7ed85b';tips.push('Distanta de engagement echilibrata — bun semn tactic.');if(avgKnocks>=1.5) tips.push('Dar iei prea multe knock-uri — expunere mare chiar si la distanta medie.');}
   else if(avgDist>0){style='💥 Close range / Agresiv';styleColor='#ff9f1a';tips.push('Joci in close range constant — agresivitate mare.');if(avgKnocks>=1.5) tips.push('Close range + knock-uri dese = te expui fara suficient avantaj.');else tips.push('Agresivitate buna daca supravietuiesti in dueluri directe.');}
-  if(zoneIssues>=3) tips.push(`Ai luat damage de zona in ${zoneIssues} situatii — rotezi tarziu, urmareste minimap-ul mai des.`);
-  else if(zoneIssues>=1) tips.push(`${zoneIssues} situatie(ii) cu damage de zona — atentie la rotatie in mid/late game.`);
   if(earlyDeaths>=3) tips.push(`Mori devreme des (${earlyDeaths}x) — evita fight-urile din primele 5 minute fara avantaj clar.`);
   if(!style) style='⚖ Stil nedefinit — prea putine date';
   return {style,styleColor,tips:tips.slice(0,4)};
@@ -1992,7 +1988,85 @@ function buildHitDistributionCard(playerName, totals, combatData, isMvp) {
 }
 
 
-const GB={avgKills:{top10:3.5,top25:2.2,top50:1.2},avgDamage:{top10:500,top25:320,top50:180},winRate:{top10:8,top25:4,top50:1.5},kd:{top10:3.2,top25:1.8,top50:0.9}};
+// ===================== MVP STORY CARD =====================
+function buildMvpStoryCard(mvp, mvpSeasonStats, totalMatches) {
+  const name = escHtml(mvp.name);
+  const m = Math.max(mvp.matches||1,1);
+  const avgKills = (mvp.kills/m).toFixed(2);
+  const avgDmg = Math.round(mvp.damage/m);
+  const winRate = Math.round((mvp.wins/m)*100);
+
+  // Season stats
+  let seasonKD = null, seasonKills = null, seasonWinRate = null;
+  if(mvpSeasonStats) {
+    const modes=['squad','squad-fpp','duo','duo-fpp','solo','solo-fpp'];
+    let sk=0,sd=0,sw=0,sr=0;
+    for(const mode of modes){const s=mvpSeasonStats[mode];if(!s)continue;sk+=safeInt(s.kills);sd+=safeInt(s.losses);sw+=safeInt(s.wins);sr+=safeInt(s.roundsPlayed);}
+    seasonKD = sd>0?(sk/sd).toFixed(2):sk.toFixed(2);
+    seasonKills = sk;
+    seasonWinRate = sr>0?((sw/sr)*100).toFixed(1):'0';
+  }
+
+  // 10 povești random
+  const stories = [
+    `A fost odată ca niciodată un jucător legendar pe nume <b style="color:var(--gold)">${name}</b>. În timp ce restul echipei se ascundea în tufișuri și se ruga să nu îi găsească nimeni, ${name} deja terminase de curățat tot cercul. Se zice că adversarii îi auzeau pașii și predau singuri.`,
+    `Într-un tărâm îndepărtat numit Erangel, trăia un războinic fără frică: <b style="color:var(--gold)">${name}</b>. Colegii de echipă îi serveau ca martori ai gloriei sale. Uneori chiar și trăgeau câte un glonț, ca să se simtă utili.`,
+    `Se povestește că atunci când <b style="color:var(--gold)">${name}</b> ateriza pe câmpul de luptă, adversarii verificau dacă există opțiunea "abandon" în meniu. Nu există, bineînțeles. Dar sperau.`,
+    `<b style="color:var(--gold)">${name}</b> nu juca PUBG. PUBG îl juca pe el, dar cu grijă, să nu îl supere. Echipa? Prezentă la final să ridice trofeul și să pară că a contribuit.`,
+    `Cronicile spun că <b style="color:var(--gold)">${name}</b> a câștigat odată un meci cu zero kills — pentru că toți adversarii au fugit când i-au văzut numele în lobby. Echipa a aplaudat. Nu știu exact de ce, dar a aplaudat.`,
+    `Era o zi ca oricare alta. Soarele răsărea, păsările cântau, și <b style="color:var(--gold)">${name}</b> deja eliminase jumătate din server înainte ca echipa să găsească o mașină funcțională. Unii numesc asta talent. Noi îl numim MVP.`,
+    `Legenda spune că <b style="color:var(--gold)">${name}</b> a primit odată un revive de la un coechipier. O singură dată. De atunci, acel coechipier îți povestește întâmplarea la orice petrecere ca și cum ar fi salvat lumea.`,
+    `<b style="color:var(--gold)">${name}</b> nu are nevoie de squad. Squad-ul are nevoie de ${name}. Diferența e subtilă dar esențială, mai ales când ești knocked și aștepți revive de 45 de secunde.`,
+    `Într-o zi, cineva din echipă a întrebat: "Ce facem?" <b style="color:var(--gold)">${name}</b> a răspuns: "Eu fac kills, voi faceți spectacol." A fost cel mai sincer plan tactic al sesiunii.`,
+    `Se spune că în dicționarul PUBG, la litera M, scrie doar: "Vezi <b style="color:var(--gold)">${name}</b>." Echipa a votat să îi cumpere o cafea. Nu au câștigat suficienți bani din meci, dar intenția a contat.`
+  ];
+
+  // Pick random story based on mvp name + score
+  const seed = hashString(mvp.name + mvp.kills + mvp.damage);
+  const story = stories[seed % stories.length];
+
+  const seasonHtml = (seasonKD !== null) ? `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(240,192,64,0.2)">
+      <div style="text-align:center;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:8px;padding:10px">
+        <div style="font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--gold)">${seasonKD}</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;margin-top:2px">Season K/D</div>
+      </div>
+      <div style="text-align:center;background:rgba(255,77,79,0.06);border:1px solid rgba(255,77,79,0.2);border-radius:8px;padding:10px">
+        <div style="font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--red)">${seasonKills.toLocaleString()}</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;margin-top:2px">Season Kills</div>
+      </div>
+      <div style="text-align:center;background:rgba(126,216,91,0.06);border:1px solid rgba(126,216,91,0.2);border-radius:8px;padding:10px">
+        <div style="font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--green)">${seasonWinRate}%</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;margin-top:2px">Season Win Rate</div>
+      </div>
+    </div>` : '';
+
+  return `<div style="background:linear-gradient(135deg,rgba(240,192,64,0.08),rgba(240,192,64,0.02));border:1px solid rgba(240,192,64,0.4);border-radius:14px;overflow:hidden;margin-bottom:20px;position:relative">
+    <div style="height:2px;background:linear-gradient(90deg,var(--gold),transparent)"></div>
+    <div style="padding:20px 24px">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:36px">👑</div>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:2px;margin-bottom:3px">MVP al Sesiunii</div>
+          <div style="font-family:var(--font-head);font-size:26px;font-weight:700;color:var(--gold);letter-spacing:1px">${name}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:16px;text-align:center">
+          <div><div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--text)">${avgKills}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">K/MECI</div></div>
+          <div><div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--orange)">${avgDmg}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DMG/MECI</div></div>
+          <div><div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--green)">${winRate}%</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">WIN RATE</div></div>
+        </div>
+      </div>
+      <!-- Story -->
+      <div style="background:rgba(0,0,0,0.3);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.8;font-style:italic">
+        ${story}
+      </div>
+      ${seasonHtml}
+    </div>
+  </div>`;
+}
+
+
 function calcPercentile(v,b){if(v>=b.top10) return{label:'Top 10%',color:'#ffd700'};if(v>=b.top25) return{label:'Top 25%',color:'#4da6ff'};if(v>=b.top50) return{label:'Top 50%',color:'#7ed85b'};return{label:'Bottom 50%',color:'#ff4d4f'};}
 
 function buildGlobalComparisonHtml(seasonStats) {
@@ -2017,9 +2091,7 @@ function buildCombatInsightHtml(data, playerName, totalMatches) {
   else if(negEvents.length>=3) topMistake={icon:'⚠',label:'EXPUS IN FIGHT',color:'#ffcc00'};
   const parts=[];
   const earlyDeathMatches = Math.min(data.earlyDeaths, totalMatches);
-  const zoneMatches = Math.min(Math.round(data.zoneIssues / 3), totalMatches);
   if(earlyDeathMatches>=2) parts.push(`in ${earlyDeathMatches} meciuri ai intrat in fight prea devreme`);
-  if(zoneMatches>=2) parts.push(`in ${zoneMatches} meciuri ai luat damage de zona`);
   if(data.avgEngagementDistance>200) parts.push(`distanta medie ${data.avgEngagementDistance}m - joci de la distanta`);
   else if(data.avgEngagementDistance>0&&data.avgEngagementDistance<=50) parts.push(`distanta medie ${data.avgEngagementDistance}m - joci in close range`);
   if(knockedCount>0) parts.push(`ai fost knocked de ${knockedCount} ori`);
@@ -2097,7 +2169,6 @@ function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
   if(wAvgDmg > lAvgDmg + 50) advantages.push(`Damage superior: ${Math.round(wAvgDmg)} vs ${Math.round(lAvgDmg)} damage/meci`);
   if(wWinRate > lWinRate + 5) advantages.push(`Win rate mai mare: ${safeNum(wWinRate,1)}% vs ${safeNum(lWinRate,1)}%`);
   if(wCombat && lCombat && (wCombat.earlyDeaths||0) < (lCombat.earlyDeaths||0)) advantages.push('Mai putine early deaths — mai disciplinat in faza de opening');
-  if(wCombat && lCombat && (wCombat.zoneIssues||0) < (lCombat.zoneIssues||0)) advantages.push('Rotatie mai buna — mai putine damaguri de zona');
   if(!advantages.length) advantages.push('Statistici apropiate, diferenta este minima');
 
   const improvements = [];
@@ -2105,7 +2176,6 @@ function build1vs1Html(p1, p2, p1Combat, p2Combat, p1Ext, p2Ext) {
   if(lAvgDmg < 300) improvements.push(`Creste damage-ul de la ${Math.round(lAvgDmg)} spre 350+/meci — standard Master rank`);
   if(lWinRate < 10) improvements.push('Imbunatateste pozitionarea in late game pentru a creste win rate-ul');
   if(lCombat && (lCombat.earlyDeaths||0) >= 2) improvements.push(`Evita fight-urile in primele 5 minute — ${lCombat.earlyDeaths} early deaths il costa`);
-  if(lCombat && (lCombat.zoneIssues||0) >= 2) improvements.push('Rotatie mai rapida — ia des damage de zona');
   if(!improvements.length) improvements.push('Nivel apropiat — focus pe consistenta si win rate');
 
   // Detailed side by side - 4 sections
@@ -2575,6 +2645,35 @@ async function runReport() {
     const streaks=detectStreaks(matchesFiltered,playerName);
     const colors=['#7b5ea7','#8a6d00','#2c5a8a','#4a7a2a','#8a3c3c','#5a4a8a'];
 
+    // ── Fetch player IDs + season stats for team MVP ──
+    let mvpSeasonStats = null;
+    if(reportType === 'team' && seasonId && mvp.name) {
+      try {
+        // Get IDs for all players we don't have yet
+        const unknownNames = leaderboard.filter(p=>!p._id).map(p=>p.name);
+        if(unknownNames.length) {
+          logMsg(`Fetch IDs pentru ${unknownNames.length} jucători...`);
+          // Batch by 6 (API limit)
+          for(let i=0; i<unknownNames.length; i+=6) {
+            const batch = unknownNames.slice(i,i+6);
+            try {
+              const res = await apiGet(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${batch.map(encodeURIComponent).join(',')}`, apiKey);
+              for(const pd of (res.data||[])) {
+                const found = leaderboard.find(p=>nameEq(p.name, pd.attributes?.name||''));
+                if(found) found._id = pd.id;
+              }
+            } catch(e) {}
+          }
+        }
+        // Fetch season stats for MVP
+        const mvpEntry = leaderboard[0];
+        if(mvpEntry?._id) {
+          logMsg(`Season stats MVP: ${mvpEntry.name}...`);
+          mvpSeasonStats = await fetchPlayerSeasonStats(platform, apiKey, mvpEntry._id, seasonId);
+        }
+      } catch(e) { logMsg('Season stats MVP indisponibile','warn'); }
+    }
+
     setProgress(95);
     logMsg('Generare raport...','ok');
 
@@ -2598,10 +2697,12 @@ async function runReport() {
     const heroHtml=`<div class="hero-grid">${heroCards.map(([l,v])=>`<div class="hero-card"><div class="hero-label">${l}</div><div class="hero-value">${escHtml(String(v))}</div></div>`).join('')}</div>`;
 
     // Podium
+    const mvpStoryHtml = reportType==='team' ? buildMvpStoryCard(mvp, mvpSeasonStats, matchesFiltered.length) : '';
+
     const podiumHtml = reportType==='team' ? `
       <div class="section-title">🏆 Podium</div>
       <div class="podium">${top3.map((p,i)=>`<div class="podium-card ${['gold','silver','bronze'][i]||''}"><div class="podium-icon">${['🥇','🥈','🥉'][i]||''}</div><div class="podium-name">${escHtml(p.name)}</div><div class="podium-stats">${p.kills}K &nbsp; ${Math.round(p.damage)}D &nbsp; ${p.downs}Down &nbsp; ${p.knocksTaken}Taken</div></div>`).join('')}</div>
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;">⭐ MVP: <b style="color:var(--gold)">${escHtml(mvp.name)}</b> — ${mvp.kills}K &nbsp; ${Math.round(mvp.damage)}D &nbsp; ${mvp.downs}Down</div>` : '';
+      ${mvpStoryHtml}` : '';
 
     // Table (not for 1vs1)
     let tableHtml = '';
@@ -2674,11 +2775,6 @@ async function runReport() {
 
     // Team Summary
     let teamSummaryHtml='';
-    if(reportType==='team'){
-      const wins=matchesFiltered.filter(m=>m.rank===1).length;const winRate=(wins/matchesFiltered.length)*100;const teamAvgKills=leaderboard.reduce((s,p)=>s+p.kills/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);const teamAvgDmg=leaderboard.reduce((s,p)=>s+p.damage/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
-      const tips2=[];if(teamAvgKills<1)tips2.push('Echipa converteste prea putin damage in kills.');if(teamAvgDmg<200)tips2.push('Damage general scazut.');if(winRate<10)tips2.push('Win rate sub 10% — pozitionarea in late game e problema.');if(tips2.length===0)tips2.push('Sesiune decenta. Continuati coordonarea.');
-      teamSummaryHtml=`<div class="team-summary"><div class="section-title">📈 Team Session Summary</div><div class="team-summary-stats">Win rate: <b>${safeNum(winRate,1)}%</b> &nbsp;|&nbsp; AVG kills: <b>${safeNum(teamAvgKills,2)}</b> &nbsp;|&nbsp; AVG damage: <b>${safeNum(teamAvgDmg,0)}</b></div><ul class="team-tips">${tips2.map(t=>`<li>${escHtml(t)}</li>`).join('')}</ul></div>`;
-    }
 
     // Detailed sections
     let detailedHtml='';
