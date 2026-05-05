@@ -1493,7 +1493,7 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
   const teamAvgDmg = players.reduce((s,p)=>s+p.avgDmg,0)/players.length;
   const teamAvgKnocks = players.reduce((s,p)=>s+p.avgKnocks,0)/players.length;
   const teamScore = Math.round(players.reduce((s,p)=>s+p.score,0)/players.length);
-  const carry = players.sort((a,b)=>b.avgKills-a.avgKills)[0];
+  const carry = players.sort((a,b)=>b.score-a.score)[0];
   const support = [...players].sort((a,b)=>b.avgRevives-a.avgRevives)[0];
   const mostKnocked = [...players].sort((a,b)=>b.avgKnocks-a.avgKnocks)[0];
   const mostSurvival = [...players].sort((a,b)=>a.earlyDeaths-b.earlyDeaths)[0];
@@ -1523,7 +1523,7 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
   if(winRate<15) teamTips.push({icon:'🎯', text:`Win rate ${safeNum(winRate,1)}% — problema principală este pozitionarea în late game. Intrați în final circle minim 2 minute înainte de zona activă.`});
   if(fraggers>=2&&supports===0) teamTips.push({icon:'🧠', text:'Echipa are prea mulți fraggers și niciun support dedicat. Cel cu cel mai mic kill rate ar trebui să preia rolul de revive și informații.'});
   if(mostKnocked.avgKnocks>=2) teamTips.push({icon:'💀', text:`${escHtml(mostKnocked.name)} ia ${safeNum(mostKnocked.avgKnocks,1)} knock-uri/meci — cel mai expus din echipă. Joacă mai retras sau cu un coechipier în permanență alături.`});
-  if(teamTips.length<2) teamTips.push({icon:'🚀', text:'Sesiune solidă ca echipă. Lucrați la consistența fight-urilor și la comunicarea poziției adversarilor după fiecare contact.'});
+  if(teamTips.length<2) teamTips.push({icon:'🚀', text: winRate>=10 ? 'Sesiune solidă ca echipă. Lucrați la consistența fight-urilor și la comunicarea poziției adversarilor după fiecare contact.' : 'Focus pe supraviețuire în late game — intrați în final circle cu avantaj de poziție și nu forțați fight-uri inutile în ultimele cercuri.'});
 
   // ── TEAM VERDICT HEADER ──
   const teamVerdictHtml = `
@@ -1571,6 +1571,29 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
   </div>`;
 
   // ── INDIVIDUAL PLAYER CARDS ──
+  // ── COMBAT DISTANCES SECTION ──
+  const maxDist = Math.max(...players.map(p=>p.avgDist), 1);
+  const distSectionHtml = `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">
+    <div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:8px">🎯 Combat Style — Distanța de Engagement <div style="flex:1;height:1px;background:var(--border);margin-left:8px"></div></div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:14px;padding:6px 10px;background:rgba(77,166,255,0.06);border-radius:6px;border-left:2px solid var(--blue)">Distanța medie la care atacă fiecare jucător. 🔴 Sub 80m = close range agresiv. 🟢 Peste 80m = mid/long range. Ideal echipa să fie uniformă.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${[...players].sort((a,b)=>b.avgDist-a.avgDist).map(p=>{
+        const pct = maxDist>0 ? Math.round((p.avgDist/maxDist)*100) : 0;
+        const color = p.avgDist>200?'var(--blue)':p.avgDist>80?'var(--green)':'var(--red)';
+        const style = p.avgDist>200?'🔭 Sniper':p.avgDist>80?'🎯 Mid-range':'💥 Close range';
+        return `<div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2);min-width:110px;text-align:right">${escHtml(p.name)}</div>
+          <div style="flex:1;height:28px;background:var(--bg3);border-radius:6px;overflow:hidden;border:1px solid var(--border);position:relative">
+            <div style="height:100%;width:${Math.max(pct,3)}%;background:${color};border-radius:6px;opacity:0.85"></div>
+            <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--font-mono);font-size:10px;color:#fff;font-weight:700;text-shadow:0 0 6px #000">${p.avgDist>0?p.avgDist+'m':'—'}</div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:${color};min-width:80px">${style}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
   const playerCardsHtml = `
   <div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px">
     👤 Analiză Individuală <div style="flex:1;height:1px;background:var(--border)"></div>
@@ -1639,7 +1662,7 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
     }).join('')}
   </div>`;
 
-  return `<div class="team-detailed-box">${teamVerdictHtml}${playerCardsHtml}</div>`;
+  return `<div class="team-detailed-box">${teamVerdictHtml}${distSectionHtml}${playerCardsHtml}</div>`;
 }
 
 
