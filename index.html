@@ -1768,14 +1768,11 @@ function renderTargetSvg(head,body,legs,unknown) {
 // ===================== HIT DISTRIBUTION CARD =====================
 function buildHitDistributionCard(playerName, totals, combatData, isMvp) {
   const hz = combatData?.hitZones || {head:{hits:0,dmg:0,kills:0},body:{hits:0,dmg:0,kills:0},legs:{hits:0,dmg:0,kills:0},unknown:{hits:0,dmg:0,kills:0}};
-  // Use totals for hit counts (already aggregated from telemetry per match)
   const headHits = totals.head||0, bodyHits = totals.body||0, legsHits = totals.legs||0;
   const totalHits = headHits + bodyHits + legsHits + (totals.unknown||0);
   const headPct = totalHits>0?Math.round((headHits/totalHits)*100):0;
   const bodyPct = totalHits>0?Math.round((bodyHits/totalHits)*100):0;
   const legsPct = totalHits>0?Math.round((legsHits/totalHits)*100):0;
-
-  // Damage per zone from combatData.hitZones
   const headDmg = Math.round(hz.head?.dmg||0);
   const bodyDmg = Math.round(hz.body?.dmg||0);
   const legsDmg = Math.round(hz.legs?.dmg||0);
@@ -1784,130 +1781,213 @@ function buildHitDistributionCard(playerName, totals, combatData, isMvp) {
   const headKills = hz.head?.kills||0;
   const bodyKills = hz.body?.kills||0;
   const legsKills = hz.legs?.kills||0;
-  const totalKills = totals.kills||0;
   const kd = totals.matches>0 ? (totals.kills/Math.max(totals.matches-totals.wins,1)).toFixed(2) : '0';
-
-  // Top weapons
   const wDmg = combatData?.weaponDamage||{};
   const wKills = combatData?.weaponKills||{};
   const topWeapons = Object.entries(wDmg).sort((a,b)=>b[1]-a[1]).slice(0,3);
   const favWeapon = Object.entries(wKills).sort((a,b)=>b[1]-a[1])[0];
 
-  // SVG silueta umana cu cercuri concentrice
-  function ringOpacity(hits, max) { return max>0 ? Math.min(0.2 + (hits/max)*0.75, 0.95).toFixed(2) : '0.15'; }
+  // ── SVG realistic human silhouette with concentric rings ──
   const maxHits = Math.max(headHits, bodyHits, legsHits, 1);
+  function rOpacity(h) { return Math.min(0.15 + (h/maxHits)*0.82, 0.97).toFixed(2); }
+  function rScale(h) { return (0.4 + (h/maxHits)*0.6).toFixed(2); }
 
-  const svgHuman = `<svg viewBox="0 0 200 320" width="160" height="256" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <filter id="glow-h"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="glow-b"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      <filter id="glow-l"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    </defs>
-    <!-- Body silhouette -->
-    <ellipse cx="100" cy="44" rx="24" ry="26" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
-    <path d="M62 70 Q100 58 138 70 L144 175 Q100 188 56 175 Z" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
-    <rect x="64" y="172" width="22" height="100" rx="6" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
-    <rect x="114" y="172" width="22" height="100" rx="6" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
-    <!-- HEAD circles -->
-    <circle cx="100" cy="44" r="22" fill="rgba(255,77,79,${ringOpacity(headHits,maxHits)})" filter="url(#glow-h)" stroke="#ff4d4f" stroke-width="1.5" opacity="${ringOpacity(headHits,maxHits)}"/>
-    <circle cx="100" cy="44" r="14" fill="rgba(255,77,79,${ringOpacity(headHits,maxHits)})" stroke="#ff4d4f" stroke-width="1" opacity="${ringOpacity(headHits,maxHits)}"/>
-    <circle cx="100" cy="44" r="6" fill="rgba(255,77,79,0.9)" stroke="#ff4d4f" stroke-width="1"/>
-    <!-- BODY circles -->
-    <ellipse cx="100" cy="118" rx="36" ry="52" fill="rgba(255,159,26,${ringOpacity(bodyHits,maxHits)})" filter="url(#glow-b)" stroke="#ff9f1a" stroke-width="1.5" opacity="${ringOpacity(bodyHits,maxHits)}"/>
-    <ellipse cx="100" cy="118" rx="24" ry="36" fill="rgba(255,159,26,${ringOpacity(bodyHits,maxHits)})" stroke="#ff9f1a" stroke-width="1" opacity="${ringOpacity(bodyHits,maxHits)}"/>
-    <ellipse cx="100" cy="118" rx="10" ry="16" fill="rgba(255,159,26,0.9)" stroke="#ff9f1a" stroke-width="1"/>
-    <!-- LEGS circles -->
-    <ellipse cx="75" cy="218" rx="16" ry="46" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" filter="url(#glow-l)" stroke="#4da6ff" stroke-width="1.5" opacity="${ringOpacity(legsHits,maxHits)}"/>
-    <ellipse cx="75" cy="218" rx="9" ry="30" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" stroke="#4da6ff" stroke-width="1" opacity="${ringOpacity(legsHits,maxHits)}"/>
-    <ellipse cx="125" cy="218" rx="16" ry="46" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" stroke="#4da6ff" stroke-width="1.5" opacity="${ringOpacity(legsHits,maxHits)}"/>
-    <ellipse cx="125" cy="218" rx="9" ry="30" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" stroke="#4da6ff" stroke-width="1" opacity="${ringOpacity(legsHits,maxHits)}"/>
-    <!-- Labels -->
-    <text x="30" y="48" fill="#ff4d4f" font-size="13" font-weight="700" font-family="'Share Tech Mono',monospace">${headHits}</text>
-    <line x1="55" y1="46" x2="78" y2="44" stroke="#ff4d4f" stroke-width="1" opacity="0.6"/>
-    <text x="14" y="122" fill="#ff9f1a" font-size="13" font-weight="700" font-family="'Share Tech Mono',monospace">${bodyHits}</text>
-    <line x1="48" y1="120" x2="64" y2="118" stroke="#ff9f1a" stroke-width="1" opacity="0.6"/>
-    <text x="14" y="222" fill="#4da6ff" font-size="13" font-weight="700" font-family="'Share Tech Mono',monospace">${legsHits}</text>
-    <line x1="46" y1="220" x2="59" y2="218" stroke="#4da6ff" stroke-width="1" opacity="0.6"/>
-  </svg>`;
+  // unique IDs per player to avoid SVG filter conflicts
+  const uid = playerName.replace(/[^a-zA-Z0-9]/g,'').substring(0,8);
 
-  // Weapons HTML
+  const svgHuman = `<svg viewBox="0 0 340 520" width="100%" style="max-width:300px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="gh${uid}" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="gb${uid}" x="-40%" y="-30%" width="180%" height="160%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="gl${uid}" x="-40%" y="-20%" width="180%" height="140%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="headGrad${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff4d4f" stop-opacity="${rOpacity(headHits)}"/>
+      <stop offset="60%" stop-color="#ff4d4f" stop-opacity="${(rOpacity(headHits)*0.6).toFixed(2)}"/>
+      <stop offset="100%" stop-color="#ff4d4f" stop-opacity="0.05"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad${uid}" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#ff9f1a" stop-opacity="${rOpacity(bodyHits)}"/>
+      <stop offset="55%" stop-color="#ff9f1a" stop-opacity="${(rOpacity(bodyHits)*0.55).toFixed(2)}"/>
+      <stop offset="100%" stop-color="#ff9f1a" stop-opacity="0.05"/>
+    </radialGradient>
+    <radialGradient id="legsGrad${uid}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4da6ff" stop-opacity="${rOpacity(legsHits)}"/>
+      <stop offset="55%" stop-color="#4da6ff" stop-opacity="${(rOpacity(legsHits)*0.55).toFixed(2)}"/>
+      <stop offset="100%" stop-color="#4da6ff" stop-opacity="0.05"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ── SILHOUETTE ── -->
+  <!-- Head -->
+  <ellipse cx="170" cy="68" rx="42" ry="48" fill="#0d1117" stroke="#1e2736" stroke-width="1.5"/>
+  <!-- Neck -->
+  <rect x="155" y="112" width="30" height="20" rx="4" fill="#0d1117" stroke="#1e2736" stroke-width="1"/>
+  <!-- Torso -->
+  <path d="M105 130 Q170 115 235 130 L248 300 Q170 320 92 300 Z" fill="#0d1117" stroke="#1e2736" stroke-width="1.5"/>
+  <!-- Left arm -->
+  <path d="M105 135 Q80 160 72 240 Q68 270 76 290 Q88 300 96 290 Q102 270 108 240 Q116 180 118 150 Z" fill="#0d1117" stroke="#1e2736" stroke-width="1.5"/>
+  <!-- Right arm -->
+  <path d="M235 135 Q260 160 268 240 Q272 270 264 290 Q252 300 244 290 Q238 270 232 240 Q224 180 222 150 Z" fill="#0d1117" stroke="#1e2736" stroke-width="1.5"/>
+  <!-- Left leg -->
+  <path d="M120 295 Q110 340 106 400 Q102 450 110 490 Q120 505 136 500 Q150 495 150 478 Q148 435 148 400 Q150 355 152 300 Z" fill="#0d1117" stroke="#1e2736" stroke-width="1.5"/>
+  <!-- Right leg -->
+  <path d="M220 295 Q230 340 234 400 Q238 450 230 490 Q220 505 204 500 Q190 495 190 478 Q192 435 192 400 Q190 355 188 300 Z" fill="#0d1117" stroke="#1e2736" stroke-width="1.5"/>
+
+  <!-- ── HEAD HIT ZONE ── -->
+  <ellipse cx="170" cy="68" rx="42" ry="48" fill="url(#headGrad${uid})" filter="url(#gh${uid})" opacity="${rOpacity(headHits)}"/>
+  <ellipse cx="170" cy="68" rx="28" ry="32" fill="rgba(255,77,79,${(rOpacity(headHits)*0.7).toFixed(2)})" stroke="#ff4d4f" stroke-width="1" opacity="${rOpacity(headHits)}"/>
+  <ellipse cx="170" cy="68" rx="14" ry="16" fill="rgba(255,77,79,${(rOpacity(headHits)*0.9).toFixed(2)})" stroke="#ff4d4f" stroke-width="1.5"/>
+  <circle cx="170" cy="68" r="5" fill="#ff4d4f"/>
+
+  <!-- ── BODY HIT ZONE ── -->
+  <ellipse cx="170" cy="210" rx="68" ry="82" fill="url(#bodyGrad${uid})" filter="url(#gb${uid})" opacity="${rOpacity(bodyHits)}"/>
+  <ellipse cx="170" cy="210" rx="48" ry="58" fill="rgba(255,159,26,${(rOpacity(bodyHits)*0.65).toFixed(2)})" stroke="#ff9f1a" stroke-width="1" opacity="${rOpacity(bodyHits)}"/>
+  <ellipse cx="170" cy="210" rx="26" ry="32" fill="rgba(255,159,26,${(rOpacity(bodyHits)*0.85).toFixed(2)})" stroke="#ff9f1a" stroke-width="1.5"/>
+  <ellipse cx="170" cy="210" rx="10" ry="12" fill="#ff9f1a"/>
+
+  <!-- ── LEGS HIT ZONE ── -->
+  <ellipse cx="130" cy="395" rx="28" ry="82" fill="url(#legsGrad${uid})" filter="url(#gl${uid})" opacity="${rOpacity(legsHits)}"/>
+  <ellipse cx="130" cy="395" rx="18" ry="58" fill="rgba(77,166,255,${(rOpacity(legsHits)*0.65).toFixed(2)})" stroke="#4da6ff" stroke-width="1" opacity="${rOpacity(legsHits)}"/>
+  <circle cx="130" cy="395" r="8" fill="#4da6ff"/>
+  <ellipse cx="210" cy="395" rx="28" ry="82" fill="rgba(77,166,255,${rOpacity(legsHits)})" filter="url(#gl${uid})" opacity="${rOpacity(legsHits)}"/>
+  <ellipse cx="210" cy="395" rx="18" ry="58" fill="rgba(77,166,255,${(rOpacity(legsHits)*0.65).toFixed(2)})" stroke="#4da6ff" stroke-width="1" opacity="${rOpacity(legsHits)}"/>
+  <circle cx="210" cy="395" r="8" fill="#4da6ff"/>
+
+  <!-- ── LABELS LEFT ── -->
+  <!-- HEAD label -->
+  <line x1="116" y1="68" x2="60" y2="68" stroke="#ff4d4f" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>
+  <text x="56" y="58" fill="#ff4d4f" font-size="22" font-weight="700" font-family="'Rajdhani',sans-serif" text-anchor="end">${headPct}%</text>
+  <text x="56" y="74" fill="#ff4d4f" font-size="11" font-family="'Share Tech Mono',monospace" text-anchor="end">HEAD</text>
+
+  <!-- CHEST label -->
+  <line x1="102" y1="210" x2="60" y2="210" stroke="#ff9f1a" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>
+  <text x="56" y="200" fill="#ff9f1a" font-size="22" font-weight="700" font-family="'Rajdhani',sans-serif" text-anchor="end">${bodyPct}%</text>
+  <text x="56" y="216" fill="#ff9f1a" font-size="11" font-family="'Share Tech Mono',monospace" text-anchor="end">CHEST</text>
+
+  <!-- LEGS label -->
+  <line x1="108" y1="395" x2="60" y2="395" stroke="#4da6ff" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>
+  <text x="56" y="385" fill="#4da6ff" font-size="22" font-weight="700" font-family="'Rajdhani',sans-serif" text-anchor="end">${legsPct}%</text>
+  <text x="56" y="401" fill="#4da6ff" font-size="11" font-family="'Share Tech Mono',monospace" text-anchor="end">LEGS</text>
+
+  <!-- Corner decorations -->
+  <path d="M10 10 L10 30 M10 10 L30 10" stroke="#232a38" stroke-width="2" fill="none"/>
+  <path d="M330 10 L330 30 M330 10 L310 10" stroke="#232a38" stroke-width="2" fill="none"/>
+  <path d="M10 510 L10 490 M10 510 L30 510" stroke="#232a38" stroke-width="2" fill="none"/>
+  <path d="M330 510 L330 490 M330 510 L310 510" stroke="#232a38" stroke-width="2" fill="none"/>
+</svg>`;
+
+  // ── ZONE STAT ROW ──
+  function zoneRow(label, icon, color, hits, dmg, avgD, kills, pct) {
+    return `<div style="background:#0d1117;border:1px solid ${color}22;border-left:3px solid ${color};border-radius:8px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${icon}</span>
+          <span style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:${color};letter-spacing:1px">${label}</span>
+        </div>
+        <span style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:${color}">${pct}%</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6272;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">LOVITURI</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#e8eaf0">${hits.toLocaleString()}</div>
+        </div>
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6272;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">DAUNĂ TOTALĂ</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#e8eaf0">${dmg.toLocaleString()}</div>
+        </div>
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6272;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">DAUNĂ MEDIE</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#e8eaf0">${avgD}</div>
+        </div>
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6272;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">KILLURI</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:${color}">${kills}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── WEAPONS ──
   const weaponsHtml = topWeapons.length ? `
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🔫 Top Arme</div>
-      ${favWeapon?`<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:6px">Preferată: <b style="color:var(--gold)">${escHtml(favWeapon[0])}</b> (${favWeapon[1]} kills)</div>`:''}
-      ${topWeapons.map(([w,d])=>{
+    <div style="background:#0d1117;border:1px solid #1e2736;border-radius:8px;padding:14px 16px;margin-top:4px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:14px">🔫</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a6272;text-transform:uppercase;letter-spacing:1px">TOP ARME</span>
+      </div>
+      ${topWeapons.map(([w,d],i)=>{
         const wk = wKills[w]||0;
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(35,42,56,0.5)">
-          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">${escHtml(w)}</span>
-          <div style="text-align:right">
-            <span style="font-family:var(--font-mono);font-size:10px;color:var(--orange);font-weight:700">${Math.round(d)} dmg</span>
-            ${wk?`<span style="font-family:var(--font-mono);font-size:10px;color:var(--red);font-weight:700;margin-left:8px">${wk}K</span>`:''}
+        const maxD = topWeapons[0][1];
+        const barW = Math.round((d/maxD)*100);
+        return `<div style="margin-bottom:${i<topWeapons.length-1?'10':'0'}px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#9aa3b2">${escHtml(w)}</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              ${wk?`<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff4d4f;font-weight:700">${wk}K</span>`:''}
+              <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#ff9f1a;font-weight:700">${Math.round(d)} dmg</span>
+            </div>
+          </div>
+          <div style="background:#1a1f2b;border-radius:3px;height:4px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:linear-gradient(90deg,#ff9f1a,#ffd700);border-radius:3px"></div>
           </div>
         </div>`;
       }).join('')}
     </div>` : '';
 
-  return `<div style="background:var(--bg2);border:1px solid ${isMvp?'var(--gold)':'var(--border)'};border-radius:14px;overflow:hidden;position:relative">
-    ${isMvp?'<div style="position:absolute;top:10px;right:10px;font-family:var(--font-mono);font-size:9px;color:var(--gold);border:1px solid var(--gold);padding:2px 6px;border-radius:3px;background:rgba(240,192,64,0.1)">MVP</div>':''}
-    <div style="background:linear-gradient(90deg,rgba(240,192,64,0.06),transparent);padding:12px 16px;border-bottom:1px solid var(--border)">
-      <div style="font-family:var(--font-head);font-size:16px;font-weight:700">${escHtml(playerName)}</div>
+  // ── FOOTER TOTALS ──
+  const footerHtml = `
+    <div style="background:#0d1117;border-top:1px solid #1e2736;padding:14px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:0">
+      ${[
+        {icon:'✏️', l:'TOTAL LOVITURI', v:totalHits.toLocaleString()},
+        {icon:'💥', l:'DAUNĂ TOTALĂ', v:totalDmg.toLocaleString()},
+        {icon:'📐', l:'DAUNĂ MEDIE', v:avgDmg},
+        {icon:'⚔️', l:'K/D', v:kd},
+      ].map((s,i)=>`<div style="text-align:center${i>0?';border-left:1px solid #1e2736':''}">
+        <div style="font-size:12px;margin-bottom:3px">${s.icon}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#e8eaf0">${s.v}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:#5a6272;text-transform:uppercase;letter-spacing:0.5px">${s.l}</div>
+      </div>`).join('')}
+    </div>`;
+
+  return `<div style="background:#090b0f;border:1px solid ${isMvp?'#f0c040':'#1e2736'};border-radius:14px;overflow:hidden;position:relative">
+    ${isMvp?'<div style="height:2px;background:linear-gradient(90deg,#f0c040,transparent)"></div>':'<div style="height:2px;background:linear-gradient(90deg,#232a38,transparent)"></div>'}
+    <!-- HEADER -->
+    <div style="padding:14px 20px;border-bottom:1px solid #1e2736;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,rgba(240,192,64,0.04),transparent)">
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6272;text-transform:uppercase;letter-spacing:2px;margin-bottom:3px">DISTRIBUȚIE LOVITURI</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:#e8eaf0;letter-spacing:1px">${escHtml(playerName)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${isMvp?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f0c040;border:1px solid #f0c040;padding:3px 8px;border-radius:4px;background:rgba(240,192,64,0.08)">MVP</div>`:''}
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#5a6272;display:flex;align-items:center;gap:4px">
+          <span style="display:inline-block;width:6px;height:6px;background:#4da6ff;border-radius:50%;animation:livePulse 2s infinite"></span>
+          DATE TELEMETRIE
+        </div>
+      </div>
     </div>
-    <div style="display:grid;grid-template-columns:160px 1fr;gap:0">
+    <!-- MAIN CONTENT: silueta stanga, stats dreapta -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:520px">
       <!-- LEFT: silueta -->
-      <div style="padding:20px 10px 20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid var(--border)">
+      <div style="padding:20px 10px 20px 20px;display:flex;align-items:center;justify-content:center;border-right:1px solid #1e2736;background:radial-gradient(ellipse at center,#0f1218 0%,#090b0f 100%)">
         ${svgHuman}
       </div>
-      <!-- RIGHT: stats -->
-      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-        <!-- HEAD -->
-        <div style="background:rgba(255,77,79,0.07);border:1px solid rgba(255,77,79,0.3);border-radius:8px;padding:10px 12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--red)">💀 HEAD</div>
-            <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)">${headPct}%</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:var(--font-mono);font-size:10px;color:var(--text3)">
-            <div>LOVITURI <b style="color:var(--text2)">${headHits}</b></div>
-            <div>DAUNĂ <b style="color:var(--text2)">${headDmg.toLocaleString()}</b></div>
-            <div>DMG MEDIU <b style="color:var(--text2)">${headHits>0?(headDmg/headHits).toFixed(1):0}</b></div>
-            <div>KILLS <b style="color:var(--red)">${headKills}</b></div>
-          </div>
-        </div>
-        <!-- BODY/CHEST -->
-        <div style="background:rgba(255,159,26,0.07);border:1px solid rgba(255,159,26,0.3);border-radius:8px;padding:10px 12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--orange)">🫀 CHEST</div>
-            <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--orange)">${bodyPct}%</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:var(--font-mono);font-size:10px;color:var(--text3)">
-            <div>LOVITURI <b style="color:var(--text2)">${bodyHits}</b></div>
-            <div>DAUNĂ <b style="color:var(--text2)">${bodyDmg.toLocaleString()}</b></div>
-            <div>DMG MEDIU <b style="color:var(--text2)">${bodyHits>0?(bodyDmg/bodyHits).toFixed(1):0}</b></div>
-            <div>KILLS <b style="color:var(--orange)">${bodyKills}</b></div>
-          </div>
-        </div>
-        <!-- LEGS -->
-        <div style="background:rgba(77,166,255,0.07);border:1px solid rgba(77,166,255,0.3);border-radius:8px;padding:10px 12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--blue)">🦵 LEGS</div>
-            <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--blue)">${legsPct}%</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:var(--font-mono);font-size:10px;color:var(--text3)">
-            <div>LOVITURI <b style="color:var(--text2)">${legsHits}</b></div>
-            <div>DAUNĂ <b style="color:var(--text2)">${legsDmg.toLocaleString()}</b></div>
-            <div>DMG MEDIU <b style="color:var(--text2)">${legsHits>0?(legsDmg/legsHits).toFixed(1):0}</b></div>
-            <div>KILLS <b style="color:var(--blue)">${legsKills}</b></div>
-          </div>
-        </div>
-        <!-- TOTALS -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding-top:6px;border-top:1px solid var(--border)">
-          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${totalHits}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">LOVITURI</div></div>
-          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${totalDmg.toLocaleString()}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DAUNĂ</div></div>
-          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${avgDmg}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DMG MEDIU</div></div>
-          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${kd}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">K/D</div></div>
-        </div>
+      <!-- RIGHT: zone cards -->
+      <div style="padding:16px 16px 8px 16px;display:flex;flex-direction:column;justify-content:space-between">
+        ${zoneRow('HEAD','💀','#ff4d4f',headHits,headDmg,headHits>0?(headDmg/headHits).toFixed(1):'0',headKills,headPct)}
+        ${zoneRow('CHEST','🫀','#ff9f1a',bodyHits,bodyDmg,bodyHits>0?(bodyDmg/bodyHits).toFixed(1):'0',bodyKills,bodyPct)}
+        ${zoneRow('LEGS','🦵','#4da6ff',legsHits,legsDmg,legsHits>0?(legsDmg/legsHits).toFixed(1):'0',legsKills,legsPct)}
         ${weaponsHtml}
       </div>
     </div>
+    ${footerHtml}
   </div>`;
 }
 
