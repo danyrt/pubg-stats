@@ -1019,8 +1019,17 @@ async function apiGet(url, apiKey, useAuth=true) {
 async function fetchSeasonId(platform, apiKey) {
   try { const res = await apiGet(`https://api.pubg.com/shards/${platform}/seasons`, apiKey); const current = (res.data||[]).find(s=>s.attributes?.isCurrentSeason); return current ? current.id : null; } catch(e) { return null; }
 }
-async function fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId) {
-  try { const res = await apiGet(`https://api.pubg.com/shards/${platform}/players/${playerId}/seasons/${seasonId}`, apiKey); return res.data?.attributes?.gameModeStats || null; } catch(e) { return null; }
+async function fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId, isRanked=false) {
+  try {
+    if(isRanked) {
+      const res = await apiGet(`https://api.pubg.com/shards/${platform}/players/${playerId}/seasons/${seasonId}/ranked`, apiKey);
+      const stats = res.data?.attributes?.rankedGameModeStats || res.data?.attributes?.gameModeStats || null;
+      return stats ? {_ranked: true, ...stats} : null;
+    } else {
+      const res = await apiGet(`https://api.pubg.com/shards/${platform}/players/${playerId}/seasons/${seasonId}`, apiKey);
+      return res.data?.attributes?.gameModeStats || null;
+    }
+  } catch(e) { return null; }
 }
 async function fetchGlobalLeaderboard(platform, apiKey, seasonId) {
   try { const res = await apiGet(`https://api.pubg.com/shards/${platform}/leaderboards/${seasonId}/squad-ranked`, apiKey); const included = res.included||[]; return included.filter(x=>x.type==='player').map(x=>({name:x.attributes?.name||'',kills:safeInt(x.attributes?.stats?.kills)})).sort((a,b)=>b.kills-a.kills).slice(0,100); } catch(e) { return []; }
@@ -1996,13 +2005,24 @@ function buildMvpStoryCard(mvp, mvpSeasonStats, totalMatches) {
   const avgDmg = Math.round(mvp.damage/m);
   const winRate = Math.round((mvp.wins/m)*100);
 
-  // Season stats
+  // Season stats - ranked foloseste 'squad-fpp' sau 'squad', normal foloseste toate modurile
   let seasonKD = null, seasonKills = null, seasonWinRate = null;
   if(mvpSeasonStats) {
-    const modes=['squad','squad-fpp','duo','duo-fpp','solo','solo-fpp'];
-    let sk=0,sd=0,sw=0,sr=0;
-    for(const mode of modes){const s=mvpSeasonStats[mode];if(!s)continue;sk+=safeInt(s.kills);sd+=safeInt(s.losses);sw+=safeInt(s.wins);sr+=safeInt(s.roundsPlayed);}
-    seasonKD = sd>0?(sk/sd).toFixed(2):sk.toFixed(2);
+    const isRanked = mvpSeasonStats._ranked;
+    let sk=0, sd=0, sw=0, sr=0;
+    if(isRanked) {
+      // Ranked: structura e direct { kills, losses, wins, roundsPlayed } per mod
+      const rankedModes = ['squad-fpp','squad','duo-fpp','duo'];
+      for(const mode of rankedModes) {
+        const s = mvpSeasonStats[mode]; if(!s) continue;
+        sk+=safeInt(s.kills); sd+=safeInt(s.losses||s.deaths||0);
+        sw+=safeInt(s.wins); sr+=safeInt(s.roundsPlayed);
+      }
+    } else {
+      const modes=['squad','squad-fpp','duo','duo-fpp','solo','solo-fpp'];
+      for(const mode of modes){const s=mvpSeasonStats[mode];if(!s)continue;sk+=safeInt(s.kills);sd+=safeInt(s.losses);sw+=safeInt(s.wins);sr+=safeInt(s.roundsPlayed);}
+    }
+    seasonKD = sd>0?(sk/sd).toFixed(2):sk>0?sk.toFixed(0):'0';
     seasonKills = sk;
     seasonWinRate = sr>0?((sw/sr)*100).toFixed(1):'0';
   }
@@ -2418,7 +2438,7 @@ async function runReport() {
     let seasonStats = null, globalLeaderboard = [];
     const seasonId = await fetchSeasonId(platform, apiKey);
     if(seasonId) {
-      if(reportType === 'personal') seasonStats = await fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId);
+      if(reportType === 'personal') seasonStats = await fetchPlayerSeasonStats(platform, apiKey, playerId, seasonId, matchMode==='ranked');
       if(detailLevel === 'detailed') { globalLeaderboard = await fetchGlobalLeaderboard(platform, apiKey, seasonId); logMsg(`Leaderboard: ${globalLeaderboard.length} jucatori`, 'ok'); }
     }
     setProgress(18);
@@ -2669,7 +2689,7 @@ async function runReport() {
         const mvpEntry = leaderboard[0];
         if(mvpEntry?._id) {
           logMsg(`Season stats MVP: ${mvpEntry.name}...`);
-          mvpSeasonStats = await fetchPlayerSeasonStats(platform, apiKey, mvpEntry._id, seasonId);
+          mvpSeasonStats = await fetchPlayerSeasonStats(platform, apiKey, mvpEntry._id, seasonId, matchMode==='ranked');
         }
       } catch(e) { logMsg('Season stats MVP indisponibile','warn'); }
     }
