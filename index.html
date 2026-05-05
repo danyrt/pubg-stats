@@ -467,14 +467,15 @@ textarea.modal-input { resize: vertical; min-height: 100px; }
         </div>
       </div>
 
-      <div class="range-custom" id="customRange">
-        <div class="field">
-          <label>De la</label>
-          <div class="input-wrap"><input type="datetime-local" id="fromDate"></div>
-        </div>
-        <div class="field">
-          <label>Pana la</label>
-          <div class="input-wrap"><input type="datetime-local" id="toDate"></div>
+      <div class="range-custom" id="customRange" style="grid-template-columns:1fr">
+        <div class="field full">
+          <label id="customRangeLabel">Ultimele <b id="customDaysVal">7</b> zile</label>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">1</span>
+            <input type="range" id="customDaysSlider" min="1" max="10" value="7" style="flex:1;accent-color:var(--gold);cursor:pointer">
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">10</span>
+          </div>
+          <div id="customRangeDates" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:6px;text-align:center"></div>
         </div>
       </div>
 
@@ -499,6 +500,15 @@ textarea.modal-input { resize: vertical; min-height: 100px; }
           <span id="minLabel" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)"></span>
         </div>
         <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--blue)">ℹ️ Dacă nu adaugi membri, se afișează toate meciurile.</div>
+        <div id="onlyTheseWrap" style="display:none;margin-top:10px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:rgba(240,192,64,0.06);border:1px solid var(--border);border-radius:8px;transition:border-color .2s" id="onlyTheseLabel">
+            <div id="onlyTheseCheck" style="width:20px;height:20px;border-radius:5px;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s"></div>
+            <div>
+              <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text)">Stats doar pentru acești jucători</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:2px">Ignoră restul echipei din meci</div>
+            </div>
+          </label>
+        </div>
       </div>
 
       <div class="field full" id="vsPlayerWrap" style="display:none">
@@ -713,7 +723,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state[group] = btn.dataset.val;
-      if(group === 'range') document.getElementById('customRange').classList.toggle('show', btn.dataset.val === 'custom');
+      if(group === 'range') {
+        document.getElementById('customRange').classList.toggle('show', btn.dataset.val === 'custom');
+        if(btn.dataset.val === 'custom') updateCustomRangeLabel();
+      }
       if(group === 'reportType') {
         document.getElementById('extraPlayersWrap').style.display = 'none';
         document.getElementById('teamFilterWrap').style.display = btn.dataset.val === 'team' ? 'block' : 'none';
@@ -724,6 +737,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  function updateCustomRangeLabel() {
+    const days = parseInt(document.getElementById('customDaysSlider').value);
+    document.getElementById('customDaysVal').textContent = days;
+    const now = new Date();
+    const from = new Date(now.getTime() - days * 24 * 3600 * 1000);
+    document.getElementById('customRangeDates').textContent =
+      formatRoDateTime(from) + ' → ' + formatRoDateTime(now);
+  }
+  const slider = document.getElementById('customDaysSlider');
+  if(slider) slider.addEventListener('input', updateCustomRangeLabel);
+  updateCustomRangeLabel();
 
   document.getElementById('btnRun').addEventListener('click', runReport);
   document.getElementById('btnClearKey').addEventListener('click', () => { clearApiKey(); document.getElementById('apiKey').value = ''; document.getElementById('savedKeyNote').style.display = 'none'; });
@@ -872,6 +897,21 @@ function fixStickyHeaders() {
 // ── TEAM FILTER ──
 let teamMembers = [];
 let minMembers = 3;
+let onlyThesePlayers = false;
+
+function toggleOnlyThese() {
+  onlyThesePlayers = !onlyThesePlayers;
+  const check = document.getElementById('onlyTheseCheck');
+  const label = document.getElementById('onlyTheseLabel');
+  check.innerHTML = onlyThesePlayers ? '<span style="color:#000;font-size:13px;font-weight:700">✓</span>' : '';
+  check.style.background = onlyThesePlayers ? 'var(--gold)' : 'var(--bg3)';
+  check.style.borderColor = onlyThesePlayers ? 'var(--gold)' : 'var(--border)';
+  label.style.borderColor = onlyThesePlayers ? 'var(--gold)' : 'var(--border)';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const lbl = document.getElementById('onlyTheseLabel');
+  if(lbl) lbl.addEventListener('click', toggleOnlyThese);
+});
 
 function addTeamMember() {
   const input = document.getElementById('teamMemberInput');
@@ -910,6 +950,7 @@ function renderTeamMembers() {
   list.innerHTML = html;
   if(teamMembers.length > 0) {
     minWrap.style.display = 'flex';
+    document.getElementById('onlyTheseWrap').style.display = 'block';
     var total = teamMembers.length + 1;
     var minBtnsEl = document.getElementById('minBtns');
     minBtnsEl.innerHTML = '';
@@ -932,6 +973,8 @@ function renderTeamMembers() {
     if(minMembers > total) minMembers = Math.max(2, total);
   } else {
     minWrap.style.display = 'none';
+    document.getElementById('onlyTheseWrap').style.display = 'none';
+    if(onlyThesePlayers) toggleOnlyThese(); // reset bifa
   }
 }
 
@@ -1315,217 +1358,283 @@ function buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, mat
   const totalMatches = matchesFiltered.length;
   if(!totalMatches) return '';
 
-  // 1. Loot Analysis - using aggregatedExt per player
-  const lootData = leaderboard.map(p => {
-    const pKey2 = p.name.toLowerCase();
-    const lootExtKey = aggregatedExt[pKey2] ? pKey2 : Object.keys(aggregatedExt).find(k=>k===pKey2||k.includes(pKey2)||pKey2.includes(k));
-    const ext = lootExtKey ? aggregatedExt[lootExtKey] : null;
-    const totalLootTime = ext?.lootTime || 0;
-    const totalMatchTime = ext?.totalMatchTime || (totalMatches * 1800);
-    const avgLootPerMatch = totalMatches > 0 ? totalLootTime / totalMatches : 0; // seconds
-    const avgLootMin = avgLootPerMatch / 60;
-    const lootPct = totalMatchTime > 0 ? Math.round((totalLootTime/totalMatchTime)*100) : 0;
-    const warnings = ext ? getLootWarnings(ext.lootEvents||[]) : [];
-    const topItems = {};
-    (ext?.lootEvents||[]).filter(e=>e.type==='pickup').forEach(e=>{
-      if(e.item) topItems[e.item]=(topItems[e.item]||0)+(e.count||1);
-    });
-    const topItemsList = Object.entries(topItems).sort((a,b)=>b[1]-a[1]).slice(0,3);
-    return {name:p.name, lootPct, totalLootTime, avgLootPerMatch, avgLootMin, warnings, topItemsList};
-  }).sort((a,b)=>b.avgLootMin-a.avgLootMin);
-
-  const topLooter = lootData[0];
-  const topLooterMin = topLooter ? topLooter.avgLootMin.toFixed(1) : 0;
-  const lootImpact = topLooter && topLooter.avgLootMin > 8 ?
-    `${escHtml(topLooter.name)} petrece ~${topLooterMin} min/meci lootând — EXCESIV (peste 8 min). Reduce prezenta in fight-uri.` :
-    topLooter && topLooter.avgLootMin > 4 ?
-    `${escHtml(topLooter.name)} petrece ~${topLooterMin} min/meci lootând — acceptabil (4-8 min), dar poate fi optimizat.` :
-    lootData.every(p=>p.totalLootTime===0) ? 'Date insuficiente din telemetry.' :
-    'Loot eficient pentru toti jucatorii — sub 4 min/meci.';
-
-  const maxLootMin = Math.max(...lootData.map(p=>p.avgLootMin), 0.1);
-  const lootBars = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">` +
-  lootData.map(p => {
-    const color = p.avgLootMin>8?'var(--red)':p.avgLootMin>4?'var(--orange)':'var(--green)';
-    const verdictIcon = p.avgLootMin>8?'❌':p.avgLootMin>4?'⚠️':'✅';
-    const warningHtml = p.warnings.length ? `<div style="font-size:10px;color:var(--red);margin-top:6px">⚠ ${p.warnings.slice(0,2).map(w=>escHtml(w)).join(' · ')}</div>` : '';
-    const topItemHtml = p.topItemsList.length ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">${p.topItemsList.map(([k,v])=>`${escHtml(k)} ${v}x`).join(' · ')}</div>` : '';
-    const pct = maxLootMin > 0 ? Math.round((p.avgLootMin/maxLootMin)*100) : 0;
-    return `<div class="weapon-box">
-      <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escHtml(p.name)}</div>
-      <div style="text-align:center;margin-bottom:8px">
-        <div style="font-family:var(--font-head);font-size:26px;font-weight:700;color:${color}">${p.avgLootMin.toFixed(1)}</div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">MIN/MECI ${verdictIcon}</div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:2px">${secToMin(p.totalLootTime)} total · ${totalMatches} meciuri</div>
-      </div>
-      <div style="background:var(--bg3);border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px">
-        <div style="height:100%;width:${Math.max(pct,3)}%;background:${color};border-radius:4px"></div>
-      </div>
-      ${warningHtml}${topItemHtml}
-    </div>`;
-  }).join('') + `</div>`;
-
-  // 2. Survival Patterns
-  const survData = leaderboard.map(p => {
-    const cd = aggregatedCombat[p.name.toLowerCase()];
-    // earlyDeaths = total events across all matches, estimate matches affected
-    const earlyDeathsRaw = cd?.earlyDeaths || 0;
-    const earlyDeaths = Math.min(Math.ceil(earlyDeathsRaw / 2), p.matches);
-    const knocksTaken = p.knocksTaken || 0;
-    return {name:p.name, earlyDeaths, earlyDeathsRaw, knocksTaken, matches:p.matches};
-  });
-  const firstToDie = survData.sort((a,b)=>b.earlyDeaths-a.earlyDeaths)[0];
-  const mostSurvival = [...survData].sort((a,b)=>a.knocksTaken-b.knocksTaken)[0];
-  const survImpact = firstToDie && firstToDie.earlyDeaths >= 3 ?
-    `${escHtml(firstToDie.name)} moare devreme in ~${firstToDie.earlyDeaths} din ${firstToDie.matches} meciuri — lasa echipa in dezavantaj numeric in mid game.` :
-    firstToDie && firstToDie.earlyDeaths >= 1 ?
-    `${escHtml(firstToDie.name)} are ${firstToDie.earlyDeaths} meciuri cu early engagement — de monitorizat.` :
-    'Echipa supravietuieste bine in faza de early game.';
-
-  const maxED = Math.max(...survData.map(p=>p.earlyDeaths), 1);
-  const survBars = [...survData].sort((a,b)=>b.earlyDeaths-a.earlyDeaths).map((p,i) => {
-    const pct = maxED > 0 ? Math.round((p.earlyDeaths/maxED)*100) : 0;
-    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${pct}%;background:${p.earlyDeaths>=3?'var(--red)':p.earlyDeaths>=1?'var(--orange)':'var(--green)'}">&nbsp;</div><div class="player-bar-val">~${p.earlyDeaths}/${p.matches} meciuri</div></div></div>`;
-  }).join('');
-
-  // 3. Combat Style
-  const combatData = leaderboard.map(p => {
-    const cd = aggregatedCombat[p.name.toLowerCase()];
-    const avgDist = cd?.avgEngagementDistance || 0;
-    return {name:p.name, avgDist};
-  });
-  const maxDist = Math.max(...combatData.map(p=>p.avgDist), 1);
-  const distSpread = maxDist - Math.min(...combatData.map(p=>p.avgDist));
-  const combatImpact = distSpread > 150 ?
-    `Echipa joaca la distante foarte diferite (spread: ${distSpread}m) — lipsa de sistem de engagement comun. Pro teams opereaza in acelasi range de distanta.` :
-    `Echipa are un stil de engagement relativ unitar (spread: ${distSpread}m) — bun pentru coordonare.`;
-
-  const combatBars = combatData.map((p,i) => {
-    const pct = maxDist > 0 ? Math.round((p.avgDist/maxDist)*100) : 0;
-    const color = p.avgDist>200?'var(--blue)':p.avgDist>80?'var(--green)':'var(--red)';
-    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${Math.max(pct,5)}%;background:${color}">&nbsp;</div><div class="player-bar-val">${p.avgDist}m</div></div></div>`;
-  }).join('');
-
-  // 4. Kill Contribution
-  const killData = leaderboard.map(p => {
-    const m = Math.max(p.matches,1);
-    const avgKills = p.kills/m;
-    const avgDmg = p.damage/m;
-    const convertRate = p.downs>0 ? Math.round((p.kills/p.downs)*100) : 0;
-    return {name:p.name, avgKills, avgDmg, convertRate, kills:p.kills, damage:p.damage, downs:p.downs};
-  });
-  const topFragger = [...killData].sort((a,b)=>b.avgKills-a.avgKills)[0];
-  const topDmg = [...killData].sort((a,b)=>b.avgDmg-a.avgDmg)[0];
-  const killImpact = topDmg && topFragger && !nameEq(topDmg.name, topFragger.name) ?
-    `${escHtml(topDmg.name)} face cel mai mult damage (${Math.round(topDmg.avgDmg)}/meci) dar ${escHtml(topFragger.name)} converteste mai mult in kills. Echipa ar beneficia de mai mult follow-up coordonat.` :
-    `${escHtml(topFragger?.name||'')} domina atat damage cat si kills — echipa depinde mult de un singur fragger.`;
-
-  const maxKills = Math.max(...killData.map(p=>p.avgKills), 0.1);
-  const killBars = killData.map((p,i) => {
-    const pct = Math.round((p.avgKills/maxKills)*100);
-    const colors = ['var(--gold)','var(--orange)','var(--green)','var(--blue)'];
-    return `<div class="player-bar-row"><div class="player-bar-name">${escHtml(p.name)}</div><div class="player-bar-track"><div class="player-bar-fill" style="width:${Math.max(pct,5)}%;background:${colors[i%4]}">&nbsp;</div><div class="player-bar-val">${safeNum(p.avgKills,2)}K/m</div></div></div>`;
-  }).join('');
-
-  // Team Verdict
-  const scores = leaderboard.map(p => {
-    const m = Math.max(p.matches,1);
-    const cd = aggregatedCombat[p.name.toLowerCase()];
-    let score = 0;
-    if(p.kills/m >= 2) score += 2;
-    else if(p.kills/m >= 1) score += 1;
-    if(p.damage/m >= 300) score += 2;
-    else if(p.damage/m >= 150) score += 1;
-    if((cd?.earlyDeaths||0) === 0) score += 1;
-    else if((cd?.earlyDeaths||0) >= 3) score -= 1;
-    if(p.wins/m >= 0.2) score += 2;
-    if((cd?.lootPct||0) > 25) score -= 1;
-    return {name:p.name, score: Math.max(0,Math.min(10,score+3))};
-  }).sort((a,b)=>b.score-a.score);
-
   const wins = matchesFiltered.filter(m=>m.rank===1).length;
   const winRate = (wins/totalMatches)*100;
-  const teamAvgKills = leaderboard.reduce((s,p)=>s+p.kills/Math.max(p.matches,1),0)/Math.max(leaderboard.length,1);
 
-  const tips = [];
-  if(distSpread > 150) tips.push('Stabiliti un sistem de engagement — toti jucati la distante prea diferite. Alegeti un stil de echipa si respectati-l.');
-  if(firstToDie && firstToDie.earlyDeaths >= 2) tips.push(`${firstToDie.name} trebuie sa evite fight-urile in primele 5 minute fara avantaj clar — early deaths costa echipa numeric.`);
-  if(topLooter && topLooter.lootPct > 25) tips.push(`${topLooter.name} petrece prea mult timp lootând. Prioritizati echipamentul si reveniti la echipa mai rapid.`);
-  if(teamAvgKills < 1) tips.push('Echipa converteste prea putin damage in kills. Lucrati la follow-up coordonat si finish rapid dupa primul knock.');
-  if(winRate < 15) tips.push('Win rate sub 15% — pozitionarea in late game e problema principala. Intrati in final circle mai devreme si cu avantaj de pozitie.');
-  if(tips.length === 0) tips.push('Sesiune solida. Mentineti coordonarea si continuati sa lucrati la sincronizarea engagement-urilor.');
+  // ── PER-PLAYER STATS ──
+  const players = leaderboard.map(p => {
+    const m = Math.max(p.matches||1,1);
+    const cd = aggregatedCombat[p.name.toLowerCase()] || {};
+    const extKey = Object.keys(aggregatedExt).find(k=>k===p.name.toLowerCase()||k.includes(p.name.toLowerCase())||p.name.toLowerCase().includes(k));
+    const ext = extKey ? aggregatedExt[extKey] : null;
+    const avgKills = p.kills/m;
+    const avgDmg = p.damage/m;
+    const avgDowns = p.downs/m;
+    const avgAssists = p.assists/m;
+    const avgRevives = p.revives/m;
+    const avgKnocks = (p.knocksTaken||0)/m;
+    const finishRate = p.downs>0 ? p.kills/p.downs : 0;
+    const earlyDeaths = Math.min(Math.ceil((cd.earlyDeaths||0)/2), m);
+    const zoneIssues = cd.zoneIssues||0;
+    const avgDist = cd.avgEngagementDistance||0;
+    const lootMin = ext ? (ext.lootTime/Math.max(m,1))/60 : 0;
+    const totalDmg = Math.round(p.damage);
+    const kd = p.kills/Math.max(m-p.wins,1);
 
-  const verdictRows = scores.map(s => {
-    const color = s.score>=7?'var(--green)':s.score>=5?'var(--gold)':s.score>=3?'var(--orange)':'var(--red)';
-    const label = s.score>=7?'Impact pozitiv':s.score>=5?'Contributie buna':s.score>=3?'Contributie medie':'Impact negativ';
-    return `<div class="team-verdict-row"><div class="team-verdict-player">${escHtml(s.name)}</div><div class="team-verdict-score" style="color:${color}">${s.score}/10 — ${label}</div></div>`;
-  }).join('');
+    // ── ROLE DETECTION ──
+    let role, roleIcon, roleColor, roleDesc;
+    if(avgRevives>=1.2 || avgAssists>=2.5) {
+      role='IGL / Support'; roleIcon='🧠'; roleColor='#4da6ff';
+      roleDesc='Mentine echipa in viata prin revive-uri si assist-uri';
+    } else if(avgKills>=2.5 && avgDmg>=350) {
+      role='Fragger Principal'; roleIcon='🔥'; roleColor='#ff4d4f';
+      roleDesc='Motor ofensiv al echipei — kills si damage dominant';
+    } else if(avgDowns>=2 && finishRate>=0.6 && avgDist<80) {
+      role='Entry Fragger'; roleIcon='⚡'; roleColor='#ffe066';
+      roleDesc='Deschide fight-urile agresiv si creaza presiune';
+    } else if(avgKnocks<=0.6 && (p.wins/m)>=0.15) {
+      role='Clutch / Survivor'; roleIcon='🎖'; roleColor='#ffd700';
+      roleDesc='Supravietuieste si finalizeaza in late game';
+    } else if(avgDmg>=250 && avgKills<1.2 && finishRate<0.35) {
+      role='Damage Dealer'; roleIcon='💥'; roleColor='#ff9f1a';
+      roleDesc='Face damage consistent dar nu finalizeaza fight-urile';
+    } else if(avgDmg<120 && avgKills<0.5) {
+      role='Low Impact'; roleIcon='📉'; roleColor='#ff6666';
+      roleDesc='Sub nivelul asteptat pentru sesiunea analizata';
+    } else {
+      role='Solid Player'; roleIcon='⚖'; roleColor='#9aa3b2';
+      roleDesc='Contributie echilibrata si consistenta';
+    }
 
-  return `
-  <div class="team-detailed-box">
-    <div class="section-title">🔬 Team Deep Analysis (Detailed)</div>
-    <div class="team-analysis-grid">
-      <div class="team-analysis-card">
-        <div class="team-analysis-title" style="color:var(--red)">❤️ Survival Patterns</div>
-        ${survBars}
-        <div class="team-impact-line">${survImpact}</div>
+    // ── ROLE-BASED SCORE (0-100) ──
+    let score = 0;
+    if(role==='Fragger Principal'||role==='Entry Fragger') {
+      score += Math.min(avgKills/3*35, 35);
+      score += Math.min(avgDmg/500*25, 25);
+      score += Math.min(finishRate*20, 20);
+      score += avgKnocks<=1?10:avgKnocks<=2?5:0;
+      score += (p.wins/m)>=0.2?10:5;
+    } else if(role==='IGL / Support') {
+      score += Math.min(avgRevives/2*30, 30);
+      score += Math.min(avgAssists/3*25, 25);
+      score += avgKnocks<=1?15:avgKnocks<=2?8:0;
+      score += Math.min(avgDmg/300*15, 15);
+      score += (p.wins/m)>=0.2?15:7;
+    } else if(role==='Clutch / Survivor') {
+      score += (p.wins/m)*40;
+      score += avgKnocks<=0.5?25:avgKnocks<=1?15:5;
+      score += Math.min(avgKills/2*20, 20);
+      score += earlyDeaths<=1?15:earlyDeaths<=3?8:0;
+    } else {
+      score += Math.min(avgKills/2*25, 25);
+      score += Math.min(avgDmg/400*25, 25);
+      score += avgKnocks<=1?15:avgKnocks<=2?8:0;
+      score += earlyDeaths<=1?10:earlyDeaths<=3?5:0;
+      score += (p.wins/m)>=0.2?15:7;
+      score += Math.min(avgRevives/1*10, 10);
+    }
+    score = Math.round(Math.max(5, Math.min(98, score)));
+
+    // ── GRADE ──
+    let grade, gradeColor;
+    if(score>=85){grade='S';gradeColor='#ffd700';}
+    else if(score>=70){grade='A';gradeColor='#7ed85b';}
+    else if(score>=55){grade='B';gradeColor='#4da6ff';}
+    else if(score>=40){grade='C';gradeColor='#ff9f1a';}
+    else{grade='D';gradeColor='#ff4d4f';}
+
+    // ── STRENGTHS (bazate pe date reale) ──
+    const strengths=[];
+    if(avgKills>=2) strengths.push(`${safeNum(avgKills,2)} kills/meci — conversie excelentă`);
+    if(avgDmg>=350) strengths.push(`${Math.round(avgDmg)} damage/meci — output consistent`);
+    if(avgRevives>=1) strengths.push(`${safeNum(avgRevives,1)} revive-uri/meci — support esențial`);
+    if(avgAssists>=1.5) strengths.push(`${safeNum(avgAssists,1)} assist-uri/meci — jucător de echipă`);
+    if(finishRate>=0.7&&p.downs>0) strengths.push(`${Math.round(finishRate*100)}% finish rate — finalizare excelentă`);
+    if(avgKnocks<=0.5) strengths.push(`Doar ${safeNum(avgKnocks,1)} knock-uri primite/meci — supraviețuire solidă`);
+    if(earlyDeaths<=1) strengths.push('Evită fight-urile timpurii — disciplinat tactic');
+    if((p.wins/m)>=0.2) strengths.push(`Win rate ${Math.round((p.wins/m)*100)}% — impact real în victorie`);
+
+    // ── WEAKNESSES (bazate pe date reale) ──
+    const weaknesses=[];
+    if(avgKills<0.8) weaknesses.push(`Doar ${safeNum(avgKills,2)} kills/meci — conversie slabă`);
+    if(avgDmg<150) weaknesses.push(`${Math.round(avgDmg)} damage/meci — impact ofensiv minim`);
+    if(avgKnocks>=1.5) weaknesses.push(`${safeNum(avgKnocks,1)} knock-uri primite/meci — expunere excesivă`);
+    if(earlyDeaths>=3) weaknesses.push(`Moare devreme în ~${earlyDeaths}/${m} meciuri — lasă echipa 1v4`);
+    if(finishRate<0.3&&p.downs>=3) weaknesses.push(`${Math.round(finishRate*100)}% finish rate — nu finalizează avantajele`);
+    if(lootMin>8) weaknesses.push(`~${lootMin.toFixed(1)} min/meci lootând — prea mult timp inactiv`);
+    if(zoneIssues>=3) weaknesses.push(`${zoneIssues} situații de zone damage — rotație tardivă`);
+
+    // ── TIPS personalizate ──
+    const tips=[];
+    if(avgKills<0.8&&avgDmg>=200) tips.push('Ai damage dar nu finalizezi — stai lângă coechipieri după primul knock pentru follow-up rapid.');
+    if(avgKnocks>=1.5) tips.push('Prea multe knock-uri primite — joacă mai în cover și nu te expune fără info clar.');
+    if(earlyDeaths>=3) tips.push('Evită engagement-urile în primele 3-4 minute. Lotuiește și lasă echipa să confirme poziția adversarilor.');
+    if(lootMin>8) tips.push('Limitează lootarea la maxim 4-5 minute după aterizare. Prioritizează arma principală și rotează.');
+    if(finishRate<0.3&&p.downs>=3) tips.push('Când dai knock, nu te retrage — menține presiunea și închide fight-ul coordonat cu echipa.');
+    if(zoneIssues>=3) tips.push('Urmărește minimap-ul constant și mișcă-te cu 30 secunde înainte de zona activă.');
+    if(avgAssists<0.5&&avgRevives<0.3&&avgKills<1) tips.push('Contribuie mai mult la echipă prin comunicare, smoke-uri și revive-uri — nu doar kills.');
+    if(!tips.length) tips.push('Menține consistența și lucrează la comunicarea cu echipa în fight-uri.');
+
+    return { ...p, m, avgKills, avgDmg, avgDowns, avgAssists, avgRevives, avgKnocks,
+      finishRate, earlyDeaths, zoneIssues, avgDist, lootMin, kd,
+      role, roleIcon, roleColor, roleDesc, score, grade, gradeColor,
+      strengths: strengths.slice(0,3), weaknesses: weaknesses.slice(0,3), tips: tips.slice(0,2) };
+  });
+
+  // ── TEAM IDENTITY ──
+  const teamAvgKills = players.reduce((s,p)=>s+p.avgKills,0)/players.length;
+  const teamAvgDmg = players.reduce((s,p)=>s+p.avgDmg,0)/players.length;
+  const teamAvgKnocks = players.reduce((s,p)=>s+p.avgKnocks,0)/players.length;
+  const teamScore = Math.round(players.reduce((s,p)=>s+p.score,0)/players.length);
+  const carry = players.sort((a,b)=>b.avgKills-a.avgKills)[0];
+  const support = [...players].sort((a,b)=>b.avgRevives-a.avgRevives)[0];
+  const mostKnocked = [...players].sort((a,b)=>b.avgKnocks-a.avgKnocks)[0];
+  const mostSurvival = [...players].sort((a,b)=>a.earlyDeaths-b.earlyDeaths)[0];
+  const killSpread = Math.max(...players.map(p=>p.avgKills)) - Math.min(...players.map(p=>p.avgKills));
+  const fraggers = players.filter(p=>p.role==='Fragger Principal'||p.role==='Entry Fragger').length;
+  const supports = players.filter(p=>p.role==='IGL / Support').length;
+
+  let teamStyle, teamStyleColor, teamStyleDesc;
+  if(fraggers>=2&&supports===0){teamStyle='⚔️ Echipă Agresivă';teamStyleColor='#ff4d4f';teamStyleDesc='Mult output ofensiv dar lipsă suport — risc mare de colapș în late game.';}
+  else if(supports>=2){teamStyle='🛡 Echipă Defensivă';teamStyleColor='#4da6ff';teamStyleDesc='Support solid dar output ofensiv insuficient pentru a câștiga fight-urile cheie.';}
+  else if(killSpread>2){teamStyle='👑 Echipă Carry-Dependentă';teamStyleColor='#ff9f1a';teamStyleDesc='Un singur jucător domină — dacă cade el, echipa pierde avantajul ofensiv complet.';}
+  else if(winRate>=25&&teamAvgKills>=1.5){teamStyle='🏆 Echipă Eficientă';teamStyleColor='#7ed85b';teamStyleDesc='Win rate bun și kills distribuite echilibrat — echipă funcțională.';}
+  else if(teamAvgKnocks>=1.5){teamStyle='💀 Echipă Fragilă';teamStyleColor='#cc88ff';teamStyleDesc='Prea multe knock-uri primite în medie — expunere colectivă în fight-uri.';}
+  else{teamStyle='⚖️ Echipă Echilibrată';teamStyleColor='#9aa3b2';teamStyleDesc='Stil variat dar fără identitate clară — potențial nevalorificat.';}
+
+  let teamGrade, teamGradeColor;
+  if(teamScore>=80){teamGrade='S';teamGradeColor='#ffd700';}
+  else if(teamScore>=65){teamGrade='A';teamGradeColor='#7ed85b';}
+  else if(teamScore>=50){teamGrade='B';teamGradeColor='#4da6ff';}
+  else if(teamScore>=35){teamGrade='C';teamGradeColor='#ff9f1a';}
+  else{teamGrade='D';teamGradeColor='#ff4d4f';}
+
+  // ── TEAM TIPS ──
+  const teamTips=[];
+  if(killSpread>2) teamTips.push({icon:'⚠️', text:`Kill spread de ${safeNum(killSpread,1)} kills între jucători — distribuiți fight-urile mai echilibrat. ${escHtml(carry.name)} nu poate cara singur în fiecare meci.`});
+  if(teamAvgKnocks>=1.5) teamTips.push({icon:'🛡', text:`Media de ${safeNum(teamAvgKnocks,1)} knock-uri/jucător/meci este excesivă. Stabiliți un sistem de cover și nu atacați fără backup confirmat.`});
+  if(winRate<15) teamTips.push({icon:'🎯', text:`Win rate ${safeNum(winRate,1)}% — problema principală este pozitionarea în late game. Intrați în final circle minim 2 minute înainte de zona activă.`});
+  if(fraggers>=2&&supports===0) teamTips.push({icon:'🧠', text:'Echipa are prea mulți fraggers și niciun support dedicat. Cel cu cel mai mic kill rate ar trebui să preia rolul de revive și informații.'});
+  if(mostKnocked.avgKnocks>=2) teamTips.push({icon:'💀', text:`${escHtml(mostKnocked.name)} ia ${safeNum(mostKnocked.avgKnocks,1)} knock-uri/meci — cel mai expus din echipă. Joacă mai retras sau cu un coechipier în permanență alături.`});
+  if(teamTips.length<2) teamTips.push({icon:'🚀', text:'Sesiune solidă ca echipă. Lucrați la consistența fight-urilor și la comunicarea poziției adversarilor după fiecare contact.'});
+
+  // ── TEAM VERDICT HEADER ──
+  const teamVerdictHtml = `
+  <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px">
+    <!-- Top accent -->
+    <div style="height:3px;background:linear-gradient(90deg,${teamStyleColor},transparent)"></div>
+    <div style="padding:24px">
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+        <div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">Team Verdict · ${totalMatches} meciuri</div>
+          <div style="font-family:var(--font-head);font-size:26px;font-weight:700;color:${teamStyleColor};letter-spacing:1px">${teamStyle}</div>
+          <div style="font-family:var(--font-body);font-size:13px;color:var(--text2);margin-top:4px">${teamStyleDesc}</div>
+        </div>
+        <div style="text-align:center;background:var(--bg);border:2px solid ${teamGradeColor};border-radius:12px;padding:12px 20px;min-width:80px">
+          <div style="font-family:var(--font-head);font-size:42px;font-weight:700;color:${teamGradeColor};line-height:1">${teamGrade}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px">TEAM GRADE</div>
+          <div style="font-family:var(--font-head);font-size:14px;color:${teamGradeColor};margin-top:2px">${teamScore}/100</div>
+        </div>
       </div>
-      <div class="team-analysis-card">
-        <div class="team-analysis-title" style="color:var(--blue)">🎯 Combat Style</div>
-        ${combatBars}
-        <div class="team-impact-line">${combatImpact}</div>
+      <!-- Team Stats Row -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:24px">
+        ${[
+          {l:'Win Rate', v:safeNum(winRate,1)+'%', c:winRate>=20?'var(--green)':winRate>=10?'var(--orange)':'var(--red)'},
+          {l:'AVG Kills/echipă', v:safeNum(teamAvgKills,2), c:'var(--text)'},
+          {l:'AVG Damage/echipă', v:Math.round(teamAvgDmg), c:'var(--text)'},
+          {l:'AVG Knocks primite', v:safeNum(teamAvgKnocks,2), c:teamAvgKnocks>=1.5?'var(--red)':teamAvgKnocks>=1?'var(--orange)':'var(--green)'},
+          {l:'Carry principal', v:escHtml(carry.name), c:'var(--gold)'},
+          {l:'Support principal', v:escHtml(support.name), c:'var(--blue)'},
+        ].map(s=>`<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:${s.c}">${s.v}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;margin-top:2px">${s.l}</div>
+        </div>`).join('')}
       </div>
-      <div class="team-analysis-card">
-        <div class="team-analysis-title" style="color:var(--gold)">💥 Kill Contribution</div>
-        ${killBars}
-        <div class="team-impact-line">${killImpact}</div>
-      </div>
-    </div>
-    <div class="team-verdict-box">
-      <div class="team-verdict-title">🏆 Team Verdict</div>
-      ${verdictRows}
-      <div class="team-tips-list">${tips.map((t,i)=>`<div class="team-tip-item"><span class="team-tip-num">${i+1}.</span><span>${escHtml(t)}</span></div>`).join('')}</div>
-    </div>
-    <div class="team-analysis-section">
-      <div class="team-analysis-title" style="color:var(--red)">❤️ Survival per Jucator</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px">
-        ${leaderboard.map(p => {
-          const sKey = p.name.toLowerCase();
-          const sExtKey = aggregatedExt[sKey] ? sKey : Object.keys(aggregatedExt).find(k=>k===sKey||k.includes(sKey)||sKey.includes(k));
-          const ext = sExtKey ? aggregatedExt[sExtKey] : null;
-          if(!ext || !ext.survivalEvents.length) return `<div class="weapon-box"><div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escHtml(p.name)}</div><div style="font-size:11px;color:var(--text3)">Date insuficiente</div></div>`;
-          const dmgEvs = ext.survivalEvents.filter(e=>e.type==='damage');
-          const healEvs = ext.survivalEvents.filter(e=>e.type==='heal');
-          const totalDmg = Math.round(dmgEvs.reduce((s,e)=>s+Math.abs(e.value||0),0));
-          const totalHeal = Math.round(healEvs.reduce((s,e)=>s+Math.abs(e.value||0),0));
-          const worstHit = dmgEvs.reduce((max,e)=>Math.abs(e.value||0)>Math.abs(max.value||0)?e:max, {value:0});
-          const worstVal = Math.round(Math.abs(worstHit.value||0));
-          const dmgByWeapon = {};
-          dmgEvs.forEach(e=>{if(e.weapon&&e.weapon!=='Unknown')dmgByWeapon[e.weapon]=(dmgByWeapon[e.weapon]||0)+Math.round(Math.abs(e.value||0));});
-          const topWeapon = Object.entries(dmgByWeapon).sort((a,b)=>b[1]-a[1])[0];
-          const m = Math.max(p.matches||1,1);
-          return `<div class="weapon-box">
-            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escHtml(p.name)}</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-              <div style="text-align:center;background:var(--bg2);border-radius:6px;padding:6px">
-                <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)">${totalDmg}</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DMG PRIMIT</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">~${Math.round(totalDmg/m)}/meci</div>
-              </div>
-              <div style="text-align:center;background:var(--bg2);border-radius:6px;padding:6px">
-                <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--green)">${healEvs.length}x</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">HEALS</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">~${(healEvs.length/m).toFixed(1)}/meci</div>
-              </div>
-            </div>
-            ${worstVal>0?`<div style="font-size:11px;color:var(--text2);margin-bottom:4px">💥 Cel mai mare hit: <b style="color:var(--red)">${worstVal} HP</b>${worstHit.weapon?' ('+escHtml(worstHit.weapon)+')':''}</div>`:''}
-            ${topWeapon?`<div style="font-size:11px;color:var(--text2)">⚔️ Top armă adversar: <b style="color:var(--orange)">${escHtml(topWeapon[0])}</b> (${topWeapon[1]} dmg)</div>`:''}
-          </div>`;
-        }).join('')}
+      <!-- Team Tips -->
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📋 Recomandări pentru echipă</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${teamTips.map((t,i)=>`
+        <div style="display:flex;gap:12px;align-items:flex-start;background:var(--bg);border:1px solid var(--border);border-left:3px solid ${teamStyleColor};border-radius:8px;padding:10px 14px">
+          <span style="font-size:16px;flex-shrink:0">${t.icon}</span>
+          <span style="font-size:12px;color:var(--text2);line-height:1.6">${t.text}</span>
+        </div>`).join('')}
       </div>
     </div>
   </div>`;
+
+  // ── INDIVIDUAL PLAYER CARDS ──
+  const playerCardsHtml = `
+  <div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:8px">
+    👤 Analiză Individuală <div style="flex:1;height:1px;background:var(--border)"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:20px">
+    ${players.map((p,idx)=>{
+      const isCarry = nameEq(p.name, carry.name);
+      const borderC = isCarry ? 'var(--gold)' : p.roleColor;
+      const scoreBarW = p.score;
+
+      return `<div style="background:var(--bg2);border:1px solid ${borderC};border-radius:12px;overflow:hidden;position:relative">
+        <div style="height:2px;background:linear-gradient(90deg,${p.roleColor},transparent)"></div>
+        <!-- Player Header -->
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:22px">${p.roleIcon}</div>
+            <div>
+              <div style="font-family:var(--font-head);font-size:16px;font-weight:700">${escHtml(p.name)}${isCarry?'<span style="font-family:var(--font-mono);font-size:9px;color:var(--gold);border:1px solid var(--gold);padding:1px 5px;border-radius:3px;margin-left:6px">CARRY</span>':''}</div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:${p.roleColor};margin-top:1px">${p.role}</div>
+              <div style="font-family:var(--font-body);font-size:10px;color:var(--text3);margin-top:1px">${p.roleDesc}</div>
+            </div>
+          </div>
+          <div style="text-align:center;flex-shrink:0">
+            <div style="font-family:var(--font-head);font-size:32px;font-weight:700;color:${p.gradeColor};line-height:1">${p.grade}</div>
+            <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">${p.score}/100</div>
+          </div>
+        </div>
+        <!-- Score bar -->
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:4px">
+            <span>PERFORMANCE SCORE</span><span style="color:${p.gradeColor}">${p.score}%</span>
+          </div>
+          <div style="background:var(--bg);border-radius:4px;height:6px;overflow:hidden">
+            <div style="height:100%;width:${scoreBarW}%;background:linear-gradient(90deg,${p.roleColor},${p.gradeColor});border-radius:4px;transition:width .6s ease"></div>
+          </div>
+        </div>
+        <!-- Key Stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)">
+          ${[
+            {l:'K/M', v:safeNum(p.avgKills,2), c:p.avgKills>=2?'var(--green)':p.avgKills>=1?'var(--text)':'var(--red)'},
+            {l:'DMG/M', v:Math.round(p.avgDmg), c:p.avgDmg>=300?'var(--orange)':'var(--text)'},
+            {l:'KNOCKS', v:safeNum(p.avgKnocks,1), c:p.avgKnocks>=1.5?'var(--red)':'var(--text)'},
+            {l:'WIN%', v:Math.round((p.wins/p.m)*100)+'%', c:(p.wins/p.m)>=0.2?'var(--gold)':'var(--text)'},
+          ].map((s,i)=>`<div style="padding:10px 8px;text-align:center${i<3?';border-right:1px solid var(--border)':''}">
+            <div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:${s.c}">${s.v}</div>
+            <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">${s.l}</div>
+          </div>`).join('')}
+        </div>
+        <!-- Strengths & Weaknesses -->
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+          ${p.strengths.length?`<div style="margin-bottom:8px">
+            <div style="font-family:var(--font-mono);font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">✅ Puncte forte</div>
+            ${p.strengths.map(s=>`<div style="font-size:11px;color:var(--text2);padding:2px 0;display:flex;gap:6px"><span style="color:var(--green);flex-shrink:0">›</span>${escHtml(s)}</div>`).join('')}
+          </div>`:''}
+          ${p.weaknesses.length?`<div>
+            <div style="font-family:var(--font-mono);font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">⚠️ De îmbunătățit</div>
+            ${p.weaknesses.map(s=>`<div style="font-size:11px;color:var(--text2);padding:2px 0;display:flex;gap:6px"><span style="color:var(--red);flex-shrink:0">›</span>${escHtml(s)}</div>`).join('')}
+          </div>`:''}
+        </div>
+        <!-- Tips -->
+        ${p.tips.length?`<div style="padding:12px 16px;background:rgba(${p.roleColor.includes('ffd')?'240,192,64':p.roleColor.includes('4da')?'77,166,255':p.roleColor.includes('7ed')?'126,216,91':'255,77,79'},0.04)">
+          <div style="font-family:var(--font-mono);font-size:9px;color:${p.roleColor};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🚀 Recomandări</div>
+          ${p.tips.map(t=>`<div style="font-size:11px;color:var(--text2);line-height:1.6;padding:4px 0;border-bottom:1px solid rgba(35,42,56,0.4);display:flex;gap:8px"><span style="color:${p.roleColor};font-weight:700;flex-shrink:0">→</span>${escHtml(t)}</div>`).join('')}
+        </div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  return `<div class="team-detailed-box">${teamVerdictHtml}${playerCardsHtml}</div>`;
 }
+
 
 // ===================== ARCHETYPES =====================
 const ARCHETYPES={chicken:{icon:'🐔',label:'Gaina Sesiunii',color:'#ffcc00'},camper:{icon:'🌿',label:'Bush Camper',color:'#7ed85b'},hitrun:{icon:'💨',label:'Hit & Run',color:'#aaaaaa'},spray:{icon:'🎯',label:'Spray & Pray',color:'#ff9f1a'},lootgoblin:{icon:'📦',label:'Loot Goblin',color:'#cc88ff'},carry:{icon:'👑',label:'Carry',color:'#ffd700'},fragger:{icon:'🔥',label:'Fragger',color:'#ff4d4f'},igl:{icon:'🧠',label:'IGL / Support',color:'#4da6ff'},entry:{icon:'⚡',label:'Entry Fragger',color:'#ffe066'},clutch:{icon:'🎖',label:'Clutch King',color:'#ffd700'},solid:{icon:'⚖',label:'Solid Player',color:'#9aa3b2'},roleplay:{icon:'🧩',label:'Role Player',color:'#88ccff'},lowimpact:{icon:'📉',label:'Low Impact',color:'#ff6666'}};
@@ -1656,7 +1765,153 @@ function renderTargetSvg(head,body,legs,unknown) {
   return `<svg width="130" height="210" viewBox="0 0 170 265" xmlns="http://www.w3.org/2000/svg"><defs><filter id="sg"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="85" cy="42" r="22" fill="#111"/><path d="M58 65 Q85 54 112 65 L118 155 Q85 168 52 155 Z" fill="#111"/><rect x="62" y="155" width="16" height="80" rx="4" fill="#111"/><rect x="92" y="155" width="16" height="80" rx="4" fill="#111"/><circle cx="85" cy="42" r="22" fill="rgba(255,77,79,${ho})" stroke="#ff4d4f" stroke-width="${hw}" filter="url(#sg)" opacity="${ho}"/><ellipse cx="85" cy="108" rx="30" ry="47" fill="rgba(255,159,26,${bo})" stroke="#ff9f1a" stroke-width="${bw}" filter="url(#sg)" opacity="${bo}"/><ellipse cx="85" cy="200" rx="26" ry="38" fill="rgba(77,166,255,${lo})" stroke="#4da6ff" stroke-width="${lw}" filter="url(#sg)" opacity="${lo}"/>${unknown>0?`<circle cx="148" cy="24" r="${Math.min(6+(unknown/total)*10,16)}" fill="rgba(180,180,180,${uo})" stroke="#999" stroke-width="${uw}" opacity="${uo}"/>`:''}</svg>`;
 }
 
-// ===================== GLOBAL BENCHMARKS =====================
+// ===================== HIT DISTRIBUTION CARD =====================
+function buildHitDistributionCard(playerName, totals, combatData, isMvp) {
+  const hz = combatData?.hitZones || {head:{hits:0,dmg:0,kills:0},body:{hits:0,dmg:0,kills:0},legs:{hits:0,dmg:0,kills:0},unknown:{hits:0,dmg:0,kills:0}};
+  // Use totals for hit counts (already aggregated from telemetry per match)
+  const headHits = totals.head||0, bodyHits = totals.body||0, legsHits = totals.legs||0;
+  const totalHits = headHits + bodyHits + legsHits + (totals.unknown||0);
+  const headPct = totalHits>0?Math.round((headHits/totalHits)*100):0;
+  const bodyPct = totalHits>0?Math.round((bodyHits/totalHits)*100):0;
+  const legsPct = totalHits>0?Math.round((legsHits/totalHits)*100):0;
+
+  // Damage per zone from combatData.hitZones
+  const headDmg = Math.round(hz.head?.dmg||0);
+  const bodyDmg = Math.round(hz.body?.dmg||0);
+  const legsDmg = Math.round(hz.legs?.dmg||0);
+  const totalDmg = headDmg + bodyDmg + legsDmg;
+  const avgDmg = totalHits>0 ? (totalDmg/totalHits).toFixed(1) : '0';
+  const headKills = hz.head?.kills||0;
+  const bodyKills = hz.body?.kills||0;
+  const legsKills = hz.legs?.kills||0;
+  const totalKills = totals.kills||0;
+  const kd = totals.matches>0 ? (totals.kills/Math.max(totals.matches-totals.wins,1)).toFixed(2) : '0';
+
+  // Top weapons
+  const wDmg = combatData?.weaponDamage||{};
+  const wKills = combatData?.weaponKills||{};
+  const topWeapons = Object.entries(wDmg).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const favWeapon = Object.entries(wKills).sort((a,b)=>b[1]-a[1])[0];
+
+  // SVG silueta umana cu cercuri concentrice
+  function ringOpacity(hits, max) { return max>0 ? Math.min(0.2 + (hits/max)*0.75, 0.95).toFixed(2) : '0.15'; }
+  const maxHits = Math.max(headHits, bodyHits, legsHits, 1);
+
+  const svgHuman = `<svg viewBox="0 0 200 320" width="160" height="256" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="glow-h"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-b"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="glow-l"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <!-- Body silhouette -->
+    <ellipse cx="100" cy="44" rx="24" ry="26" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
+    <path d="M62 70 Q100 58 138 70 L144 175 Q100 188 56 175 Z" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
+    <rect x="64" y="172" width="22" height="100" rx="6" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
+    <rect x="114" y="172" width="22" height="100" rx="6" fill="#1a1f2b" stroke="#232a38" stroke-width="1.5"/>
+    <!-- HEAD circles -->
+    <circle cx="100" cy="44" r="22" fill="rgba(255,77,79,${ringOpacity(headHits,maxHits)})" filter="url(#glow-h)" stroke="#ff4d4f" stroke-width="1.5" opacity="${ringOpacity(headHits,maxHits)}"/>
+    <circle cx="100" cy="44" r="14" fill="rgba(255,77,79,${ringOpacity(headHits,maxHits)})" stroke="#ff4d4f" stroke-width="1" opacity="${ringOpacity(headHits,maxHits)}"/>
+    <circle cx="100" cy="44" r="6" fill="rgba(255,77,79,0.9)" stroke="#ff4d4f" stroke-width="1"/>
+    <!-- BODY circles -->
+    <ellipse cx="100" cy="118" rx="36" ry="52" fill="rgba(255,159,26,${ringOpacity(bodyHits,maxHits)})" filter="url(#glow-b)" stroke="#ff9f1a" stroke-width="1.5" opacity="${ringOpacity(bodyHits,maxHits)}"/>
+    <ellipse cx="100" cy="118" rx="24" ry="36" fill="rgba(255,159,26,${ringOpacity(bodyHits,maxHits)})" stroke="#ff9f1a" stroke-width="1" opacity="${ringOpacity(bodyHits,maxHits)}"/>
+    <ellipse cx="100" cy="118" rx="10" ry="16" fill="rgba(255,159,26,0.9)" stroke="#ff9f1a" stroke-width="1"/>
+    <!-- LEGS circles -->
+    <ellipse cx="75" cy="218" rx="16" ry="46" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" filter="url(#glow-l)" stroke="#4da6ff" stroke-width="1.5" opacity="${ringOpacity(legsHits,maxHits)}"/>
+    <ellipse cx="75" cy="218" rx="9" ry="30" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" stroke="#4da6ff" stroke-width="1" opacity="${ringOpacity(legsHits,maxHits)}"/>
+    <ellipse cx="125" cy="218" rx="16" ry="46" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" stroke="#4da6ff" stroke-width="1.5" opacity="${ringOpacity(legsHits,maxHits)}"/>
+    <ellipse cx="125" cy="218" rx="9" ry="30" fill="rgba(77,166,255,${ringOpacity(legsHits,maxHits)})" stroke="#4da6ff" stroke-width="1" opacity="${ringOpacity(legsHits,maxHits)}"/>
+    <!-- Labels -->
+    <text x="30" y="48" fill="#ff4d4f" font-size="13" font-weight="700" font-family="'Share Tech Mono',monospace">${headHits}</text>
+    <line x1="55" y1="46" x2="78" y2="44" stroke="#ff4d4f" stroke-width="1" opacity="0.6"/>
+    <text x="14" y="122" fill="#ff9f1a" font-size="13" font-weight="700" font-family="'Share Tech Mono',monospace">${bodyHits}</text>
+    <line x1="48" y1="120" x2="64" y2="118" stroke="#ff9f1a" stroke-width="1" opacity="0.6"/>
+    <text x="14" y="222" fill="#4da6ff" font-size="13" font-weight="700" font-family="'Share Tech Mono',monospace">${legsHits}</text>
+    <line x1="46" y1="220" x2="59" y2="218" stroke="#4da6ff" stroke-width="1" opacity="0.6"/>
+  </svg>`;
+
+  // Weapons HTML
+  const weaponsHtml = topWeapons.length ? `
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🔫 Top Arme</div>
+      ${favWeapon?`<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:6px">Preferată: <b style="color:var(--gold)">${escHtml(favWeapon[0])}</b> (${favWeapon[1]} kills)</div>`:''}
+      ${topWeapons.map(([w,d])=>{
+        const wk = wKills[w]||0;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(35,42,56,0.5)">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">${escHtml(w)}</span>
+          <div style="text-align:right">
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--orange);font-weight:700">${Math.round(d)} dmg</span>
+            ${wk?`<span style="font-family:var(--font-mono);font-size:10px;color:var(--red);font-weight:700;margin-left:8px">${wk}K</span>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  return `<div style="background:var(--bg2);border:1px solid ${isMvp?'var(--gold)':'var(--border)'};border-radius:14px;overflow:hidden;position:relative">
+    ${isMvp?'<div style="position:absolute;top:10px;right:10px;font-family:var(--font-mono);font-size:9px;color:var(--gold);border:1px solid var(--gold);padding:2px 6px;border-radius:3px;background:rgba(240,192,64,0.1)">MVP</div>':''}
+    <div style="background:linear-gradient(90deg,rgba(240,192,64,0.06),transparent);padding:12px 16px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--font-head);font-size:16px;font-weight:700">${escHtml(playerName)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:160px 1fr;gap:0">
+      <!-- LEFT: silueta -->
+      <div style="padding:20px 10px 20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid var(--border)">
+        ${svgHuman}
+      </div>
+      <!-- RIGHT: stats -->
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <!-- HEAD -->
+        <div style="background:rgba(255,77,79,0.07);border:1px solid rgba(255,77,79,0.3);border-radius:8px;padding:10px 12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--red)">💀 HEAD</div>
+            <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)">${headPct}%</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:var(--font-mono);font-size:10px;color:var(--text3)">
+            <div>LOVITURI <b style="color:var(--text2)">${headHits}</b></div>
+            <div>DAUNĂ <b style="color:var(--text2)">${headDmg.toLocaleString()}</b></div>
+            <div>DMG MEDIU <b style="color:var(--text2)">${headHits>0?(headDmg/headHits).toFixed(1):0}</b></div>
+            <div>KILLS <b style="color:var(--red)">${headKills}</b></div>
+          </div>
+        </div>
+        <!-- BODY/CHEST -->
+        <div style="background:rgba(255,159,26,0.07);border:1px solid rgba(255,159,26,0.3);border-radius:8px;padding:10px 12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--orange)">🫀 CHEST</div>
+            <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--orange)">${bodyPct}%</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:var(--font-mono);font-size:10px;color:var(--text3)">
+            <div>LOVITURI <b style="color:var(--text2)">${bodyHits}</b></div>
+            <div>DAUNĂ <b style="color:var(--text2)">${bodyDmg.toLocaleString()}</b></div>
+            <div>DMG MEDIU <b style="color:var(--text2)">${bodyHits>0?(bodyDmg/bodyHits).toFixed(1):0}</b></div>
+            <div>KILLS <b style="color:var(--orange)">${bodyKills}</b></div>
+          </div>
+        </div>
+        <!-- LEGS -->
+        <div style="background:rgba(77,166,255,0.07);border:1px solid rgba(77,166,255,0.3);border-radius:8px;padding:10px 12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--blue)">🦵 LEGS</div>
+            <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--blue)">${legsPct}%</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:var(--font-mono);font-size:10px;color:var(--text3)">
+            <div>LOVITURI <b style="color:var(--text2)">${legsHits}</b></div>
+            <div>DAUNĂ <b style="color:var(--text2)">${legsDmg.toLocaleString()}</b></div>
+            <div>DMG MEDIU <b style="color:var(--text2)">${legsHits>0?(legsDmg/legsHits).toFixed(1):0}</b></div>
+            <div>KILLS <b style="color:var(--blue)">${legsKills}</b></div>
+          </div>
+        </div>
+        <!-- TOTALS -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding-top:6px;border-top:1px solid var(--border)">
+          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${totalHits}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">LOVITURI</div></div>
+          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${totalDmg.toLocaleString()}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DAUNĂ</div></div>
+          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${avgDmg}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DMG MEDIU</div></div>
+          <div style="text-align:center"><div style="font-family:var(--font-head);font-size:16px;font-weight:700">${kd}</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">K/D</div></div>
+        </div>
+        ${weaponsHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+
 const GB={avgKills:{top10:3.5,top25:2.2,top50:1.2},avgDamage:{top10:500,top25:320,top50:180},winRate:{top10:8,top25:4,top50:1.5},kd:{top10:3.2,top25:1.8,top50:0.9}};
 function calcPercentile(v,b){if(v>=b.top10) return{label:'Top 10%',color:'#ffd700'};if(v>=b.top25) return{label:'Top 25%',color:'#4da6ff'};if(v>=b.top50) return{label:'Top 50%',color:'#7ed85b'};return{label:'Bottom 50%',color:'#ff4d4f'};}
 
@@ -1709,11 +1964,11 @@ function buildWeaponSummaryHtml(data) {
 // ===================== COMBAT ANALYSIS =====================
 function buildCombatAnalysis(telemetry, teamNamesLower, circlePhases) {
   const analysis={};
-  for(const n of teamNamesLower){analysis[n]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{},lootPct:0,lootTime:0};}
+  for(const n of teamNamesLower){analysis[n]={events:[],earlyDeaths:0,zoneIssues:0,avgEngagementDistance:0,distances:[],weaponKills:{},weaponDamage:{},weaponKnocked:{},lootPct:0,lootTime:0,hitZones:{head:{hits:0,dmg:0,kills:0},body:{hits:0,dmg:0,kills:0},legs:{hits:0,dmg:0,kills:0},unknown:{hits:0,dmg:0,kills:0}}};}
   for(const ev of telemetry){
     if(ev?._T==='LogPlayerMakeGroggy'){const vn=(ev?.victim?.name||'').toLowerCase();const an=(ev?.attacker?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const phase=getCirclePhase(evTime,circlePhases);const dist=Math.round(safeInt(ev?.distance)/100);const weapon=cleanWeaponName(ev?.damageCauserName||ev?.attackerWeapon||'');if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'knocked',time:evTime,phase,by:ev?.attacker?.name||'unknown',dist,isEarly});}if(analysis[an]){analysis[an].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[an].weaponKnocked[weapon]=(analysis[an].weaponKnocked[weapon]||0)+1;}}
-    if(ev?._T==='LogPlayerKill'){const kn=(ev?.killer?.name||'').toLowerCase();const vn=(ev?.victim?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const phase=getCirclePhase(evTime,circlePhases);const dist=Math.round(safeInt(ev?.distance)/100);const weapon=cleanWeaponName(ev?.damageCauserName||ev?.killerWeapon||'');if(analysis[kn]){analysis[kn].events.push({type:'kill',time:evTime,phase,victim:ev?.victim?.name||'unknown',dist,weapon});analysis[kn].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[kn].weaponKills[weapon]=(analysis[kn].weaponKills[weapon]||0)+1;}if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'died',time:evTime,phase,by:ev?.killer?.name||'unknown',dist,isEarly});}}
-    if(ev?._T==='LogPlayerTakeDamage'){const vn=(ev?.victim?.name||'').toLowerCase();const an=(ev?.attacker?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const dmg=safeInt(ev?.damage);const weapon=cleanWeaponName(ev?.damageCauserName||'');if(analysis[vn]&&String(ev?.damageTypeCategory||'').toLowerCase().includes('zone')){analysis[vn].zoneIssues++;analysis[vn].events.push({type:'zone_damage',time:evTime,phase:getCirclePhase(evTime,circlePhases)});}if(analysis[an]&&weapon&&weapon!=='Unknown'&&dmg>0)analysis[an].weaponDamage[weapon]=(analysis[an].weaponDamage[weapon]||0)+dmg;}
+    if(ev?._T==='LogPlayerKill'){const kn=(ev?.killer?.name||'').toLowerCase();const vn=(ev?.victim?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const phase=getCirclePhase(evTime,circlePhases);const dist=Math.round(safeInt(ev?.distance)/100);const weapon=cleanWeaponName(ev?.damageCauserName||ev?.killerWeapon||'');if(analysis[kn]){analysis[kn].events.push({type:'kill',time:evTime,phase,victim:ev?.victim?.name||'unknown',dist,weapon});analysis[kn].distances.push(dist);if(weapon&&weapon!=='Unknown')analysis[kn].weaponKills[weapon]=(analysis[kn].weaponKills[weapon]||0)+1;const zk=classifyDamageReason(ev?.damageReason||'');if(analysis[kn].hitZones[zk])analysis[kn].hitZones[zk].kills++;}if(analysis[vn]){const isEarly=evTime<300;if(isEarly)analysis[vn].earlyDeaths++;analysis[vn].events.push({type:'died',time:evTime,phase,by:ev?.killer?.name||'unknown',dist,isEarly});}}
+    if(ev?._T==='LogPlayerTakeDamage'){const vn=(ev?.victim?.name||'').toLowerCase();const an=(ev?.attacker?.name||'').toLowerCase();const evTime=ev?.common?.elapsedTime||0;const dmg=safeInt(ev?.damage);const weapon=cleanWeaponName(ev?.damageCauserName||'');if(analysis[vn]&&String(ev?.damageTypeCategory||'').toLowerCase().includes('zone')){analysis[vn].zoneIssues++;analysis[vn].events.push({type:'zone_damage',time:evTime,phase:getCirclePhase(evTime,circlePhases)});}if(analysis[an]&&weapon&&weapon!=='Unknown'&&dmg>0){analysis[an].weaponDamage[weapon]=(analysis[an].weaponDamage[weapon]||0)+dmg;const z=classifyDamageReason(ev?.damageReason||'');if(analysis[an].hitZones[z]){analysis[an].hitZones[z].hits++;analysis[an].hitZones[z].dmg+=dmg;}}}
   }
   for(const n of teamNamesLower){const d=analysis[n].distances;analysis[n].avgEngagementDistance=d.length?Math.round(d.reduce((a,b)=>a+b,0)/d.length):0;}
   return analysis;
@@ -1936,11 +2191,9 @@ async function runReport() {
 
   let fromDate, toDate;
   if(rangeVal === 'custom') {
-    const fv = document.getElementById('fromDate').value;
-    const tv = document.getElementById('toDate').value;
-    if(!fv || !tv) { alert(i('errorSelectCustom')); return; }
-    fromDate = new Date(fv); toDate = new Date(tv);
-    if(toDate <= fromDate) { alert(i('errorDateRange')); return; }
+    const days = parseInt(document.getElementById('customDaysSlider').value) || 7;
+    toDate = new Date();
+    fromDate = new Date(toDate.getTime() - days * 24 * 3600 * 1000);
   }
 
   const extra1 = document.getElementById('extra1').value.trim();
@@ -2133,6 +2386,12 @@ async function runReport() {
     let allTeamPlayers = [];
     for(const match of matchesFiltered) for(const p of match.teamStats) if(!allTeamPlayers.some(x=>nameEq(x,p.name))) allTeamPlayers.push(p.name);
 
+    // Daca "only these players" e activ, limiteaza la jucatorii definiti
+    if(reportType === 'team' && onlyThesePlayers && teamMembers.length > 0) {
+      const definedPlayers = [playerName, ...teamMembers];
+      allTeamPlayers = allTeamPlayers.filter(n => definedPlayers.some(d => nameEq(d, n)));
+    }
+
     let displayPlayers = reportType === 'personal' ? [playerName] : reportType === 'vs' ? [playerName] : (() => {
       let all=[...allTeamPlayers]; const forced=[playerName,...extraPlayers]; for(const f of forced) if(!all.some(x=>nameEq(x,f))) all.push(f);
       return [playerName,...extraPlayers.filter(n=>!nameEq(n,playerName)),...all.filter(n=>!nameEq(n,playerName)&&!extraPlayers.some(e=>nameEq(e,n)))];
@@ -2163,6 +2422,7 @@ async function runReport() {
           for(const[w,v] of Object.entries(src.weaponKills||{})) aggregatedCombat[key].weaponKills[w]=(aggregatedCombat[key].weaponKills[w]||0)+v;
           for(const[w,v] of Object.entries(src.weaponDamage||{})) aggregatedCombat[key].weaponDamage[w]=(aggregatedCombat[key].weaponDamage[w]||0)+v;
           for(const[w,v] of Object.entries(src.weaponKnocked||{})) aggregatedCombat[key].weaponKnocked[w]=(aggregatedCombat[key].weaponKnocked[w]||0)+v;
+          if(src.hitZones){if(!aggregatedCombat[key].hitZones)aggregatedCombat[key].hitZones={head:{hits:0,dmg:0,kills:0},body:{hits:0,dmg:0,kills:0},legs:{hits:0,dmg:0,kills:0},unknown:{hits:0,dmg:0,kills:0}};for(const z of['head','body','legs','unknown']){aggregatedCombat[key].hitZones[z].hits+=(src.hitZones[z]?.hits||0);aggregatedCombat[key].hitZones[z].dmg+=(src.hitZones[z]?.dmg||0);aggregatedCombat[key].hitZones[z].kills+=(src.hitZones[z]?.kills||0);}}
         }
       }
       if(match.extData) {
@@ -2223,7 +2483,7 @@ async function runReport() {
       vsTotals._ext=vsAggExt;
     }
 
-    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.1+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
+    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.05+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
     const top3=leaderboard.slice(0,3);
     const mvp=leaderboard[0]||emptyPlayerStat(playerName);
     const mainTotals=totals[playerName]||emptyPlayerStat(playerName);
@@ -2350,10 +2610,8 @@ async function runReport() {
 
       const cards=withAI.map(p=>{
         const combatData=aggregatedCombat[p.name.toLowerCase()];
-        const combatInsight=combatData?buildCombatInsightHtml(combatData,p.name,p.matches):'';
-        const weaponHtml=combatData?buildWeaponSummaryHtml(combatData):'';
         const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';
-        return `<div class="target-card ${isMvpCard?'mvp-target':''}"><div class="target-player">${escHtml(p.name)}</div><div class="target-svg-wrap">${p.target}</div><div class="target-stats"><span class="hit-head">Head: ${p.head||0}</span> &nbsp; <span class="hit-body">Body: ${p.body||0}</span> &nbsp; <span class="hit-legs">Legs: ${p.legs||0}</span> &nbsp; <span class="hit-unknown">Unk: ${p.unknown||0}</span></div>${weaponHtml}${combatInsight?`<div class="ca-block"><div class="section-title" style="font-size:12px">🧠 Combat Analysis</div>${combatInsight}</div>`:''}</div>`;
+        return buildHitDistributionCard(p.name, p, combatData, isMvpCard);
       }).join('');
 
       const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, matchesFiltered) : '';
@@ -2361,7 +2619,7 @@ async function runReport() {
       if(reportType === 'vs') {
         detailedHtml = ''; // 1VS1 detailed is handled inside build1vs1Html
       } else {
-        detailedHtml=`${teamDetailedHtml}<div class="targets-section"><div class="section-title">🎯 Hit Distribution + Weapons + Combat</div><div class="targets-grid">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
+        detailedHtml=`${teamDetailedHtml}<div class="targets-section"><div class="section-title">🎯 Distribuție Lovituri + Arme</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:14px">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
       }
     }
 
