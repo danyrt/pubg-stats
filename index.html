@@ -1176,6 +1176,160 @@ function buildExtendedTelemetry(telemetry, playerName, matchDuration) {
 }
 
 // ===================== SURVIVAL TIMELINE HTML =====================
+// ===================== KILL LOG =====================
+function buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType, playerName, vsPlayerName) {
+  // Collect all kills and deaths across all tracked players
+  const playerColors = ['#c9a800','#b39ddb','#4da6ff','#7ed85b','#ff7875','#ff9f1a','#cc88ff'];
+  const playerColorMap = {};
+  allTeamPlayers.forEach((n,i) => { playerColorMap[n.toLowerCase()] = playerColors[i%playerColors.length]; });
+
+  const allKills = [], allDeaths = [];
+
+  for(const pName of allTeamPlayers) {
+    const cd = aggregatedCombat[pName.toLowerCase()];
+    if(!cd) continue;
+    for(const ev of (cd.events||[])) {
+      if(ev.type==='kill') {
+        allKills.push({killer:pName, victim:ev.victim||'Unknown', weapon:ev.weapon||'?', dist:ev.dist||0, phase:ev.phase||1});
+      } else if(ev.type==='died') {
+        allDeaths.push({victim:pName, killer:ev.by||'Unknown', weapon:ev.weapon||'?', dist:ev.dist||0, phase:ev.phase||1});
+      }
+    }
+  }
+
+  if(!allKills.length && !allDeaths.length) return '';
+
+  const totalKills = allKills.length;
+  const totalDeaths = allDeaths.length;
+
+  function trackerUrl(username) {
+    const plat = platform==='psn'?'psn':platform==='xbox'?'xbox':'steam';
+    return `https://tracker.gg/pubg/profile/${plat}/${encodeURIComponent(username)}/overview`;
+  }
+
+  function distColor(d) {
+    return d>200?'var(--green)':d>80?'var(--blue)':'var(--red)';
+  }
+
+  function getInitials(name) {
+    const parts = String(name||'').replace(/_/g,' ').split(' ').filter(Boolean);
+    return parts.length>=2?(parts[0][0]+parts[1][0]).toUpperCase():String(name||'??').substring(0,2).toUpperCase();
+  }
+
+  function buildRows(events, type) {
+    if(!events.length) return `<div style="padding:24px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--text3)">Nu există date</div>`;
+    return events.map((ev,i) => {
+      const pName = type==='kill' ? ev.killer : ev.victim;
+      const targetName = type==='kill' ? ev.victim : ev.killer;
+      const color = playerColorMap[pName.toLowerCase()] || 'var(--text2)';
+      const initials = getInitials(pName);
+      const metaLabel = type==='kill'
+        ? `<span style="color:var(--gold)">${escHtml(ev.weapon)}</span> <span style="color:var(--text3)">· ${escHtml(pName)}</span>`
+        : `<span style="color:var(--gold)">${escHtml(ev.weapon)}</span> <span style="color:var(--text3)">· a omorât pe ${escHtml(pName)}</span>`;
+      return `<div class="kl-row" data-player="${pName.toLowerCase().replace(/[^a-z0-9]/g,'_')}">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3);min-width:20px;text-align:center">${i+1}</span>
+        <div style="width:32px;height:32px;border-radius:6px;background:${color}22;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:11px;font-weight:700;color:${color};flex-shrink:0">${initials}</div>
+        <div style="width:1px;height:28px;background:var(--border);flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(targetName)}</div>
+          <div style="font-size:10px;margin-top:1px">${metaLabel}</div>
+        </div>
+        <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:${distColor(ev.dist)};flex-shrink:0;min-width:40px;text-align:right">${ev.dist}m</span>
+        <a href="${trackerUrl(targetName)}" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text2);font-family:var(--font-mono);font-size:10px;text-decoration:none;flex-shrink:0;white-space:nowrap;transition:all .2s"
+          onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">↗ STATS</a>
+      </div>`;
+    }).join('');
+  }
+
+  // Player filter tabs
+  const ptabs = allTeamPlayers.map((n,i) => {
+    const color = playerColors[i%playerColors.length];
+    const key = n.toLowerCase().replace(/[^a-z0-9]/g,'_');
+    return `<div class="kl-ptab" data-key="${key}" style="border-color:${color}44;color:${color};padding:4px 12px;border-radius:4px;font-family:var(--font-mono);font-size:10px;cursor:pointer;border:1px solid;background:var(--bg2);transition:all .2s;letter-spacing:0.5px;opacity:0.6" onclick="klSwitchPlayer('${key}',this,'UID_PLACEHOLDER')">${escHtml(n)}</div>`;
+  }).join('');
+
+  const uid = 'kl_' + Math.random().toString(36).substr(2,6);
+
+  return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px" id="${uid}">
+    <div style="height:2px;background:linear-gradient(90deg,var(--gold),transparent)"></div>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(240,192,64,0.06),transparent)">
+      <span style="font-size:20px">⚔️</span>
+      <span style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--gold);letter-spacing:1px">KILL LOG</span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">· click pe username pentru stats complete</span>
+      <div style="margin-left:auto;display:flex;gap:16px">
+        <div style="text-align:center">
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--red)">${totalKills}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">KILLS</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--blue)">${totalDeaths}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">DEATHS</div>
+        </div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:1px solid var(--border)" id="${uid}_tabs">
+      <div style="flex:1;padding:10px 16px;font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer;border-bottom:2px solid var(--red);color:var(--red);text-align:center;background:rgba(255,77,79,0.04)" onclick="klSwitchTab('kills','${uid}',this)">💀 KILLS <span style="font-size:11px;color:var(--text3)">${totalKills}</span></div>
+      <div style="flex:1;padding:10px 16px;font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;color:var(--text3);text-align:center" onclick="klSwitchTab('deaths','${uid}',this)">☠️ DEATHS <span style="font-size:11px;color:var(--text3)">${totalDeaths}</span></div>
+    </div>
+    <!-- Player filter -->
+    <div style="display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--bg)">
+      <div class="kl-ptab active" data-key="all" onclick="klSwitchPlayer('all',this,'${uid}')" style="padding:4px 12px;border-radius:4px;font-family:var(--font-mono);font-size:10px;cursor:pointer;border:1px solid var(--gold);color:var(--gold);background:rgba(240,192,64,0.08)">TOȚI</div>
+      ${ptabs.replace(/UID_PLACEHOLDER/g, uid)}    </div>
+    <!-- Kill list -->
+    <div id="${uid}_kills" style="padding:4px 0;max-height:400px;overflow-y:auto">
+      ${buildRows(allKills,'kill')}
+    </div>
+    <!-- Death list -->
+    <div id="${uid}_deaths" style="display:none;padding:4px 0;max-height:400px;overflow-y:auto">
+      ${buildRows(allDeaths,'death')}
+    </div>
+    <style>
+      .kl-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(35,42,56,0.5);transition:background .15s}
+      .kl-row:last-child{border-bottom:none}
+      .kl-row:hover{background:rgba(255,255,255,0.02)}
+      .kl-ptab{padding:4px 12px;border-radius:4px;font-family:var(--font-mono);font-size:10px;cursor:pointer;border:1px solid;background:var(--bg2);transition:all .2s;letter-spacing:0.5px}
+      .kl-ptab:not(.active){opacity:0.6}
+      .kl-ptab.active{opacity:1}
+    </style>
+  </div>
+
+  <script>
+  if(!window._klState) window._klState={};
+  window._klState['${uid}']={tab:'kills',player:'all'};
+  function klSwitchTab(tab,uid,el){
+    window._klState[uid].tab=tab;
+    var tabs=document.querySelectorAll('#'+uid+'_tabs > div');
+    tabs[0].style.borderBottomColor=tab==='kills'?'var(--red)':'transparent';
+    tabs[0].style.color=tab==='kills'?'var(--red)':'var(--text3)';
+    tabs[0].style.background=tab==='kills'?'rgba(255,77,79,0.04)':'transparent';
+    tabs[1].style.borderBottomColor=tab==='deaths'?'var(--blue)':'transparent';
+    tabs[1].style.color=tab==='deaths'?'var(--blue)':'var(--text3)';
+    tabs[1].style.background=tab==='deaths'?'rgba(77,166,255,0.04)':'transparent';
+    document.getElementById(uid+'_kills').style.display=tab==='kills'?'block':'none';
+    document.getElementById(uid+'_deaths').style.display=tab==='deaths'?'block':'none';
+    klFilterRows(uid);
+  }
+  function klSwitchPlayer(p,el,uid){
+    if(!uid){uid=el.closest('[id^="kl_"]').id;}
+    window._klState[uid].player=p;
+    el.closest('[style*="display:flex"]').querySelectorAll('.kl-ptab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    klFilterRows(uid);
+  }
+  function klFilterRows(uid){
+    var s=window._klState[uid];
+    var listId=uid+'_'+(s.tab==='kills'?'kills':'deaths');
+    document.querySelectorAll('#'+listId+' .kl-row').forEach(r=>{
+      r.style.display=(s.player==='all'||r.dataset.player===s.player)?'flex':'none';
+    });
+  }
+  <\/script>`;
+}
+
 function buildSurvivalTimelineHtml(extData, playerName, totalMatches) {
   if(!extData || !extData.survivalEvents.length) return '';
   const tm = Math.max(totalMatches||1, 1);
@@ -2839,12 +2993,14 @@ async function runReport() {
         return buildHitDistributionCard(p.name, p, combatData, isMvpCard);
       }).join('');
 
+      const killLogHtml = buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType, playerName, vsPlayerName||'');
+
       const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, matchesFiltered) : '';
 
       if(reportType === 'vs') {
         detailedHtml = ''; // 1VS1 detailed is handled inside build1vs1Html
       } else {
-        detailedHtml=`${teamDetailedHtml}<div class="targets-section"><div class="section-title">🎯 Distribuție Lovituri + Arme</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:14px">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
+        detailedHtml=`${teamDetailedHtml}${killLogHtml}<div class="targets-section"><div class="section-title">🎯 Distribuție Lovituri + Arme</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:14px">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
       }
     }
 
