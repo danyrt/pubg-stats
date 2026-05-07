@@ -2535,7 +2535,7 @@ async function runReport() {
             } catch(e) { logMsg('  → Telemetry indisponibil','warn'); }
           }
         }
-        matches.push({createdAt, mapName:shortMapName(matchRes.data?.attributes?.mapName), mode:matchRes.data?.attributes?.gameMode||'-', duration:matchDuration, rank:safeInt(myRoster.attributes?.stats?.rank), teamStats, combatData:matchCombatData, extData: allExtData || (extData ? {[pName.toLowerCase()]: extData} : null)});
+        matches.push({id:mRefs[i].id, createdAt, mapName:shortMapName(matchRes.data?.attributes?.mapName), mode:matchRes.data?.attributes?.gameMode||'-', duration:matchDuration, rank:safeInt(myRoster.attributes?.stats?.rank), teamStats, combatData:matchCombatData, extData: allExtData || (extData ? {[pName.toLowerCase()]: extData} : null)});
         logMsg(`Meci ${matches.length}: ${shortMapName(matchRes.data?.attributes?.mapName)} @ ${formatRoTime(createdAt)}`);
       }
       matches.sort((a,b)=>a.createdAt-b.createdAt);
@@ -2674,6 +2674,7 @@ async function runReport() {
       const vsDist=vsAggCombat.distances;vsAggCombat.avgEngagementDistance=vsDist.length?Math.round(vsDist.reduce((a,b)=>a+b,0)/vsDist.length):0;
       vsTotals._combat=vsAggCombat;
       vsTotals._ext=vsAggExt;
+      vsTotals._id=vsPlayerId||'';
     }
 
     const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.05+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
@@ -2752,9 +2753,14 @@ async function runReport() {
     if(reportType !== 'vs') {
       let headerTop=`<th rowspan="2">#</th>`, headerBottom='';
       displayPlayers.forEach((name,i)=>{const color=colors[i%colors.length];headerTop+=`<th colspan="6" style="background:${color};color:#fff;">${escHtml(name)}</th>`;headerBottom+=`<th style="background:${color};color:#fff;">Kill</th><th style="background:${color};color:#fff;">Dmg</th><th style="background:${color};color:#fff;">Asst</th><th style="background:${color};color:#fff;">Rev</th><th style="background:${color};color:#fff;">Down</th><th style="background:${color};color:#fff;">KTkn</th>`;});
-      headerTop+=`<th rowspan="2">Map</th><th rowspan="2">Ora</th><th rowspan="2">Loc</th><th rowspan="2">Status</th>`;
+      headerTop+=`<th rowspan="2">Map</th><th rowspan="2">Ora</th><th rowspan="2">Loc</th><th rowspan="2">Status</th><th rowspan="2">Replay</th>`;
       function cellFor(match,name){const p=match.teamStats.find(x=>nameEq(x.name,name));if(!p) return '<td class="absent">-</td>'.repeat(6);return `<td>${p.kills}</td><td>${Math.round(p.damage)}</td><td>${p.assists}</td><td>${p.revives}</td><td>${p.downs}</td><td>${p.knocksTaken}</td>`;}
-      let rows=matchesFiltered.map((match,idx)=>{const isWinner=match.rank===1;return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td></tr>`;}).join('');
+      let rows=matchesFiltered.map((match,idx)=>{
+        const isWinner=match.rank===1;
+        const replayName=encodeURIComponent(mvp?.name||playerName);
+        const replayBtn=match.id?`<a href="https://chickendinner.gg/match/${match.id}/${replayName}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(145,70,255,0.1);border:1px solid rgba(145,70,255,0.35);color:#9146ff;font-family:var(--font-mono);font-size:10px;text-decoration:none;white-space:nowrap" onmouseover="this.style.background='rgba(145,70,255,0.22)'" onmouseout="this.style.background='rgba(145,70,255,0.1)'"><svg width="9" height="9" viewBox="0 0 10 10" fill="#9146ff"><polygon points="2,1 9,5 2,9"/></svg>2D Replay</a>`:'—';
+        return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td><td>${replayBtn}</td></tr>`;
+      }).join('');
       let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr class="rusinica-row"><td>🥚 <b>Rușine</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
       displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
       const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Match Table <button onclick="openTableFullscreen(this)" style="font-family:var(--font-mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer">⛶ Fullscreen</button></div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
@@ -2848,6 +2854,60 @@ async function runReport() {
       surprizeHtml=`<div class="surprize-box"><div class="section-title">🎉 Surprize Surprize! Top 100 Global Eliminated</div>${surprizeVictims.map(v=>`<div class="surprize-row"><div style="font-size:18px">🏆</div><div><b style="color:var(--gold)">${escHtml(v.killerName)}</b> a eliminat pe <b style="color:var(--red)">${escHtml(v.victimName)}</b> <span style="color:var(--text3)">(Top ${v.globalRank} global | ${v.kills} kills sezon | ${escHtml(v.mapName)} ${escHtml(v.time)})</span></div></div>`).join('')}</div>`;
     }
 
+    // ── TWITCH CAM CARD ──
+    const twitchPlayers = [];
+    if(playerId) twitchPlayers.push({name:playerName, id:playerId});
+    if(reportType==='team') {
+      for(const p of leaderboard) {
+        if(!nameEq(p.name,playerName) && p._id && !twitchPlayers.some(x=>nameEq(x.name,p.name)))
+          twitchPlayers.push({name:p.name, id:p._id});
+      }
+    }
+    if(reportType==='vs' && vsTotals?._id) {
+      twitchPlayers.push({name:vsPlayerName, id:vsTotals._id});
+    }
+
+    const avatarColors = ['#9146ff','#e91916','#1e69e0','#f59e0b','#10b981','#ec4899','#06b6d4'];
+    function getInitials(name) {
+      const parts = name.replace(/_/g,' ').split(' ').filter(Boolean);
+      return parts.length>=2 ? (parts[0][0]+parts[1][0]).toUpperCase() : name.substring(0,2).toUpperCase();
+    }
+
+    const twitchCamHtml = twitchPlayers.length ? `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(145,70,255,0.06),transparent)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#9146ff"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+        <span style="font-family:var(--font-head);font-size:16px;font-weight:700;color:#9146ff;letter-spacing:1px">TWITCH CAM</span>
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-left:4px">Ultimele 10 zile</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:#9146ff">
+          <span style="width:6px;height:6px;border-radius:50%;background:#9146ff;display:inline-block"></span>
+          pubg.report
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;padding:14px 18px">
+        ${twitchPlayers.map((p,i)=>{
+          const color = avatarColors[i%avatarColors.length];
+          const initials = getInitials(p.name);
+          const url = `https://pubg.report/players/${p.id}`;
+          return `<a href="${url}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:100px;max-width:160px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 10px;cursor:pointer;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#9146ff'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width:44px;height:44px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:14px;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+            <span style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);text-align:center;word-break:break-all">${escHtml(p.name)}</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Vezi clipuri</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:9px;padding:2px 8px;border-radius:20px;background:rgba(145,70,255,0.1);color:#9146ff;border:0.5px solid rgba(145,70,255,0.35)">
+              <span style="width:5px;height:5px;border-radius:50%;background:#9146ff;display:inline-block"></span>
+              Twitch
+            </span>
+          </a>`;
+        }).join('')}
+      </div>
+      <div style="padding:10px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Click pe un jucător pentru clipurile de pe Twitch</span>
+        <div style="display:flex;gap:8px">
+          ${twitchPlayers.map(p=>`<a href="https://pubg.report/players/${p.id}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:#9146ff;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${escHtml(p.name)} →</a>`).join('')}
+        </div>
+      </div>
+    </div>` : '';
+
     // 1VS1
     let vsHtml='';
     if(reportType==='vs'&&vsTotals) {
@@ -2871,7 +2931,7 @@ async function runReport() {
           <button class="btn-secondary" onclick="location.reload()">↩ Reset</button>
         </div>
       </div>
-      ${heroHtml}${podiumHtml}${tableHtml}${reportType==='vs'?'':aiHtml}${vsHtml}${personalHtml}${globalHtml}${teamSummaryHtml}${detailedHtml}${surprizeHtml}
+      ${heroHtml}${podiumHtml}${twitchCamHtml}${tableHtml}${reportType==='vs'?'':aiHtml}${vsHtml}${personalHtml}${globalHtml}${teamSummaryHtml}${detailedHtml}${surprizeHtml}
     `;
 
     setProgress(100);
