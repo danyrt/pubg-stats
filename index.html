@@ -1197,7 +1197,7 @@ function buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType
     }
   }
 
-  if(!allKills.length && !allDeaths.length) return '';
+  // Always show card even if empty (debug)
 
   const totalKills = allKills.length;
   const totalDeaths = allDeaths.length;
@@ -2664,8 +2664,10 @@ async function runReport() {
             try {
               logMsg(`  → Telemetry ${shortMapName(matchRes.data?.attributes?.mapName)}...`);
               const telemetry = await apiGet(telemetryUrl, apiKey, false);
+              // Track all participants in this match for kill log (not just roster)
+              const allParticipantNames = participants.map(p=>p.attributes?.stats?.name||'').filter(Boolean).map(n=>n.toLowerCase());
               const teamNamesLower = teamStats.map(x=>x.name.toLowerCase());
-              // Always ensure pName is included (in case not found in teamStats)
+              // Always ensure pName is included
               if(!teamNamesLower.includes(pName.toLowerCase())) teamNamesLower.push(pName.toLowerCase());
               const circlePhases = extractCirclePhases(telemetry);
               for(const ev of telemetry) {
