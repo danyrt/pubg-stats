@@ -1231,6 +1231,7 @@ function buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType
   }
 
   function trackerUrl(u) { const p=platform==='psn'?'psn':platform==='xbox'?'xbox':'steam'; return 'https://tracker.gg/pubg/profile/'+p+'/'+encodeURIComponent(u)+'/overview'; }
+  function trackerLink(u) { return `onclick="window.open('${trackerUrl(u)}','_blank','noopener')" style="cursor:pointer"`; }
   function distColor(d) { return d>200?'var(--green)':(d>80?'var(--blue)':'var(--red)'); }
   function initials(n) { const p=String(n||'??').replace(/_/g,' ').split(' ').filter(Boolean); return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():String(n||'??').substring(0,2).toUpperCase(); }
 
@@ -1249,7 +1250,7 @@ function buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType
         '<div style="font-size:10px;color:var(--text3);margin-top:2px"><span style="color:var(--gold)">'+ escHtml(ev.weapon)+'</span>'+(ev.mapName?'<span style="color:var(--text3)"> · '+escHtml(ev.mapName)+'</span>':'')+'  '+metaWho+'</div>'+
       '</div>'+
       '<span style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:'+distColor(ev.dist)+';flex-shrink:0;min-width:40px;text-align:right">'+(ev.dist||0)+'m</span>'+
-      '<a href="'+trackerUrl(target)+'" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text2);font-family:var(--font-mono);font-size:10px;text-decoration:none;flex-shrink:0" onmouseover="this.style.borderColor=\'var(--gold)\';this.style.color=\'var(--gold)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--text2)\'">↗ STATS</a>'+
+      '<a href="#" '+trackerLink(target)+' style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text2);font-family:var(--font-mono);font-size:10px;text-decoration:none;flex-shrink:0" onmouseover="this.style.borderColor=\'var(--gold)\';this.style.color=\'var(--gold)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--text2)\'">↗ STATS</a>'+
     '</div>';
   }
 
