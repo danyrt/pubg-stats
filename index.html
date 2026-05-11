@@ -2218,6 +2218,7 @@ function buildMvpStoryCard(mvp, mvpSeasonStats, totalMatches) {
 }
 
 
+const GB={avgKills:{top10:3.5,top25:2.2,top50:1.2},avgDamage:{top10:500,top25:320,top50:180},winRate:{top10:8,top25:4,top50:1.5},kd:{top10:3.2,top25:1.8,top50:0.9}};
 function calcPercentile(v,b){if(v>=b.top10) return{label:'Top 10%',color:'#ffd700'};if(v>=b.top25) return{label:'Top 25%',color:'#4da6ff'};if(v>=b.top50) return{label:'Top 50%',color:'#7ed85b'};return{label:'Bottom 50%',color:'#ff4d4f'};}
 
 function buildGlobalComparisonHtml(seasonStats) {
@@ -2952,6 +2953,10 @@ async function runReport() {
         return buildHitDistributionCard(p.name, p, combatData, isMvpCard);
       }).join('');
 
+      // DEBUG kill log
+      const _dbgKills = Object.entries(aggregatedCombat).map(([k,v])=>k+': '+( v.events||[]).filter(e=>e.type==='kill').length+'K/'+(v.events||[]).filter(e=>e.type==='died').length+'D');
+      console.log('KILL LOG DEBUG aggregatedCombat:', _dbgKills);
+      console.log('allTeamPlayers:', allTeamPlayers);
       const killLogHtml = buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType, playerName, vsPlayerName||'');
 
       const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, matchesFiltered) : '';
