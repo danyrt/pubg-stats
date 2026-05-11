@@ -2868,15 +2868,31 @@ async function runReport() {
     // Table (not for 1vs1)
     let tableHtml = '';
     if(reportType !== 'vs') {
-      let headerTop=`<th rowspan="2">#</th>`, headerBottom='';
-      displayPlayers.forEach((name,i)=>{const color=colors[i%colors.length];headerTop+=`<th colspan="6" style="background:${color};color:#fff;">${escHtml(name)}</th>`;headerBottom+=`<th style="background:${color};color:#fff;">Kill</th><th style="background:${color};color:#fff;">Dmg</th><th style="background:${color};color:#fff;">Asst</th><th style="background:${color};color:#fff;">Rev</th><th style="background:${color};color:#fff;">Down</th><th style="background:${color};color:#fff;">KTkn</th>`;});
+      // culori subtile per jucator pentru background celule
+      const cellBgs = ['rgba(123,94,167,0.07)','rgba(138,109,0,0.07)','rgba(44,90,138,0.07)','rgba(74,122,42,0.07)','rgba(138,60,60,0.07)','rgba(90,74,138,0.07)'];
+      let headerTop=`<th rowspan="2" style="border-right:2px solid var(--border)">#</th>`, headerBottom='';
+      displayPlayers.forEach((name,i)=>{
+        const color=colors[i%colors.length];
+        const isLast = i===displayPlayers.length-1;
+        const sep = isLast ? '' : ';border-right:2px solid rgba(255,255,255,0.15)';
+        headerTop+=`<th colspan="6" style="background:${color};color:#fff${sep}">${escHtml(name)}</th>`;
+        const subSep = isLast ? '' : ';border-right:2px solid rgba(255,255,255,0.15)';
+        headerBottom+=`<th style="background:${color};color:#fff">Kill</th><th style="background:${color};color:#fff">Dmg</th><th style="background:${color};color:#fff">Asst</th><th style="background:${color};color:#fff">Rev</th><th style="background:${color};color:#fff">Down</th><th style="background:${color};color:#fff${subSep}">KTkn</th>`;
+      });
       headerTop+=`<th rowspan="2">Map</th><th rowspan="2">Ora</th><th rowspan="2">Loc</th><th rowspan="2">Status</th><th rowspan="2">Replay</th>`;
-      function cellFor(match,name){const p=match.teamStats.find(x=>nameEq(x.name,name));if(!p) return '<td class="absent">-</td>'.repeat(6);return `<td>${p.kills}</td><td>${Math.round(p.damage)}</td><td>${p.assists}</td><td>${p.revives}</td><td>${p.downs}</td><td>${p.knocksTaken}</td>`;}
+      function cellFor(match,name,playerIdx){
+        const p=match.teamStats.find(x=>nameEq(x.name,name));
+        const bg=cellBgs[playerIdx%cellBgs.length];
+        const isLast = playerIdx===displayPlayers.length-1;
+        const sep = isLast ? '' : ';border-right:2px solid var(--border)';
+        if(!p) return `<td class="absent" style="background:${bg}">-</td>`.repeat(5)+`<td class="absent" style="background:${bg}${sep}">-</td>`;
+        return `<td style="background:${bg}">${p.kills}</td><td style="background:${bg}">${Math.round(p.damage)}</td><td style="background:${bg}">${p.assists}</td><td style="background:${bg}">${p.revives}</td><td style="background:${bg}">${p.downs}</td><td style="background:${bg}${sep}">${p.knocksTaken}</td>`;
+      }
       let rows=matchesFiltered.map((match,idx)=>{
         const isWinner=match.rank===1;
         const replayName=encodeURIComponent(mvp?.name||playerName);
         const replayBtn=match.id?`<a href="https://chickendinner.gg/${match.id}/${replayName}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(145,70,255,0.1);border:1px solid rgba(145,70,255,0.35);color:#9146ff;font-family:var(--font-mono);font-size:10px;text-decoration:none;white-space:nowrap" onmouseover="this.style.background='rgba(145,70,255,0.22)'" onmouseout="this.style.background='rgba(145,70,255,0.1)'"><svg width="9" height="9" viewBox="0 0 10 10" fill="#9146ff"><polygon points="2,1 9,5 2,9"/></svg>2D Replay</a>`:'—';
-        return `<tr class="${isWinner?'winner-row':''}"><td>${idx+1}</td>${displayPlayers.map(n=>cellFor(match,n)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td><td>${replayBtn}</td></tr>`;
+        return `<tr class="${isWinner?'winner-row':''}"><td style="border-right:2px solid var(--border)">${idx+1}</td>${displayPlayers.map((n,pi)=>cellFor(match,n,pi)).join('')}<td>${escHtml(match.mapName)}</td><td>${formatRoTime(match.createdAt)}</td><td>${match.rank||'-'}</td><td>${isWinner?i('chickenDinner'):''}</td><td>${replayBtn}</td></tr>`;
       }).join('');
       let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr class="rusinica-row"><td>🥚 <b>Rușine</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
       displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
@@ -2957,9 +2973,15 @@ async function runReport() {
       }).join('');
 
       // DEBUG kill log
-      const _dbgKills = Object.entries(aggregatedCombat).map(([k,v])=>k+': '+( v.events||[]).filter(e=>e.type==='kill').length+'K/'+(v.events||[]).filter(e=>e.type==='died').length+'D');
+      const _dbgKills = Object.entries(aggregatedCombat).map(([k,v])=>k+': '+(v.events||[]).filter(e=>e.type==='kill').length+'K/'+(v.events||[]).filter(e=>e.type==='died').length+'D');
       console.log('KILL LOG DEBUG aggregatedCombat:', _dbgKills);
       console.log('allTeamPlayers:', allTeamPlayers);
+      // Log first few kill events from telemetry to check names
+      const _firstKillEvs = Object.entries(aggregatedCombat).flatMap(([k,v])=>(v.events||[]).filter(e=>e.type==='kill').slice(0,2).map(e=>k+'→'+e.victim));
+      console.log('SAMPLE KILL EVENTS:', _firstKillEvs);
+      // Log all keys in aggregatedCombat vs allTeamPlayers
+      console.log('aggregatedCombat keys:', Object.keys(aggregatedCombat));
+      console.log('allTeamPlayers lower:', allTeamPlayers.map(n=>n.toLowerCase()));
       const killLogHtml = buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType, playerName, vsPlayerName||'');
 
       const teamDetailedHtml = reportType==='team' ? buildTeamDetailedHtml(leaderboard, aggregatedCombat, aggregatedExt, matchesFiltered) : '';
