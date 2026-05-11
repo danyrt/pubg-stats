@@ -2866,6 +2866,7 @@ async function runReport() {
       vs: infoTip('Comparație directă între 2 jucători pe statisticile principale ale sesiunii curente.'),
       mvp: infoTip('MVP-ul sesiunii cu statistici globale de sezon: K/D, total kills și win rate din toate meciurile ranked ale sezonului curent.'),
     };
+    const rangeText=rangeVal==='custom'?`${formatRoDateTime(fromDate)} - ${formatRoDateTime(toDate)}`:`${rangeVal}h`;
     const firstTime=formatRoTime(matchesFiltered[0].createdAt);
     const lastTime=formatRoTime(matchesFiltered[matchesFiltered.length-1].createdAt);
     const mainWinRate=(mainTotals.wins/overallMatches)*100;
