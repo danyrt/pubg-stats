@@ -92,6 +92,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert
 .section-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
+/* INFO TOOLTIP */
+.info-tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--text3);color:var(--text3);font-family:var(--font-mono);font-size:9px;cursor:default;position:relative;flex-shrink:0;vertical-align:middle;margin-left:6px}
+.info-tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1f2b;color:var(--text);font-family:var(--font-body);font-size:11px;line-height:1.5;padding:8px 12px;border-radius:6px;border:1px solid var(--border);white-space:normal;width:220px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:999;font-weight:400;text-align:left}
+.info-tip:hover::after{opacity:1}
 /* PODIUM */
 .podium { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .podium-card { flex: 1; min-width: 160px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
@@ -1230,8 +1234,8 @@ function buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType
     }
   }
 
-  function trackerUrl(u) { const p=platform==='psn'?'psn':platform==='xbox'?'xbox':'steam'; return 'https://tracker.gg/pubg/profile/'+p+'/'+encodeURIComponent(u)+'/overview'; }
-  function trackerLink(u) { return `onclick="window.open('${trackerUrl(u)}','_blank','noopener')" style="cursor:pointer"`; }
+  function trackerUrl(u) { if(!u||u==='-'||u==='unknown') return '#'; return 'https://op.gg/pubg/user/'+encodeURIComponent(u); }
+  function trackerLink(u) { if(!u||u==='-'||u==='unknown') return ''; return `onclick="window.open('${trackerUrl(u)}','_blank','noopener')" style="cursor:pointer"`; }
   function distColor(d) { return d>200?'var(--green)':(d>80?'var(--blue)':'var(--red)'); }
   function initials(n) { const p=String(n||'??').replace(/_/g,' ').split(' ').filter(Boolean); return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():String(n||'??').substring(0,2).toUpperCase(); }
 
@@ -1269,6 +1273,7 @@ function buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType
       '<span style="font-size:20px">⚔️</span>'+
       '<span style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--gold);letter-spacing:1px">KILL LOG</span>'+
       '<span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)"> · click pe username pentru stats</span>'+
+      `<span class="info-tip" data-tip="Lista completă de kills și deaths din telemetrie. Click pe ↗ STATS pentru profilul adversarului. Datele vin direct din telemetria oficială PUBG.">i</span>`+
       '<div style="margin-left:auto;display:flex;gap:16px">'+
         '<div style="text-align:center"><div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--red)">'+ allKills.length+'</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">KILLS</div></div>'+
         '<div style="text-align:center"><div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--blue)">'+ allDeaths.length+'</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">DEATHS</div></div>'+
@@ -2222,6 +2227,8 @@ function buildMvpStoryCard(mvp, mvpSeasonStats, totalMatches) {
 }
 
 
+function infoTip(text) { return `<span class="info-tip" data-tip="${text.replace(/"/g,"'")}">i</span>`; }
+
 const GB={avgKills:{top10:3.5,top25:2.2,top50:1.2},avgDamage:{top10:500,top25:320,top50:180},winRate:{top10:8,top25:4,top50:1.5},kd:{top10:3.2,top25:1.8,top50:0.9}};
 function calcPercentile(v,b){if(v>=b.top10) return{label:'Top 10%',color:'#ffd700'};if(v>=b.top25) return{label:'Top 25%',color:'#4da6ff'};if(v>=b.top50) return{label:'Top 50%',color:'#7ed85b'};return{label:'Bottom 50%',color:'#ff4d4f'};}
 
@@ -2233,7 +2240,7 @@ function buildGlobalComparisonHtml(seasonStats) {
   if(!totalRounds) return '';
   const avgK=totalKills/totalRounds,avgD=totalDmg/totalRounds,wr=(totalWins/totalRounds)*100,kd=totalDeaths>0?totalKills/totalDeaths:totalKills;
   const pK=calcPercentile(avgK,GB.avgKills),pD=calcPercentile(avgD,GB.avgDamage),pW=calcPercentile(wr,GB.winRate),pKD=calcPercentile(kd,GB.kd);
-  return `<div class="global-box"><div class="section-title">🌍 Global Ranking (Season)</div><div class="global-grid"><div class="global-card"><div class="global-label">AVG Kills</div><div class="global-val">${safeNum(avgK,2)}</div><div class="global-pct" style="color:${pK.color}">${pK.label}</div></div><div class="global-card"><div class="global-label">AVG Damage</div><div class="global-val">${safeNum(avgD,0)}</div><div class="global-pct" style="color:${pD.color}">${pD.label}</div></div><div class="global-card"><div class="global-label">Win Rate</div><div class="global-val">${safeNum(wr,1)}%</div><div class="global-pct" style="color:${pW.color}">${pW.label}</div></div><div class="global-card"><div class="global-label">K/D</div><div class="global-val">${safeNum(kd,2)}</div><div class="global-pct" style="color:${pKD.color}">${pKD.label}</div></div></div></div>`;
+  return `<div class="global-box"><div class="section-title">🌍 Global Ranking (Season) ${infoTip('Comparație cu media globală a jucătorilor PUBG pentru sezonul curent. Percentilele sunt estimate față de toți jucătorii activi.')}</div><div class="global-grid"><div class="global-card"><div class="global-label">AVG Kills</div><div class="global-val">${safeNum(avgK,2)}</div><div class="global-pct" style="color:${pK.color}">${pK.label}</div></div><div class="global-card"><div class="global-label">AVG Damage</div><div class="global-val">${safeNum(avgD,0)}</div><div class="global-pct" style="color:${pD.color}">${pD.label}</div></div><div class="global-card"><div class="global-label">Win Rate</div><div class="global-val">${safeNum(wr,1)}%</div><div class="global-pct" style="color:${pW.color}">${pW.label}</div></div><div class="global-card"><div class="global-label">K/D</div><div class="global-val">${safeNum(kd,2)}</div><div class="global-pct" style="color:${pKD.color}">${pKD.label}</div></div></div></div>`;
 }
 
 function buildCombatInsightHtml(data, playerName, totalMatches) {
@@ -2635,6 +2642,9 @@ async function runReport() {
                 if(ev?._T==='LogPlayerKill'&&globalLeaderboard.length){const kn=ev?.killer?.name||'';const vn=ev?.victim?.name||'';const isTeamKill=teamStats.some(x=>nameEq(x.name,kn));if(isTeamKill){const gIdx=globalLeaderboard.findIndex(x=>nameEq(x.name,vn));if(gIdx!==-1){surprizes.push({killerName:kn,victimName:vn,globalRank:gIdx+1,kills:globalLeaderboard[gIdx].kills,mapName:shortMapName(matchRes.data?.attributes?.mapName),time:formatRoTime(createdAt)});logMsg(`  ⭐ SURPRIZE: Top ${gIdx+1} eliminated!`,'ok');}}}
               }
               matchCombatData = buildCombatAnalysis(telemetry, teamNamesLower, circlePhases, shortMapName(matchRes.data?.attributes?.mapName));
+              // DEBUG: log kill event types found in telemetry
+              const killEvTypes = [...new Set(telemetry.filter(e=>e?._T?.toLowerCase().includes('kill')||e?._T?.toLowerCase().includes('groggy')).map(e=>e._T))];
+              console.log('TELEMETRY KILL EVENT TYPES:', killEvTypes);
               // Build ext data for pName + all team members
               const allExtData = {};
               // Always build for pName first (most important)
@@ -2839,7 +2849,23 @@ async function runReport() {
     setProgress(95);
     logMsg('Generare raport...','ok');
 
-    const rangeText=rangeVal==='custom'?`${formatRoDateTime(fromDate)} - ${formatRoDateTime(toDate)}`:`${rangeVal}h`;
+    const sectionTips = {
+      podium: infoTip('Top 3 jucători din sesiune ordonați după scorul combinat: kills, damage, downs, assists și revive-uri.'),
+      table: infoTip('Statisticile detaliate per meci pentru fiecare jucător. K=Kills, Dmg=Damage, Asst=Assists, Rev=Revives, Down=Downs date, KTkn=Knock-uri primite.'),
+      ai: infoTip('Analiza AI bazată pe datele sesiunii. Archetipul și mesajul sunt generate automat din statisticile reale.'),
+      personal: infoTip('Analiza personalizată pentru Player 1: profil de joc, puncte forte, slăbiciuni și recomandări bazate pe sesiunea curentă.'),
+      global: infoTip('Comparație cu media globală a jucătorilor PUBG pentru sezonul curent. Percentilele sunt estimate față de toți jucătorii activi.'),
+      killlog: infoTip('Lista completă de kills și deaths din telemetrie. Click pe ↗ STATS pentru a vedea profilul adversarului pe tracker.gg.'),
+      twitch: infoTip('Link-uri directe către pubg.report pentru fiecare jucător. Dacă adversarul era streamer activ, poți vedea clipul din perspectiva lui.'),
+      hits: infoTip('Distribuția loviturilor date per zonă corporală: HEAD, CHEST, LEGS. Date extrase din telemetria oficială PUBG.'),
+      team: infoTip('Analiza detaliată a echipei: rol detectat, scor de performanță, puncte forte și recomandări personalizate per jucător.'),
+      dist: infoTip('Distanța medie de engagement — de la ce distanță atacă fiecare jucător. Sub 80m = close range, 80-200m = mid range, peste 200m = sniper.'),
+      survival: infoTip('Damage primit și heals folosite în sesiune. Arată cât de mult ești expus în fight-uri și cât de bine gestionezi HP-ul.'),
+      killdist: infoTip('Distribuția kill-urilor după distanță. Arată stilul tău de joc: rusher agresiv, mid-range sau sniper pasiv.'),
+      loot: infoTip('Estimarea timpului petrecut lootând vs timp activ în joc. Peste 8 min/meci de loot = ineficient.'),
+      vs: infoTip('Comparație directă între 2 jucători pe statisticile principale ale sesiunii curente.'),
+      mvp: infoTip('MVP-ul sesiunii cu statistici globale de sezon: K/D, total kills și win rate din toate meciurile ranked ale sezonului curent.'),
+    };
     const firstTime=formatRoTime(matchesFiltered[0].createdAt);
     const lastTime=formatRoTime(matchesFiltered[matchesFiltered.length-1].createdAt);
     const mainWinRate=(mainTotals.wins/overallMatches)*100;
@@ -2862,7 +2888,7 @@ async function runReport() {
     const mvpStoryHtml = reportType==='team' ? buildMvpStoryCard(mvp, mvpSeasonStats, matchesFiltered.length) : '';
 
     const podiumHtml = reportType==='team' ? `
-      <div class="section-title">🏆 Podium</div>
+      <div class="section-title">🏆 Podium ${sectionTips.podium}</div>
       <div class="podium">${top3.map((p,i)=>`<div class="podium-card ${['gold','silver','bronze'][i]||''}"><div class="podium-icon">${['🥇','🥈','🥉'][i]||''}</div><div class="podium-name">${escHtml(p.name)}</div><div class="podium-stats">${p.kills}K &nbsp; ${Math.round(p.damage)}D &nbsp; ${p.downs}Down &nbsp; ${p.knocksTaken}Taken</div></div>`).join('')}</div>
       ${mvpStoryHtml}` : '';
 
@@ -2897,7 +2923,7 @@ async function runReport() {
       }).join('');
       let totalRow='<tr class="total-row"><td>Total</td>',avgRow='<tr class="avg-row"><td><b>AVG</b></td>',winRow='<tr><td><b>Wins</b></td>',zeroRow='<tr class="rusinica-row"><td>🥚 <b>Rușine</b></td>',playedRow='<tr><td><b>Played</b></td>',missedRow='<tr><td><b>Missed</b></td>';
       displayPlayers.forEach(name=>{const t=totals[name]||emptyPlayerStat(name);totalRow+=`<td><b>${t.kills}</b></td><td><b>${Math.round(t.damage)}</b></td><td><b>${t.assists}</b></td><td><b>${t.revives}</b></td><td><b>${t.downs}</b></td><td><b>${t.knocksTaken}</b></td>`;avgRow+=`<td>${safeNum(t.matches?t.kills/t.matches:0,2)}</td><td>${safeNum(t.matches?t.damage/t.matches:0,2)}</td><td></td><td></td><td>${safeNum(t.matches?t.downs/t.matches:0,2)}</td><td>${safeNum(t.matches?t.knocksTaken/t.matches:0,2)}</td>`;winRow+=`<td colspan="6">${t.wins}</td>`;zeroRow+=`<td colspan="6">${zeroLines[name]??0}</td>`;playedRow+=`<td colspan="6">${t.matches}</td>`;missedRow+=`<td colspan="6">${matchesFiltered.length-t.matches}</td>`;});
-      const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Match Table <button onclick="openTableFullscreen(this)" style="font-family:var(--font-mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer">⛶ Fullscreen</button></div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
+      const stickyAttr = matchesFiltered.length > 10 ? 'class="table-sticky-name"' : ''; tableHtml=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Match Table ${sectionTips.table}<button onclick="openTableFullscreen(this)" style="font-family:var(--font-mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer">⛶ Fullscreen</button></div><div class="table-wrap"><table><thead><tr>${headerTop}</tr><tr>${headerBottom}</tr></thead><tbody>${rows}</tbody><tfoot>${totalRow}<td colspan="4"></td></tr>${avgRow}<td colspan="4"></td></tr>${winRow}<td colspan="4"></td></tr>${zeroRow}<td colspan="4"></td></tr>${playedRow}<td colspan="4"></td></tr>${missedRow}<td colspan="4"></td></tr></tfoot></table></div>`;
     }
 
     // AI
@@ -2940,7 +2966,7 @@ async function runReport() {
         + 'K/M: ' + safeNum(topRusinica.kills/Math.max(topRusinica.matches,1),2) + ' &nbsp;|&nbsp; Dmg/M: ' + safeNum(topRusinica.damage/Math.max(topRusinica.matches,1),2)
         + '</div></div>';
     })();
-    const aiHtml=`<div class="section-title">🤖 AI Analysis</div><div class="ai-grid">${withAI.map(p=>{const arch=p.ai.archetype;const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';return `<div class="ai-card ${isMvpCard?'mvp':''}"><div class="ai-name">${escHtml(p.name)}</div><div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div><div class="ai-msg">${escHtml(p.ai.msg)}</div><div class="ai-notes">${escHtml(p.ai.notes||' ')}</div><div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div></div>`;}).join('')}${rusinicaCard}</div>`;
+    const aiHtml=`<div class="section-title">🤖 AI Analysis ${sectionTips.ai}</div><div class="ai-grid">${withAI.map(p=>{const arch=p.ai.archetype;const isMvpCard=nameEq(p.name,mvp.name)&&reportType==='team';return `<div class="ai-card ${isMvpCard?'mvp':''}"><div class="ai-name">${escHtml(p.name)}</div><div class="ai-archetype" style="color:${arch.color}">${arch.icon} ${arch.label}</div><div class="ai-msg">${escHtml(p.ai.msg)}</div><div class="ai-notes">${escHtml(p.ai.notes||' ')}</div><div class="ai-mini">K/M: ${safeNum(p.kills/Math.max(p.matches,1),2)} | Dmg/M: ${safeNum(p.damage/Math.max(p.matches,1),2)} | Kn/M: ${safeNum((p.knocksTaken||0)/Math.max(p.matches,1),2)} | Win: ${safeNum((p.wins/Math.max(p.matches,1))*100,1)}%</div></div>`;}).join('')}${rusinicaCard}</div>`;
 
     // Personal
     let personalHtml='';
@@ -2951,7 +2977,7 @@ async function runReport() {
       if(streaks.maxKillStreak>=3) streakAlert+=`<div class="streak-good">🔥 ${streaks.maxKillStreak} meciuri consecutive cu cel putin un kill</div>`;
       if(streaks.bestHour) streakAlert+=`<div class="streak-info">⏰ Performezi cel mai bine in jurul orei <b>${streaks.bestHour}:00</b></div>`;
       if(streaks.bestMatchIdx>=0){const bm=matchesFiltered[streaks.bestMatchIdx];const bp=bm.teamStats.find(x=>nameEq(x.name,playerName));if(bp) streakAlert+=`<div class="streak-best">⭐ Cel mai bun meci: ${bm.mapName} @ ${formatRoTime(bm.createdAt)} — ${bp.kills}K / ${Math.round(bp.damage)}D / ${bp.downs}Down</div>`;}
-      personalHtml=`<div class="section-title" style="color:var(--blue)">🎯 Personal Analysis</div><div class="personal-box">${streakAlert}<div class="personal-section"><b>Profil:</b> ${escHtml(tips.profile)}</div><div class="personal-section"><b>Insight:</b> ${escHtml(tips.insight)}</div><div class="personal-section"><b>✔ Strengths</b><ul>${tips.strengths.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div><div class="personal-section"><b>⚠ Weaknesses</b><ul>${tips.weaknesses.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div><div class="personal-section"><b>🚀 Improve</b><ul>${tips.tips.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div></div>`;
+      personalHtml=`<div class="section-title" style="color:var(--blue)">🎯 Personal Analysis ${sectionTips.personal}</div><div class="personal-box">${streakAlert}<div class="personal-section"><b>Profil:</b> ${escHtml(tips.profile)}</div><div class="personal-section"><b>Insight:</b> ${escHtml(tips.insight)}</div><div class="personal-section"><b>✔ Strengths</b><ul>${tips.strengths.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div><div class="personal-section"><b>⚠ Weaknesses</b><ul>${tips.weaknesses.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div><div class="personal-section"><b>🚀 Improve</b><ul>${tips.tips.map(s=>`<li>${escHtml(s)}</li>`).join('')}</ul></div></div>`;
     }
 
     const globalHtml=reportType==='personal'?buildGlobalComparisonHtml(seasonStats):'';
@@ -2990,7 +3016,7 @@ async function runReport() {
       if(reportType === 'vs') {
         detailedHtml = ''; // 1VS1 detailed is handled inside build1vs1Html
       } else {
-        detailedHtml=`${teamDetailedHtml}${killLogHtml}<div class="targets-section"><div class="section-title">🎯 Distribuție Lovituri + Arme</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:14px">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
+        detailedHtml=`${teamDetailedHtml}${killLogHtml}<div class="targets-section"><div class="section-title">🎯 Distribuție Lovituri + Arme ${sectionTips.hits}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:14px">${cards}</div></div>${survivalHtml}${distHtml}${lootHtml}`;
       }
     }
 
@@ -3025,6 +3051,7 @@ async function runReport() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="#9146ff"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
         <span style="font-family:var(--font-head);font-size:16px;font-weight:700;color:#9146ff;letter-spacing:1px">TWITCH CAM</span>
         <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-left:4px">Ultimele 10 zile</span>
+        <span class="info-tip" data-tip="Link-uri directe către pubg.report per jucător. Dacă adversarul era streamer activ în momentul meciului, poți vedea clipul din perspectiva lui.">i</span>
         <div style="margin-left:auto;display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:#9146ff">
           <span style="width:6px;height:6px;border-radius:50%;background:#9146ff;display:inline-block"></span>
           pubg.report
