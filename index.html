@@ -1218,12 +1218,15 @@ function buildKillLogHtml(aggregatedCombat, allTeamPlayers, platform, reportType
   allTeamPlayers.forEach((n,i) => { playerColorMap[n.toLowerCase()] = playerColors[i%playerColors.length]; });
 
   const allKills = [], allDeaths = [];
-  for(const pName of allTeamPlayers) {
-    const cd = aggregatedCombat[pName.toLowerCase()];
+  // Iterăm toate cheile din aggregatedCombat, nu doar allTeamPlayers
+  const trackedPlayers = allTeamPlayers.length ? allTeamPlayers : [playerName];
+  for(const pName of trackedPlayers) {
+    const key = pName.toLowerCase();
+    const cd = aggregatedCombat[key] || Object.values(aggregatedCombat).find((_,i)=>Object.keys(aggregatedCombat)[i]===key);
     if(!cd) continue;
     for(const ev of (cd.events||[])) {
-      if(ev.type==='kill') allKills.push({killer:pName, victim:ev.victim||'-', weapon:ev.weapon||'-', dist:ev.dist||0});
-      else if(ev.type==='died') allDeaths.push({victim:pName, killer:ev.by||'-', weapon:ev.weapon||'-', dist:ev.dist||0});
+      if(ev.type==='kill') allKills.push({killer:pName, victim:ev.victim||'-', weapon:ev.weapon||'-', dist:ev.dist||0, mapName:ev.mapName||''});
+      else if(ev.type==='died') allDeaths.push({victim:pName, killer:ev.by||'-', weapon:ev.weapon||'-', dist:ev.dist||0, mapName:ev.mapName||''});
     }
   }
 
