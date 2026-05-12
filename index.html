@@ -2805,7 +2805,7 @@ async function runReport() {
       vsTotals._id=vsPlayerId||'';
     }
 
-    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.05+t.downs*5+t.assists*5+t.revives*3-(t.knocksTaken||0)*3;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
+    const leaderboard = Object.values(totals).map(t=>{const score=t.kills*10+t.damage*0.025+t.downs*3+t.assists*5+t.revives*3-(t.knocksTaken||0)*3+t.wins*10;return{...t,score,zeroLine:zeroLines[t.name]||0,_id:nameEq(t.name,playerName)?playerId:''};}).sort((a,b)=>b.score-a.score);
     const top3=leaderboard.slice(0,3);
     const mvp=leaderboard[0]||emptyPlayerStat(playerName);
     const mainTotals=totals[playerName]||emptyPlayerStat(playerName);
@@ -2851,7 +2851,7 @@ async function runReport() {
 
     const sectionTips = {
       podium: infoTip('Top 3 jucători din sesiune ordonați după scorul combinat: kills, damage, downs, assists și revive-uri.'),
-      table: infoTip('Statisticile detaliate per meci pentru fiecare jucător. K=Kills, Dmg=Damage, Asst=Assists, Rev=Revives, Down=Downs date, KTkn=Knock-uri primite.'),
+      table: infoTip('Statisticile per meci. K=Kills, Dmg=Damage, Asst=Assists, Rev=Revives, Down=Downs date, KTkn=Knock-uri primite. Scor MVP: Kills×10 + Damage×0.025 + Downs×3 + Assists×5 + Revives×3 - KnocksTaken×3 + Wins×10.'),
       ai: infoTip('Analiza AI bazată pe datele sesiunii. Archetipul și mesajul sunt generate automat din statisticile reale.'),
       personal: infoTip('Analiza personalizată pentru Player 1: profil de joc, puncte forte, slăbiciuni și recomandări bazate pe sesiunea curentă.'),
       global: infoTip('Comparație cu media globală a jucătorilor PUBG pentru sezonul curent. Percentilele sunt estimate față de toți jucătorii activi.'),
